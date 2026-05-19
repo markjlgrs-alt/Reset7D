@@ -640,82 +640,154 @@ function LogoR7D({size=90}) {
   );
 }
 
-// ── SILHUETA FEMININA — SVG (perfil de costas, referência cinematográfica) ─────
+// ── SILHUETA FEMININA — SVG (vista de costas, perfil esquerdo, referência exata) ─
 function WomanSilhouetteSVG({id='w', flip=false, style={}}) {
   const g = `wsv_${id}`;
   return (
-    <svg viewBox="0 0 240 720" xmlns="http://www.w3.org/2000/svg"
+    <svg viewBox="0 0 420 900" preserveAspectRatio="xMidYMid slice"
+      xmlns="http://www.w3.org/2000/svg"
       style={{width:'100%',height:'100%',display:'block',transform:flip?'scaleX(-1)':'none',...style}}>
       <defs>
-        <filter id={`${g}_glow`} x="-80%" y="-20%" width="260%" height="140%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="4.5" result="b"/>
+        <filter id={`${g}_gw`} x="-70%" y="-15%" width="240%" height="130%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/>
           <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
-        <filter id={`${g}_sg`} x="-100%" y="-30%" width="300%" height="160%">
+        <filter id={`${g}_sg`} x="-90%" y="-15%" width="280%" height="130%">
           <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"/>
           <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
-        <linearGradient id={`${g}_rL`} x1="0%" y1="8%" x2="0%" y2="88%">
+        {/* Contraluz principal — pescoço → braço (gradiente de cima para baixo) */}
+        <linearGradient id={`${g}_rL`} gradientUnits="userSpaceOnUse" x1="165" y1="24" x2="130" y2="475">
           <stop offset="0%"   stopColor="rgba(255,255,255,0.0)"/>
-          <stop offset="12%"  stopColor="rgba(255,255,255,0.88)"/>
-          <stop offset="38%"  stopColor="rgba(228,238,255,0.60)"/>
-          <stop offset="68%"  stopColor="rgba(198,215,240,0.28)"/>
-          <stop offset="100%" stopColor="rgba(180,200,230,0.0)"/>
+          <stop offset="4%"   stopColor="rgba(255,255,255,0.95)"/>
+          <stop offset="22%"  stopColor="rgba(242,248,255,0.82)"/>
+          <stop offset="45%"  stopColor="rgba(218,234,255,0.55)"/>
+          <stop offset="70%"  stopColor="rgba(195,218,252,0.28)"/>
+          <stop offset="90%"  stopColor="rgba(175,205,248,0.08)"/>
+          <stop offset="100%" stopColor="rgba(160,196,245,0.0)"/>
         </linearGradient>
-        <linearGradient id={`${g}_rR`} x1="0%" y1="35%" x2="0%" y2="88%">
+        {/* Contraluz secundário — cintura-quadril direito */}
+        <linearGradient id={`${g}_rR`} gradientUnits="userSpaceOnUse" x1="318" y1="530" x2="298" y2="650">
           <stop offset="0%"   stopColor="rgba(255,255,255,0.0)"/>
-          <stop offset="28%"  stopColor="rgba(240,245,255,0.42)"/>
-          <stop offset="62%"  stopColor="rgba(215,228,248,0.20)"/>
-          <stop offset="100%" stopColor="rgba(195,215,242,0.0)"/>
+          <stop offset="30%"  stopColor="rgba(245,248,255,0.58)"/>
+          <stop offset="65%"  stopColor="rgba(220,234,252,0.28)"/>
+          <stop offset="100%" stopColor="rgba(200,220,250,0.0)"/>
         </linearGradient>
       </defs>
-      {/* Corpo — preenchimento quase preto */}
+
+      {/* ══ SILHUETA ══
+          Perfil esquerdo com rosto, pescoço longo, ombros, cintura.
+          Sentido horário a partir do topo-traseiro da cabeça. */}
       <path d="
-        M 120 22
-        C 142 18,160 32,162 58
-        C 164 75,158 94,150 106
-        C 164 114,178 122,184 136
-        C 190 150,188 166,182 176
-        C 176 186,168 200,166 220
-        C 164 238,164 256,164 274
-        C 163 292,162 306,165 322
-        C 168 338,172 354,172 372
-        C 172 390,168 408,162 428
-        C 156 448,152 470,150 492
-        C 148 514,147 536,146 558
-        C 145 580,144 602,143 624
-        L 143 720 L 97 720 L 97 624
-        C 96 602,95 580,94 558
-        C 93 536,92 514,90 492
-        C 88 470,84 448,78 428
-        C 72 408,68 390,68 372
-        C 68 354,72 338,75 322
-        C 78 306,77 292,76 274
-        C 75 256,75 238,74 220
-        C 72 200,64 186,58 176
-        C 52 166,50 150,56 136
-        C 62 122,76 114,90 106
-        C 82 94,76 75,78 58
-        C 80 32,98 18,120 22 Z
-      " fill="rgba(5,2,6,0.94)"/>
-      {/* Contraluz esquerdo — pescoço → ombro → lateral do torso */}
+        M 252 20
+        C 284 12,322 27,346 56
+        C 364 77,366 110,358 138
+        C 350 158,338 174,328 190
+        C 318 205,312 222,308 240
+        C 304 258,302 276,300 294
+        C 312 284,328 278,344 284
+        C 358 292,366 308,364 328
+        C 362 348,354 366,344 382
+        C 334 398,326 416,320 436
+        C 314 455,312 474,312 493
+        C 312 512,316 530,318 549
+        C 318 568,314 586,309 605
+        C 304 623,298 640,295 659
+        C 292 678,290 698,289 718
+        L 289 900
+        L 255 900
+        L 255 718
+        C 254 698,252 678,249 659
+        C 246 640,240 623,235 605
+        C 230 586,226 568,226 549
+        C 226 530,230 512,230 493
+        C 230 474,228 455,222 436
+        C 216 416,208 398,198 382
+        C 188 366,180 348,178 328
+        C 176 308,184 292,198 284
+        C 214 278,230 284,242 294
+        C 240 276,238 258,234 240
+        C 230 222,224 205,214 190
+        C 204 174,192 158,184 138
+        C 176 110,178 77,196 56
+        C 214 30,234 14,252 20
+        Z
+      " fill="rgba(10,5,12,0.90)"/>
+
+      {/* Face profile overlay — forma do rosto em perfil esquerdo
+          (nariz, lábios, queixo, pescoço longo) */}
       <path d="
-        M 90 106 C 76 114,62 122,56 136
-        C 50 150,52 166,58 176
-        C 64 186,72 200,74 220
-        C 75 238,75 256,76 274
-      " fill="none" stroke={`url(#${g}_rL)`} strokeWidth="1.5" filter={`url(#${g}_glow)`}/>
-      {/* Contraluz direito — cintura-quadril */}
+        M 252 20
+        C 240 14,226 12,214 16
+        C 200 22,188 34,178 48
+        C 168 62,164 80,166 98
+        C 168 116,175 132,180 148
+        C 185 164,186 180,184 196
+        C 182 212,178 228,175 244
+        C 172 260,170 276,170 292
+        C 172 295,177 296,182 294
+        C 194 288,206 280,215 272
+        C 222 264,228 255,232 246
+        C 236 238,238 230,238 222
+        C 238 212,236 202,234 192
+        C 232 182,230 172,229 162
+        C 228 152,228 142,230 132
+        C 232 122,235 112,236 102
+        C 237 92,237 82,235 72
+        C 234 65,232 58,228 52
+        C 238 44,248 32,252 20
+        Z
+      " fill="rgba(10,5,12,0.90)"/>
+
+      {/* Rosto: perfil com nariz, lábios e queixo */}
       <path d="
-        M 165 322 C 168 338,172 354,172 372
-        C 172 390,168 408,162 428
-      " fill="none" stroke={`url(#${g}_rR)`} strokeWidth="1.3" filter={`url(#${g}_sg)`}/>
-      {/* Acento ombro direito */}
+        M 196 56
+        C 185 45,172 36,158 30
+        C 144 25,128 22,112 26
+        C 97 30,83 40,73 54
+        C 63 68,58 85,57 102
+        C 56 119,60 136,68 150
+        C 76 164,88 174,100 180
+        C 112 186,125 188,138 182
+        C 151 176,162 164,170 150
+        C 178 136,182 120,184 104
+        C 186 88,184 72,178 60
+        C 188 52,196 50,196 56
+        Z
+      " fill="rgba(10,5,12,0.90)"/>
+
+      {/* Contraluz principal: queixo → pescoço → clavícula → braço esquerdo
+          Este é o contraluz brilhante e contínuo da referência */}
       <path d="
-        M 150 106 C 164 114,178 122,184 136
-        C 190 150,188 166,182 176
-      " fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="1.0"
-        filter={`url(#${g}_glow)`} opacity="0.55"/>
+        M 158 30
+        C 148 38,140 50,136 64
+        C 132 78,130 94,130 110
+        C 130 126,132 142,134 158
+        C 136 174,138 190,138 206
+        C 138 222,136 238,134 254
+        C 132 270,128 284,122 298
+        C 116 312,108 324,100 338
+        C 92 352,84 366,78 381
+        C 72 396,67 412,64 428
+        C 61 444,59 460,58 477
+      " fill="none" stroke={`url(#${g}_rL)`} strokeWidth="2.2"
+        filter={`url(#${g}_gw)`}/>
+
+      {/* Contraluz secundário: ombro direito → pescoço */}
+      <path d="
+        M 358 138
+        C 354 120,345 104,332 94
+        C 319 84,304 80,292 84
+      " fill="none" stroke="rgba(255,255,255,0.38)" strokeWidth="1.4"
+        filter={`url(#${g}_gw)`} opacity="0.7"/>
+
+      {/* Contraluz cintura-quadril direito */}
+      <path d="
+        M 318 549
+        C 320 568,316 588,311 607
+        C 306 626,299 644,296 663
+      " fill="none" stroke={`url(#${g}_rR)`} strokeWidth="1.8"
+        filter={`url(#${g}_sg)`}/>
     </svg>
   );
 }
@@ -749,7 +821,7 @@ function CinematicLightCanvas() {
       const cy = e.touches?.[0]?.clientY ?? e.clientY;
       const nx = cx / window.innerWidth, ny = cy / window.innerHeight;
       const dx = nx - m.lx, dy = ny - m.ly;
-      m.flash = Math.min(1.0, m.flash + Math.sqrt(dx*dx+dy*dy) * 14);
+      m.flash = Math.min(1.0, m.flash + Math.sqrt(dx*dx+dy*dy) * 18);
       m.tx = nx; m.ty = ny; m.lx = nx; m.ly = ny;
     };
     window.addEventListener('mousemove', onMove);
@@ -760,37 +832,36 @@ function CinematicLightCanvas() {
       t += 0.007;
       m.x += (m.tx - m.x) * 0.048;
       m.y += (m.ty - m.y) * 0.048;
-      m.flash *= 0.88;
+      m.flash *= 0.91;  // decay mais lento = luz fica mais tempo
       const W = canvas.width, H = canvas.height;
       ctx.clearRect(0, 0, W, H);
-      // Luz de varredura automática — movimento lento de holofote
-      const sx = 0.5 + Math.sin(t * 0.30) * 0.40;
-      const sy = 0.40 + Math.cos(t * 0.20) * 0.16;
-      const si = 0.095 + Math.sin(t * 0.75) * 0.030;
-      const R = Math.max(W, H) * 0.56;
+      // Varredura automática — holofote lento revelando a silhueta
+      const sx = 0.5 + Math.sin(t * 0.28) * 0.42;
+      const sy = 0.38 + Math.cos(t * 0.18) * 0.18;
+      const si = 0.17 + Math.sin(t * 0.72) * 0.05;  // mais intenso
+      const R = Math.max(W, H) * 0.58;
       const ag = ctx.createRadialGradient(sx*W, sy*H, 0, sx*W, sy*H, R);
-      ag.addColorStop(0,   `rgba(208,218,234,${si})`);
-      ag.addColorStop(0.3, `rgba(172,186,212,${si*0.48})`);
-      ag.addColorStop(0.6, `rgba(138,156,192,${si*0.18})`);
+      ag.addColorStop(0,   `rgba(215,225,242,${si})`);
+      ag.addColorStop(0.28, `rgba(180,196,222,${si*0.52})`);
+      ag.addColorStop(0.58, `rgba(148,168,205,${si*0.20})`);
       ag.addColorStop(1,   'rgba(0,0,0,0)');
       ctx.fillStyle = ag; ctx.fillRect(0, 0, W, H);
-      // Flash cinematográfico do cursor
-      if (m.flash > 0.008) {
+      // Flash do cursor — revelação dramática
+      if (m.flash > 0.006) {
         const mx = m.x * W, my = m.y * H, fi = m.flash;
-        const fl = Math.max(W, H) * 0.60;
+        const fl = Math.max(W, H) * 0.62;
         const og = ctx.createRadialGradient(mx, my, 0, mx, my, fl);
-        og.addColorStop(0,    `rgba(232,240,255,${fi*0.52})`);
-        og.addColorStop(0.22, `rgba(200,216,240,${fi*0.26})`);
-        og.addColorStop(0.52, `rgba(158,178,218,${fi*0.09})`);
+        og.addColorStop(0,    `rgba(240,246,255,${fi*0.72})`);
+        og.addColorStop(0.20, `rgba(210,224,248,${fi*0.38})`);
+        og.addColorStop(0.48, `rgba(168,188,228,${fi*0.14})`);
         og.addColorStop(1,    'rgba(0,0,0,0)');
         ctx.fillStyle = og; ctx.fillRect(0, 0, W, H);
-        if (fi > 0.18) {
-          const ig = ctx.createRadialGradient(mx, my, 0, mx, my, fl*0.16);
-          ig.addColorStop(0,   `rgba(248,250,255,${fi*0.72})`);
-          ig.addColorStop(0.5, `rgba(222,234,252,${fi*0.28})`);
-          ig.addColorStop(1,   'rgba(0,0,0,0)');
-          ctx.fillStyle = ig; ctx.fillRect(0, 0, W, H);
-        }
+        // Núcleo do flash — pico brilhante
+        const ig = ctx.createRadialGradient(mx, my, 0, mx, my, fl*0.18);
+        ig.addColorStop(0,   `rgba(252,254,255,${fi*0.88})`);
+        ig.addColorStop(0.45, `rgba(228,240,255,${fi*0.38})`);
+        ig.addColorStop(1,   'rgba(0,0,0,0)');
+        ctx.fillStyle = ig; ctx.fillRect(0, 0, W, H);
       }
     };
     tick();
@@ -828,7 +899,7 @@ function WomanSilhouetteBackground() {
   );
 }
 
-// ── PRESENÇA DE SILHUETA NO QUIZ (muito sutil) ─────────────────
+// ── SILHUETA NO QUIZ — mesma figura, luz mais sutil com flash no cursor ─────────
 function QuizSilBackground() {
   const canvasRef = useRef(null);
   useEffect(() => {
@@ -838,28 +909,65 @@ function QuizSilBackground() {
     const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
     resize();
     window.addEventListener('resize', resize);
+    const m = {x:0.5,y:0.5,tx:0.5,ty:0.5,flash:0,lx:0.5,ly:0.5};
+    const onMove = (e) => {
+      const cx = e.touches?.[0]?.clientX ?? e.clientX;
+      const cy = e.touches?.[0]?.clientY ?? e.clientY;
+      const nx = cx / window.innerWidth, ny = cy / window.innerHeight;
+      const dx = nx - m.lx, dy = ny - m.ly;
+      m.flash = Math.min(1.0, m.flash + Math.sqrt(dx*dx+dy*dy) * 12);
+      m.tx = nx; m.ty = ny; m.lx = nx; m.ly = ny;
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onMove, {passive:true});
     let t = 0, animId;
     const tick = () => {
       animId = requestAnimationFrame(tick);
       t += 0.004;
+      m.x += (m.tx - m.x) * 0.04;
+      m.y += (m.ty - m.y) * 0.04;
+      m.flash *= 0.92;
       const W = canvas.width, H = canvas.height;
       ctx.clearRect(0, 0, W, H);
-      const lx = 0.5 + Math.sin(t * 0.18) * 0.26;
-      const ly = 0.44 + Math.cos(t * 0.13) * 0.11;
-      const si = 0.040 + Math.sin(t * 0.48) * 0.012;
-      const g2 = ctx.createRadialGradient(lx*W, ly*H, 0, lx*W, ly*H, W*0.68);
-      g2.addColorStop(0,   `rgba(192,205,228,${si})`);
-      g2.addColorStop(0.5, `rgba(152,168,198,${si*0.32})`);
+      // Luz ambiente lenta
+      const lx = 0.5 + Math.sin(t * 0.16) * 0.28;
+      const ly = 0.44 + Math.cos(t * 0.11) * 0.12;
+      const si = 0.10 + Math.sin(t * 0.44) * 0.032;
+      const g2 = ctx.createRadialGradient(lx*W, ly*H, 0, lx*W, ly*H, W*0.72);
+      g2.addColorStop(0,   `rgba(205,216,238,${si})`);
+      g2.addColorStop(0.48, `rgba(162,178,212,${si*0.38})`);
       g2.addColorStop(1,   'rgba(0,0,0,0)');
       ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
+      // Flash do cursor (intensidade 60% do login)
+      if (m.flash > 0.006) {
+        const mx = m.x * W, my = m.y * H, fi = m.flash;
+        const fl = Math.max(W, H) * 0.58;
+        const og = ctx.createRadialGradient(mx, my, 0, mx, my, fl);
+        og.addColorStop(0,    `rgba(238,244,255,${fi*0.45})`);
+        og.addColorStop(0.22, `rgba(206,220,245,${fi*0.22})`);
+        og.addColorStop(0.52, `rgba(162,182,222,${fi*0.08})`);
+        og.addColorStop(1,    'rgba(0,0,0,0)');
+        ctx.fillStyle = og; ctx.fillRect(0, 0, W, H);
+        const ig = ctx.createRadialGradient(mx, my, 0, mx, my, fl*0.16);
+        ig.addColorStop(0,   `rgba(250,252,255,${fi*0.58})`);
+        ig.addColorStop(0.5, `rgba(225,238,255,${fi*0.24})`);
+        ig.addColorStop(1,   'rgba(0,0,0,0)');
+        ctx.fillStyle = ig; ctx.fillRect(0, 0, W, H);
+      }
     };
     tick();
-    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize); };
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('touchmove', onMove);
+    };
   }, []);
   return (
     <>
+      {/* Silhueta centralizada — levemente visível no fundo */}
       <div style={{position:'absolute',inset:0,zIndex:0,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none',overflow:'hidden'}}>
-        <div style={{opacity:0.042,height:'82vh',display:'flex',alignItems:'center',filter:'blur(0.5px)'}}>
+        <div style={{opacity:0.07,height:'86vh',display:'flex',alignItems:'center'}}>
           <WomanSilhouetteSVG id="qbg" style={{height:'100%',width:'auto'}}/>
         </div>
       </div>
