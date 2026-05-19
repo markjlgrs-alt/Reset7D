@@ -446,7 +446,7 @@ function QuizScreen({onDone, th}) {
   const chartData = [{name:"Inchaço",pct:67},{name:"Energia",pct:78},{name:"Compulsão",pct:54},{name:"Peso",pct:71},{name:"Hormônios",pct:61}];
 
   if (showResult) return (
-    <div style={{flex:1,overflowY:"auto",padding:"24px 20px 40px",display:"flex",flexDirection:"column",gap:14,background:th.bg}}>
+    <div style={{flex:1,overflowY:"auto",padding:"24px 20px 40px",display:"flex",flexDirection:"column",gap:14,background:"transparent"}}>
       <div className="quiz-result-card" style={{textAlign:"center",paddingTop:8}}>
         <div style={{fontSize:60,marginBottom:8,filter:"drop-shadow(0 4px 12px rgba(232,164,192,0.4))"}}>👩‍⚕️</div>
         <div className="serif grad-text" style={{fontSize:30,fontWeight:700,marginBottom:6}}>Sua Análise está Pronta!</div>
@@ -499,7 +499,7 @@ function QuizScreen({onDone, th}) {
 
   const q = QUIZ[step];
   return (
-    <div style={{flex:1,display:"flex",flexDirection:"column",padding:"24px 20px 20px",background:th.bg,overflow:"hidden"}}>
+    <div style={{flex:1,display:"flex",flexDirection:"column",padding:"24px 20px 20px",background:"transparent",overflow:"hidden"}}>
 
       {/* Progress bar — animada */}
       <div style={{marginBottom:20}}>
@@ -640,155 +640,22 @@ function LogoR7D({size=90}) {
   );
 }
 
-// ── SILHUETA FEMININA — SVG (vista de costas, perfil esquerdo, referência exata) ─
-function WomanSilhouetteSVG({id='w', flip=false, style={}}) {
-  const g = `wsv_${id}`;
+// ── SILHUETA REAL (imagem) — usada em login + quiz ─────────────
+// A imagem fica escurecida por padrão (multiplicada pelo canvas escuro acima dela).
+// O canvas com mix-blend-mode:multiply funciona como "máscara de luz":
+//   - Pixels escuros do canvas → multiplicação reduz o brilho da imagem (escondida)
+//   - Pixels brancos do canvas → multiplicação preserva o brilho original (revela 100%)
+function SilhouetteImage({position='center'}) {
   return (
-    <svg viewBox="0 0 420 900" preserveAspectRatio="xMidYMid slice"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{width:'100%',height:'100%',display:'block',transform:flip?'scaleX(-1)':'none',...style}}>
-      <defs>
-        <filter id={`${g}_gw`} x="-70%" y="-15%" width="240%" height="130%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/>
-          <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <filter id={`${g}_sg`} x="-90%" y="-15%" width="280%" height="130%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"/>
-          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        {/* Contraluz principal — pescoço → braço (gradiente de cima para baixo) */}
-        <linearGradient id={`${g}_rL`} gradientUnits="userSpaceOnUse" x1="165" y1="24" x2="130" y2="475">
-          <stop offset="0%"   stopColor="rgba(255,255,255,0.0)"/>
-          <stop offset="4%"   stopColor="rgba(255,255,255,0.95)"/>
-          <stop offset="22%"  stopColor="rgba(242,248,255,0.82)"/>
-          <stop offset="45%"  stopColor="rgba(218,234,255,0.55)"/>
-          <stop offset="70%"  stopColor="rgba(195,218,252,0.28)"/>
-          <stop offset="90%"  stopColor="rgba(175,205,248,0.08)"/>
-          <stop offset="100%" stopColor="rgba(160,196,245,0.0)"/>
-        </linearGradient>
-        {/* Contraluz secundário — cintura-quadril direito */}
-        <linearGradient id={`${g}_rR`} gradientUnits="userSpaceOnUse" x1="318" y1="530" x2="298" y2="650">
-          <stop offset="0%"   stopColor="rgba(255,255,255,0.0)"/>
-          <stop offset="30%"  stopColor="rgba(245,248,255,0.58)"/>
-          <stop offset="65%"  stopColor="rgba(220,234,252,0.28)"/>
-          <stop offset="100%" stopColor="rgba(200,220,250,0.0)"/>
-        </linearGradient>
-      </defs>
-
-      {/* ══ SILHUETA ══
-          Perfil esquerdo com rosto, pescoço longo, ombros, cintura.
-          Sentido horário a partir do topo-traseiro da cabeça. */}
-      <path d="
-        M 252 20
-        C 284 12,322 27,346 56
-        C 364 77,366 110,358 138
-        C 350 158,338 174,328 190
-        C 318 205,312 222,308 240
-        C 304 258,302 276,300 294
-        C 312 284,328 278,344 284
-        C 358 292,366 308,364 328
-        C 362 348,354 366,344 382
-        C 334 398,326 416,320 436
-        C 314 455,312 474,312 493
-        C 312 512,316 530,318 549
-        C 318 568,314 586,309 605
-        C 304 623,298 640,295 659
-        C 292 678,290 698,289 718
-        L 289 900
-        L 255 900
-        L 255 718
-        C 254 698,252 678,249 659
-        C 246 640,240 623,235 605
-        C 230 586,226 568,226 549
-        C 226 530,230 512,230 493
-        C 230 474,228 455,222 436
-        C 216 416,208 398,198 382
-        C 188 366,180 348,178 328
-        C 176 308,184 292,198 284
-        C 214 278,230 284,242 294
-        C 240 276,238 258,234 240
-        C 230 222,224 205,214 190
-        C 204 174,192 158,184 138
-        C 176 110,178 77,196 56
-        C 214 30,234 14,252 20
-        Z
-      " fill="rgba(10,5,12,0.90)"/>
-
-      {/* Face profile overlay — forma do rosto em perfil esquerdo
-          (nariz, lábios, queixo, pescoço longo) */}
-      <path d="
-        M 252 20
-        C 240 14,226 12,214 16
-        C 200 22,188 34,178 48
-        C 168 62,164 80,166 98
-        C 168 116,175 132,180 148
-        C 185 164,186 180,184 196
-        C 182 212,178 228,175 244
-        C 172 260,170 276,170 292
-        C 172 295,177 296,182 294
-        C 194 288,206 280,215 272
-        C 222 264,228 255,232 246
-        C 236 238,238 230,238 222
-        C 238 212,236 202,234 192
-        C 232 182,230 172,229 162
-        C 228 152,228 142,230 132
-        C 232 122,235 112,236 102
-        C 237 92,237 82,235 72
-        C 234 65,232 58,228 52
-        C 238 44,248 32,252 20
-        Z
-      " fill="rgba(10,5,12,0.90)"/>
-
-      {/* Rosto: perfil com nariz, lábios e queixo */}
-      <path d="
-        M 196 56
-        C 185 45,172 36,158 30
-        C 144 25,128 22,112 26
-        C 97 30,83 40,73 54
-        C 63 68,58 85,57 102
-        C 56 119,60 136,68 150
-        C 76 164,88 174,100 180
-        C 112 186,125 188,138 182
-        C 151 176,162 164,170 150
-        C 178 136,182 120,184 104
-        C 186 88,184 72,178 60
-        C 188 52,196 50,196 56
-        Z
-      " fill="rgba(10,5,12,0.90)"/>
-
-      {/* Contraluz principal: queixo → pescoço → clavícula → braço esquerdo
-          Este é o contraluz brilhante e contínuo da referência */}
-      <path d="
-        M 158 30
-        C 148 38,140 50,136 64
-        C 132 78,130 94,130 110
-        C 130 126,132 142,134 158
-        C 136 174,138 190,138 206
-        C 138 222,136 238,134 254
-        C 132 270,128 284,122 298
-        C 116 312,108 324,100 338
-        C 92 352,84 366,78 381
-        C 72 396,67 412,64 428
-        C 61 444,59 460,58 477
-      " fill="none" stroke={`url(#${g}_rL)`} strokeWidth="2.2"
-        filter={`url(#${g}_gw)`}/>
-
-      {/* Contraluz secundário: ombro direito → pescoço */}
-      <path d="
-        M 358 138
-        C 354 120,345 104,332 94
-        C 319 84,304 80,292 84
-      " fill="none" stroke="rgba(255,255,255,0.38)" strokeWidth="1.4"
-        filter={`url(#${g}_gw)`} opacity="0.7"/>
-
-      {/* Contraluz cintura-quadril direito */}
-      <path d="
-        M 318 549
-        C 320 568,316 588,311 607
-        C 306 626,299 644,296 663
-      " fill="none" stroke={`url(#${g}_rR)`} strokeWidth="1.8"
-        filter={`url(#${g}_sg)`}/>
-    </svg>
+    <img src="/silhouette.jpg" alt=""
+      draggable={false}
+      style={{
+        position:'absolute', inset:0,
+        width:'100%', height:'100%',
+        objectFit:'cover', objectPosition:position,
+        userSelect:'none', pointerEvents:'none',
+        zIndex:2,
+      }}/>
   );
 }
 
@@ -805,8 +672,10 @@ function GrainOverlay() {
   );
 }
 
-// ── MOTOR DE LUZ CINEMATOGRÁFICA (Canvas + screen blend) ──────
-function CinematicLightCanvas() {
+// ── MOTOR DE LUZ — máscara dinâmica (multiply blend) ──────────
+// Canvas é renderizado escuro por padrão (esconde a imagem multiplicando por ~0)
+// e fica branco onde a luz incide (revela a imagem 100% — multiplica por 1).
+function CinematicLightCanvas({mode='login'}) {
   const canvasRef = useRef(null);
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -821,45 +690,61 @@ function CinematicLightCanvas() {
       const cy = e.touches?.[0]?.clientY ?? e.clientY;
       const nx = cx / window.innerWidth, ny = cy / window.innerHeight;
       const dx = nx - m.lx, dy = ny - m.ly;
-      m.flash = Math.min(1.0, m.flash + Math.sqrt(dx*dx+dy*dy) * 18);
+      m.flash = Math.min(1.0, m.flash + Math.sqrt(dx*dx+dy*dy) * 22);
       m.tx = nx; m.ty = ny; m.lx = nx; m.ly = ny;
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('touchmove', onMove, {passive:true});
+
+    const isLogin = mode === 'login';
+    // Cor escura de fundo do canvas (define o quão escondida a imagem fica em repouso)
+    const baseDark = isLogin ? '14,8,22' : '20,12,28';  // quiz um pouco mais visível
+    const autoIntensity = isLogin ? 0.42 : 0.32;
+    const flashOuter = isLogin ? 0.96 : 0.85;
+    const flashCore  = isLogin ? 1.0  : 0.95;
+
     let t = 0, animId;
     const tick = () => {
       animId = requestAnimationFrame(tick);
       t += 0.007;
-      m.x += (m.tx - m.x) * 0.048;
-      m.y += (m.ty - m.y) * 0.048;
-      m.flash *= 0.91;  // decay mais lento = luz fica mais tempo
+      m.x += (m.tx - m.x) * 0.05;
+      m.y += (m.ty - m.y) * 0.05;
+      m.flash *= 0.93;
       const W = canvas.width, H = canvas.height;
-      ctx.clearRect(0, 0, W, H);
-      // Varredura automática — holofote lento revelando a silhueta
-      const sx = 0.5 + Math.sin(t * 0.28) * 0.42;
-      const sy = 0.38 + Math.cos(t * 0.18) * 0.18;
-      const si = 0.17 + Math.sin(t * 0.72) * 0.05;  // mais intenso
+
+      // 1. Fundo escuro do canvas (multiplica imagem → escurece)
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = `rgba(${baseDark},1)`;
+      ctx.fillRect(0, 0, W, H);
+
+      // 2. Varredura automática — adiciona luz (modo 'lighter' = aditivo)
+      ctx.globalCompositeOperation = 'lighter';
+      const sx = 0.5 + Math.sin(t * 0.26) * 0.42;
+      const sy = 0.42 + Math.cos(t * 0.18) * 0.18;
+      const si = autoIntensity + Math.sin(t * 0.7) * 0.10;
       const R = Math.max(W, H) * 0.58;
       const ag = ctx.createRadialGradient(sx*W, sy*H, 0, sx*W, sy*H, R);
-      ag.addColorStop(0,   `rgba(215,225,242,${si})`);
-      ag.addColorStop(0.28, `rgba(180,196,222,${si*0.52})`);
-      ag.addColorStop(0.58, `rgba(148,168,205,${si*0.20})`);
+      ag.addColorStop(0,   `rgba(210,220,245,${si})`);
+      ag.addColorStop(0.32, `rgba(140,160,205,${si*0.5})`);
+      ag.addColorStop(0.62, `rgba(70,90,140,${si*0.18})`);
       ag.addColorStop(1,   'rgba(0,0,0,0)');
       ctx.fillStyle = ag; ctx.fillRect(0, 0, W, H);
-      // Flash do cursor — revelação dramática
-      if (m.flash > 0.006) {
+
+      // 3. Flash do cursor — pico de luz que revela 100% da silhueta
+      if (m.flash > 0.005) {
         const mx = m.x * W, my = m.y * H, fi = m.flash;
-        const fl = Math.max(W, H) * 0.62;
+        const fl = Math.max(W, H) * 0.65;
+        // Halo amplo
         const og = ctx.createRadialGradient(mx, my, 0, mx, my, fl);
-        og.addColorStop(0,    `rgba(240,246,255,${fi*0.72})`);
-        og.addColorStop(0.20, `rgba(210,224,248,${fi*0.38})`);
-        og.addColorStop(0.48, `rgba(168,188,228,${fi*0.14})`);
+        og.addColorStop(0,    `rgba(255,250,245,${fi*flashOuter})`);
+        og.addColorStop(0.20, `rgba(225,235,255,${fi*0.55})`);
+        og.addColorStop(0.52, `rgba(140,170,220,${fi*0.18})`);
         og.addColorStop(1,    'rgba(0,0,0,0)');
         ctx.fillStyle = og; ctx.fillRect(0, 0, W, H);
-        // Núcleo do flash — pico brilhante
-        const ig = ctx.createRadialGradient(mx, my, 0, mx, my, fl*0.18);
-        ig.addColorStop(0,   `rgba(252,254,255,${fi*0.88})`);
-        ig.addColorStop(0.45, `rgba(228,240,255,${fi*0.38})`);
+        // Núcleo brilhante quase puro → revela 100%
+        const ig = ctx.createRadialGradient(mx, my, 0, mx, my, fl*0.22);
+        ig.addColorStop(0,   `rgba(255,255,255,${fi*flashCore})`);
+        ig.addColorStop(0.45, `rgba(248,251,255,${fi*0.72})`);
         ig.addColorStop(1,   'rgba(0,0,0,0)');
         ctx.fillStyle = ig; ctx.fillRect(0, 0, W, H);
       }
@@ -871,108 +756,46 @@ function CinematicLightCanvas() {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('touchmove', onMove);
     };
-  }, []);
-  return <canvas ref={canvasRef} style={{position:'absolute',inset:0,zIndex:3,width:'100%',height:'100%',mixBlendMode:'screen',pointerEvents:'none'}}/>;
+  }, [mode]);
+  return <canvas ref={canvasRef} style={{
+    position:'absolute',inset:0,zIndex:5,
+    width:'100%',height:'100%',
+    mixBlendMode:'multiply',
+    pointerEvents:'none',
+  }}/>;
 }
 
 // ── BACKGROUND CINEMATOGRÁFICO — LOGIN ────────────────────────
+// Imagem em tela cheia + canvas multiply (escuro por padrão, branco no flash)
 function WomanSilhouetteBackground() {
   return (
-    <div style={{position:'fixed',inset:0,zIndex:0,overflow:'hidden'}}>
-      {/* Base escura densa */}
-      <div style={{position:'absolute',inset:0,zIndex:1,background:'radial-gradient(ellipse at 50% 38%, #150a1a 0%, #0d0612 48%, #060208 100%)'}}/>
-      {/* Silhueta esquerda */}
-      <div style={{position:'absolute',left:0,top:0,bottom:0,zIndex:2,width:'30vw',minWidth:145,maxWidth:310}}>
-        <WomanSilhouetteSVG id="L"/>
-      </div>
-      {/* Silhueta direita (espelhada) */}
-      <div style={{position:'absolute',right:0,top:0,bottom:0,zIndex:2,width:'30vw',minWidth:145,maxWidth:310}}>
-        <WomanSilhouetteSVG id="R" flip={true}/>
-      </div>
-      {/* Motor de luz com screen blend */}
-      <CinematicLightCanvas/>
-      {/* Granulação */}
+    <div style={{position:'fixed',inset:0,zIndex:0,overflow:'hidden',background:'#020108'}}>
+      {/* z=1: base escura sutil */}
+      <div style={{position:'absolute',inset:0,zIndex:1,background:'radial-gradient(ellipse at 50% 45%, #0c0612 0%, #050208 65%, #020107 100%)'}}/>
+      {/* z=2: imagem real da silhueta em tela cheia */}
+      <SilhouetteImage position="center"/>
+      {/* z=5: motor de luz (mix-blend-mode:multiply) */}
+      <CinematicLightCanvas mode="login"/>
+      {/* z=6: granulação cinematográfica */}
       <GrainOverlay/>
-      {/* Vinheta central — preserva legibilidade do formulário */}
-      <div style={{position:'absolute',inset:0,zIndex:6,pointerEvents:'none',background:'radial-gradient(ellipse 46% 88% at 50% 50%, transparent 0%, rgba(7,2,10,0.52) 62%, rgba(4,1,6,0.86) 100%)'}}/>
+      {/* z=7: vinheta central para legibilidade do formulário */}
+      <div style={{position:'absolute',inset:0,zIndex:7,pointerEvents:'none',background:'radial-gradient(ellipse 45% 85% at 50% 50%, transparent 0%, rgba(3,1,6,0.45) 60%, rgba(2,0,5,0.85) 100%)'}}/>
     </div>
   );
 }
 
-// ── SILHUETA NO QUIZ — mesma figura, luz mais sutil com flash no cursor ─────────
+// ── BACKGROUND DO QUIZ — silhueta em PLANO DE FUNDO INTEIRO ───
+// Renderiza fora do container 430px → cobre a viewport toda
 function QuizSilBackground() {
-  const canvasRef = useRef(null);
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-    resize();
-    window.addEventListener('resize', resize);
-    const m = {x:0.5,y:0.5,tx:0.5,ty:0.5,flash:0,lx:0.5,ly:0.5};
-    const onMove = (e) => {
-      const cx = e.touches?.[0]?.clientX ?? e.clientX;
-      const cy = e.touches?.[0]?.clientY ?? e.clientY;
-      const nx = cx / window.innerWidth, ny = cy / window.innerHeight;
-      const dx = nx - m.lx, dy = ny - m.ly;
-      m.flash = Math.min(1.0, m.flash + Math.sqrt(dx*dx+dy*dy) * 12);
-      m.tx = nx; m.ty = ny; m.lx = nx; m.ly = ny;
-    };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('touchmove', onMove, {passive:true});
-    let t = 0, animId;
-    const tick = () => {
-      animId = requestAnimationFrame(tick);
-      t += 0.004;
-      m.x += (m.tx - m.x) * 0.04;
-      m.y += (m.ty - m.y) * 0.04;
-      m.flash *= 0.92;
-      const W = canvas.width, H = canvas.height;
-      ctx.clearRect(0, 0, W, H);
-      // Luz ambiente lenta
-      const lx = 0.5 + Math.sin(t * 0.16) * 0.28;
-      const ly = 0.44 + Math.cos(t * 0.11) * 0.12;
-      const si = 0.10 + Math.sin(t * 0.44) * 0.032;
-      const g2 = ctx.createRadialGradient(lx*W, ly*H, 0, lx*W, ly*H, W*0.72);
-      g2.addColorStop(0,   `rgba(205,216,238,${si})`);
-      g2.addColorStop(0.48, `rgba(162,178,212,${si*0.38})`);
-      g2.addColorStop(1,   'rgba(0,0,0,0)');
-      ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
-      // Flash do cursor (intensidade 60% do login)
-      if (m.flash > 0.006) {
-        const mx = m.x * W, my = m.y * H, fi = m.flash;
-        const fl = Math.max(W, H) * 0.58;
-        const og = ctx.createRadialGradient(mx, my, 0, mx, my, fl);
-        og.addColorStop(0,    `rgba(238,244,255,${fi*0.45})`);
-        og.addColorStop(0.22, `rgba(206,220,245,${fi*0.22})`);
-        og.addColorStop(0.52, `rgba(162,182,222,${fi*0.08})`);
-        og.addColorStop(1,    'rgba(0,0,0,0)');
-        ctx.fillStyle = og; ctx.fillRect(0, 0, W, H);
-        const ig = ctx.createRadialGradient(mx, my, 0, mx, my, fl*0.16);
-        ig.addColorStop(0,   `rgba(250,252,255,${fi*0.58})`);
-        ig.addColorStop(0.5, `rgba(225,238,255,${fi*0.24})`);
-        ig.addColorStop(1,   'rgba(0,0,0,0)');
-        ctx.fillStyle = ig; ctx.fillRect(0, 0, W, H);
-      }
-    };
-    tick();
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('touchmove', onMove);
-    };
-  }, []);
   return (
-    <>
-      {/* Silhueta centralizada — levemente visível no fundo */}
-      <div style={{position:'absolute',inset:0,zIndex:0,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none',overflow:'hidden'}}>
-        <div style={{opacity:0.07,height:'86vh',display:'flex',alignItems:'center'}}>
-          <WomanSilhouetteSVG id="qbg" style={{height:'100%',width:'auto'}}/>
-        </div>
-      </div>
-      <canvas ref={canvasRef} style={{position:'absolute',inset:0,zIndex:1,width:'100%',height:'100%',mixBlendMode:'screen',pointerEvents:'none'}}/>
-    </>
+    <div style={{position:'fixed',inset:0,zIndex:0,overflow:'hidden',background:'#030109'}}>
+      <div style={{position:'absolute',inset:0,zIndex:1,background:'radial-gradient(ellipse at 50% 45%, #0e0814 0%, #060309 60%, #020107 100%)'}}/>
+      <SilhouetteImage position="center"/>
+      <CinematicLightCanvas mode="quiz"/>
+      <GrainOverlay/>
+      {/* Vinheta mais permissiva no quiz — deixa o conteúdo central legível */}
+      <div style={{position:'absolute',inset:0,zIndex:7,pointerEvents:'none',background:'radial-gradient(ellipse 60% 95% at 50% 50%, transparent 0%, rgba(3,1,6,0.40) 70%, rgba(2,0,5,0.78) 100%)'}}/>
+    </div>
   );
 }
 
@@ -2293,9 +2116,10 @@ function App() {
     <>
       <style>{cssStr}</style>
       {screen==="quiz"     && (
-        <div style={{maxWidth:430,margin:"0 auto",height:"100vh",display:"flex",flexDirection:"column",background:th.bg,position:'relative',overflow:'hidden'}}>
+        <>
+          {/* Background cinematográfico em tela cheia — fora do container 430px */}
           <QuizSilBackground/>
-          <div style={{position:'relative',zIndex:2,display:'flex',flexDirection:'column',flex:1}}>
+          <div style={{maxWidth:430,margin:"0 auto",height:"100vh",display:"flex",flexDirection:"column",background:"transparent",position:'relative',zIndex:10}}>
             <div style={{padding:"36px 20px 16px",textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",background:"transparent"}}>
               <div className="float-anim" style={{marginBottom:"4px",filter:"drop-shadow(0 4px 16px rgba(232,164,192,0.5))"}}>
                 <LogoR7D size={68}/>
@@ -2304,7 +2128,7 @@ function App() {
             </div>
             <QuizScreen th={th} onDone={()=>setScreen("login")}/>
           </div>
-        </div>
+        </>
       )}
       {screen==="login"    && <LoginScreen    onLogin={doLogin} onRegister={()=>setScreen("register")} onForgot={()=>setScreen("forgot")}/>}
       {screen==="register" && <RegisterScreen onBack={()=>setScreen("login")} onSuccess={doLogin}/>}
