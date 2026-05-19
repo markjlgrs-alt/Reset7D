@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="0; url=app.html">
+    <title>Reset 7D</title>
+    <style>
+      /* Animação de shake para erro de login */
+      @keyframes shake {
+        0%,100%{ transform:translateX(0) }
+        20%,60%{ transform:translateX(-6px) }
+        40%,80%{ transform:translateX(6px) }
+      }
+      .shake { animation:shake .4s ease; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Reset 7D</h1>
+        <p>Seu app de emagrecimento personalizado</p>
+
+        <!-- LOGIN -->
+        <div id="login-form" class="form-container">
+            <h2>Login</h2>
+            <form id="loginForm">
+                <input type="email" id="email" placeholder="E-mail" required autocomplete="email">
+                <input type="password" id="password" placeholder="Senha" required autocomplete="current-password">
+                <button type="submit">Entrar</button>
+            </form>
+            <p style="margin-top:10px"><a href="#" id="forgot-password-link">Esqueceu a senha?</a></p>
+            <p>Não tem conta? <a href="#" id="register-link">Registrar</a></p>
+        </div>
+
+        <!-- REGISTRO -->
+        <div id="register-form" class="form-container hidden">
+            <h2>Criar Conta</h2>
+            <form id="registerForm">
+                <input type="text" id="name" placeholder="Nome completo" required>
+                <input type="email" id="reg-email" placeholder="E-mail" required autocomplete="email">
+                <input type="password" id="reg-password" placeholder="Senha (mín. 6 caracteres)" required autocomplete="new-password">
+                <button type="submit">Registrar</button>
+            </form>
+            <p><a href="#" id="back-to-login">← Voltar ao Login</a></p>
+        </div>
+
+        <!-- ESQUECI A SENHA -->
+        <div id="forgot-password-form" class="form-container hidden">
+            <h2>Recuperar Senha</h2>
+            <p style="font-size:13px;color:#666;margin-bottom:12px;">
+                Digite seu e-mail e enviaremos um link de recuperação.
+            </p>
+            <form id="forgotPasswordForm">
+                <input type="email" id="reset-email" placeholder="Seu e-mail cadastrado" required autocomplete="email">
+                <button type="submit">Enviar link de recuperação</button>
+            </form>
+            <p id="reset-message" style="font-size:13px;margin-top:10px;line-height:1.5"></p>
+            <p style="margin-top:12px"><a href="#" id="back-to-login-from-forgot">← Voltar ao Login</a></p>
+        </div>
+
+        <!-- REDEFINIR SENHA (acessado via link do e-mail) -->
+        <div id="reset-password-form" class="form-container hidden">
+            <h2>Nova Senha</h2>
+            <p id="reset-confirm-message" style="font-size:13px;color:#666;margin-bottom:12px;line-height:1.5"></p>
+            <form id="resetPasswordForm">
+                <input type="password" id="new-password" placeholder="Nova senha (mín. 6 caracteres)" required autocomplete="new-password">
+                <input type="password" id="confirm-password" placeholder="Confirmar nova senha" required autocomplete="new-password">
+                <button type="submit">Salvar nova senha</button>
+            </form>
+            <p style="margin-top:12px"><a href="#" id="back-to-login-from-reset">← Cancelar</a></p>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="hidden">
+            <h2>Bem-vindo ao Dashboard!</h2>
+            <p id="dashboard-name" style="color:#666;margin:8px 0 16px"></p>
+            <p>Conteúdo do app de emagrecimento aqui.</p>
+            <button id="logout" style="margin-top:16px">Sair</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

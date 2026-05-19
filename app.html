@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Reset 7D — App de Emagrecimento</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Manrope',sans-serif;background:#1f1620;}
+    #root{height:100vh;}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script>window.BACKEND_URL=window.location.hostname==="localhost"?"http://localhost:3001":"";</script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+const _RC = (typeof Recharts !== 'undefined') ? Recharts : {};
+const { AreaChart, Area, BarChart, Bar, RadarChart, Radar,
+        PolarGrid, PolarAngleAxis, XAxis, YAxis,
+        CartesianGrid, Tooltip, ResponsiveContainer } = _RC;
+
+// ── TEMA ─────────────────────────────────────────────────────
+const THEMES = {
+  dark: {
+    bg:"#1f1620", bg2:"#251a26", bg3:"#2a1d2c",
+    card:"#2c1f2e", card2:"#332433", cardSolid:"#2c1f2e",
+    text:"#f5e6ed", text2:"#e8b4cc", text3:"#a89098",
+    border:"rgba(245,230,237,0.08)", border2:"rgba(232,180,204,0.22)",
+    primary:"#e8a4c0", primaryL:"rgba(232,164,192,0.13)", primaryM:"rgba(232,164,192,0.25)",
+    green:"#9dd9b8", greenL:"rgba(157,217,184,0.14)",
+    accent:"#f4c896", accentL:"rgba(244,200,150,0.14)",
+    inputBg:"#332433", shadow:"0 4px 24px rgba(0,0,0,0.3)",
+  },
+  light: {
+    bg:"#fff7fa", bg2:"#ffe9f0", bg3:"#ffd9e3",
+    card:"#ffffff", card2:"#fff3f7", cardSolid:"#ffffff",
+    text:"#2d1521", text2:"#b54573", text3:"#8a7681",
+    border:"rgba(0,0,0,0.06)", border2:"rgba(225,29,72,0.18)",
+    primary:"#d6628e", primaryL:"rgba(214,98,142,0.08)", primaryM:"rgba(214,98,142,0.18)",
+    green:"#56b685", greenL:"rgba(86,182,133,0.1)",
+    accent:"#d4922f", accentL:"rgba(212,146,47,0.12)",
+    inputBg:"#fdf4f7", shadow:"0 2px 16px rgba(0,0,0,0.06)",
+  }
+};
+// alias para compatibilidade com código de auth (usa T.primary etc)
+const T = THEMES.dark;
+
+const makeCSS = (th) => `
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@300;400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Manrope',sans-serif;background:${th.bg};color:${th.text};-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:${th.primary};border-radius:2px;}
+.serif{font-family:'Fraunces',serif;font-optical-sizing:auto;letter-spacing:-0.01em;}
+.glass{background:${th.card};border:1px solid ${th.border};}
+.glass2{background:${th.card2};border:1px solid ${th.border};}
+.hover-scale{transition:transform .18s,box-shadow .18s;cursor:pointer;}
+.hover-scale:active{transform:scale(0.97);}
+.slide-up{animation:su .38s ease forwards;}
+@keyframes su{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.fade{animation:fi .28s ease forwards;}
+@keyframes fi{from{opacity:0;}to{opacity:1;}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.shake{animation:shake .4s ease;}
+@keyframes checkPop{0%{transform:scale(0) rotate(-20deg);opacity:0}65%{transform:scale(1.25);opacity:1}100%{transform:scale(1);opacity:1}}
+.check-circle{width:72px;height:72px;border-radius:50%;background:${th.greenL};border:2px solid ${th.green};display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;color:${th.green};animation:checkPop .5s ease forwards;}
+.grad-text{background:linear-gradient(135deg,${th.primary},${th.green});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.inp{width:100%;padding:13px 16px;background:${th.inputBg};border:1.5px solid ${th.border};border-radius:13px;color:${th.text};font-size:14px;font-family:'Manrope',sans-serif;outline:none;transition:border-color .2s;}
+.inp:focus{border-color:${th.primary};}
+.inp::placeholder{color:${th.text3};}
+.inp.err{border-color:${th.primary};}
+.btn-p{background:linear-gradient(135deg,${th.primary},${th.text2});border:none;border-radius:14px;color:${th.bg};font-weight:700;font-size:14px;padding:13px;cursor:pointer;width:100%;font-family:'Manrope',sans-serif;transition:.15s;}
+.btn-p:active{transform:scale(0.98);}
+.btn-p:disabled{opacity:.45;cursor:not-allowed;}
+.btn-s{background:${th.primaryL};border:1.5px solid ${th.border2};border-radius:13px;color:${th.primary};font-weight:700;font-size:13px;padding:11px 18px;cursor:pointer;font-family:'Manrope',sans-serif;}
+.btn-g{background:${th.greenL};border:1.5px solid rgba(157,217,184,.3);border-radius:13px;color:${th.green};font-weight:700;font-size:13px;padding:11px 18px;cursor:pointer;font-family:'Manrope',sans-serif;}
+.xp-fly{position:fixed;top:35%;left:50%;transform:translateX(-50%);z-index:999;background:linear-gradient(135deg,${th.primary},${th.accent});border-radius:20px;padding:10px 22px;font-size:20px;font-weight:900;color:${th.bg};pointer-events:none;animation:xpf .9s ease forwards;}
+@keyframes xpf{0%{opacity:1;transform:translateX(-50%) scale(1) translateY(0);}60%{opacity:1;transform:translateX(-50%) scale(1.3) translateY(-20px);}100%{opacity:0;transform:translateX(-50%) scale(0.8) translateY(-50px);}}
+.pbar{height:100%;border-radius:999px;transition:width .8s ease;}
+.pb-rose{background:linear-gradient(90deg,${th.primary},${th.text2});}
+.pb-green{background:linear-gradient(90deg,${th.green},${th.green});}
+.overlay{position:fixed;inset:0;z-index:200;background:rgba(20,12,18,0.55);backdrop-filter:blur(4px);}
+.modal-wrap{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(20,12,18,0.5);}
+.divider{height:1px;background:${th.border};margin:12px 0;}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top:2px solid #fff;border-radius:50%;animation:spin .65s linear infinite;vertical-align:middle;}
+.inp-wrap{position:relative;}
+.eye-btn{position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;font-size:15px;color:${th.text3};line-height:1;}
+.pass-bar-track{height:5px;border-radius:99px;background:${th.border};overflow:hidden;margin-top:8px;}
+.pass-bar{height:5px;border-radius:99px;transition:width .45s,background .45s;}
+input,textarea{font-family:'Manrope',sans-serif;}
+`;
+
+// ── QUIZ ──────────────────────────────────────────────────────
+const QUIZ = [
+  {q:"O que mais te incomoda no seu corpo hoje?",opts:["Inchaço e retenção de líquidos","Energia no zero, cansaço constante","Compulsão por doce e carboidrato","Peso que não sai do lugar há meses"]},
+  {q:"Há quanto tempo você tenta mudar sem resultado consistente?",opts:["Menos de 6 meses","6 meses a 1 ano","1 a 3 anos","Mais de 3 anos"]},
+  {q:"Qual é seu maior obstáculo no dia a dia?",opts:["Falta de tempo — rotina corrida","Não sei por onde começar","Já tentei de tudo e nada funciona","Falta de energia para manter o foco"]},
+  {q:"O que você mais quer conquistar nos próximos 7 dias?",opts:["Barriga menos inchada e corpo mais leve","Mais disposição e energia no dia a dia","Parar de comer por impulso à tarde","Um recomeço real — de verdade"]},
+  {q:"Como está a sua relação com o seu corpo agora?",opts:["Batalho todo dia mas não vejo resultado","Estou quase desistindo de vez","Sinto que meu corpo não me obedece","Quero recomeçar com estratégia real"]}
+];
+
+// ── PROTOCOLO 7 DIAS (PC) ─────────────────────────────────────
+const PC = {
+  1:{
+    emoji:"⏰", color:"#d6628e",
+    bg:"linear-gradient(135deg,#5d2c44,#a04970)",
+    title:"O Relógio Biológico e a Janela Alimentar",
+    intro:`Você já se perguntou por que, mesmo comendo de forma saudável, o ponteiro da balança parece não se mover e aquela calça continua apertada? 🤔\n\nO segredo pode estar no relógio interno do seu corpo. O metabolismo feminino é regulado por um ritmo circadiano, que determina quando seu corpo está pronto para queimar gordura, absorver nutrientes e se recuperar. Comer fora do horário ideal, como jantar tarde ou beliscar à noite, envia sinais confusos para o corpo: a insulina permanece alta, a queima de gordura desacelera e a retenção de líquidos aumenta.\n\nHoje, vamos ensinar o corpo a trabalhar a seu favor, respeitando seu relógio biológico e criando uma janela alimentar de 10 horas que ativa naturalmente o metabolismo. 🔥`,
+    sections:[
+      {title:"🌞 O que é a Janela Alimentar e por que funciona?",content:`A prática de Time-Restricted Eating (TRE) consiste em limitar o consumo de alimentos a uma janela diária de 8 a 10 horas. Estudos do Dr. Satchin Panda, do Salk Institute (Stanford), mostram que isso regula insulina e glucagon, permitindo que o corpo entre em modo lipolítico — ou seja, queime gordura de forma natural.\n\nBENEFÍCIOS COMPROVADOS:\n• Sincroniza o metabolismo com o ciclo circadiano natural\n• Reduz episódios de fome noturna\n• Apoia a regulação de hormônios ligados à retenção e gordura abdominal\n• Redução de inchaço abdominal e retenção de líquidos 💧\n• Controle de fome fora de hora e picos de glicose 🍌\n• Maior disposição e energia durante o dia ⚡\n\nESTRATÉGIAS PRÁTICAS:\n1. Janela alimentar de 10h: café 8h30 → jantar 18h30\n2. Hidratação estratégica: água morna ao acordar + 1 limão\n3. Refeições equilibradas: proteína + fibra + gordura boa\n4. Evitar calorias fora da janela: apenas água, chá ou café puro\n5. Respiração 4-4-8 à noite: ativa nervo vago e reduz cortisol 🌙`},
+      {title:"⏰ Horário Sugerido do Dia 1",content:`07:00 — Água morna ou pura, sem calorias, para iniciar hidratação e preparar fígado e intestino, de preferência com suco de ½ limão.\n\n08:00–08:30 — Café da manhã com proteína + fibra + fruta: ovos mexidos + aveia + banana ou iogurte natural + chia + mamão.\n\n12:30 — Almoço equilibrado: metade do prato legumes/verduras, 1 palma de proteína (frango, sardinha, feijão + ovo), 1 punho de carboidrato (arroz, batata, mandioca).\n\n16:00 — Lanche opcional: fruta + iogurte ou fruta + amendoim simples.\n\n18:30–19:00 — Jantar leve: vegetais + proteína, mantendo a janela de 10h.\n\nApós 19:00 — Apenas líquidos sem calorias: água morna ou chá puro.\n\n21:00–21:30 — Preparação para o sono: desligar telas, luzes auxiliares de baixa intensidade, respiração 4-4-8.`},
+    ],
+    recipes:[
+      {e:"🥚",name:"Café Metabólico — Ovos com Abacate + Fruta",ing:["2 ovos","½ abacate pequeno","½ xícara de frutas vermelhas"],how:["Bata os ovos e cozinhe em frigideira antiaderente.","Fatie o abacate e coloque ao lado.","Sirva com frutas frescas."],sci:"Proteína de alta qualidade + gordura boa + fibras = saciedade prolongada e glicose estável durante toda a manhã."},
+      {e:"🥗",name:"Almoço Anti-Inflamatório — Frango + Legumes + Arroz Integral",ing:["150g de frango grelhado","½ xícara de arroz integral","Brócolis, cenoura e abobrinha no vapor"],how:["Grelhe o frango com limão e ervas.","Cozinhe os legumes no vapor.","Sirva com arroz integral."],sci:"Proteínas magras + fibras + carboidratos complexos = energia sustentada, insulina regulada e metabolismo ativo."},
+      {e:"☕",name:"Chá Despertador Metabólico",ing:["250ml de água quente","½ col. chá de cúrcuma","½ col. chá de canela","Pitada de pimenta-do-reino","½ cm de gengibre fresco ralado"],how:["Misture todos os ingredientes em água quente.","Tome morno 30 minutos após o almoço."],sci:"Cúrcuma, canela e gengibre têm efeito anti-inflamatório e termogênico documentado — metabolismo ativado."},
+    ],
+    refs:[
+      {l:"TRE e perda de peso — meta-análise (PubMed)",u:"https://pubmed.ncbi.nlm.nih.gov/36911845/"},
+      {l:"NIH — TRE e síndrome metabólica",u:"https://www.nih.gov/news-events/nih-research-matters/time-restricted-eating-metabolic-syndrome"},
+    ]
+  },
+  2:{
+    emoji:"💧", color:"#7ec5d6", bg:"linear-gradient(135deg,#1f4658,#4a8aa3)",
+    title:"O Esgoto — Ativando o Sistema Linfático",
+    intro:`Você já acordou com pernas pesadas, mãos inchadas ou a sensação de que seu corpo está retendo líquido? 😖\n\nO que muita gente não sabe é que isso não tem a ver apenas com alimentação ou excesso de sal. Grande parte desse problema vem de um sistema linfático inativo. Diferente do coração, que bombeia sangue continuamente, o sistema linfático não possui uma bomba própria — ele depende do movimento, respiração e estímulos suaves para funcionar corretamente.\n\nHoje, vamos aprender como ativar essa rede de drenagem natural do corpo. O objetivo é reduzir inchaço, melhorar a circulação e preparar o organismo para otimizar o metabolismo. 🌿💧`,
+    sections:[
+      {title:"🌿 Como funciona o sistema linfático",content:`O sistema linfático transporta fluidos, proteínas e células de defesa do corpo, filtrando toxinas pelos linfonodos. Quando ele não funciona bem:\n\n• Líquido se acumula nos tecidos → sensação de inchaço\n• Substâncias inflamatórias ficam paradas → retenção de gordura superficial\n• Metabolismo e circulação ficam mais lentos → corpo pesado\n\nA ativação linfática verdadeira depende de três pilares:\n1. MOVIMENTO MUSCULAR: cada contração ajuda a empurrar a linfa pelo corpo.\n2. RESPIRAÇÃO DIAFRAGMÁTICA PROFUNDA: o diafragma funciona como uma bomba interna.\n3. ESTIMULAÇÃO MANUAL SUAVE: movimentos lentos em direção aos linfonodos.`},
+      {title:"⚡ Estratégias do Dia 2",content:`1️⃣ ATIVAÇÃO MATINAL DO SISTEMA LINFÁTICO (menos de 10 minutos)\n\n1 minuto cada movimento:\n• Saltitar e balançar as mãos\n• Saltitar lateralmente\n• Levantamento de braços\n• Elevação de joelho com palma no joelho\n• Balanço lateral\n\n2️⃣ CAMINHADA LEVE PÓS-ALMOÇO (10–15 min)\n\n3️⃣ PERNAS NA PAREDE (10 min)\nDeite-se de costas, apoie as pernas formando 90° no quadril.\n\n4️⃣ AUTOMASSAGEM LINFÁTICA SUPERFICIAL (10 min)\nUse óleo ou creme. Pressão leve, rente à pele.`},
+    ],
+    recipes:[
+      {e:"🥤",name:"Suco Verde da Drenagem",ing:["½ pepino com casca","1 folha de couve ou espinafre","Suco de 1 limão","200ml de água de coco","Hortelã a gosto"],how:["Bata todos os ingredientes no liquidificador.","Beba imediatamente."],sci:"Hidratação e eletrólitos ajudam o volume e fluidez da linfa; antioxidantes apoiam drenagem e redução de retenção."},
+    ],
+    refs:[
+      {l:"Automassagem linfática (PubMed 36353530)",u:"https://pubmed.ncbi.nlm.nih.gov/36353530/"},
+      {l:"Sistema linfático: anatomia e função (Medical News Today)",u:"https://www.medicalnewstoday.com/articles/303087"},
+    ]
+  },
+  3:{
+    emoji:"🔥", color:"#f0a07a", bg:"linear-gradient(135deg,#6b3624,#c2724e)",
+    title:"O Forno Interno — Ativando a Gordura Marrom",
+    intro:`Você já sentiu que o seu metabolismo parece "desligado"? Queimar gordura parece lento, mesmo quando você está comendo melhor? 😓\n\nIsso acontece porque muitos mecanismos internos ainda não foram ativados — especialmente aquele "forno metabólico" que vive dentro do corpo: a gordura marrom.\n\nA gordura marrom não funciona como a gordura branca (que guarda energia); ela queima energia para gerar calor, ajudando o corpo a gastar calorias mesmo em repouso.\n\nHoje vamos ligar esse forno interno de forma prática, baseada em ciência real. 🔥`,
+    sections:[
+      {title:"🔥 O que é gordura marrom e por que importa?",content:`A gordura marrom (BAT) existe no corpo humano e é especialmente ativa em pescoço, ombros e tronco. Ao ser ativada, usa ácidos graxos como combustível para produzir calor — termogênese não tremulante.\n\nEstudos mostram que:\n➡️ A exposição ao frio pode ativar a gordura marrom e aumentar gasto energético.\n➡️ Certos estímulos alimentares aumentam a termogênese.\n\n⚠️ IMPORTANTE: ativação de BAT não substitui alimentação saudável e movimento.`},
+      {title:"🚿 Estratégias do Dia 3",content:`1) EXPOSIÇÃO MODERADA AO FRIO\nAo final do banho:\n• 30s água morna → 30s água fria → Repita 3x\n⚠️ NÃO faça com pressão alta descompensada ou problemas cardíacos.\n\n2) TERMOGÊNESE NATURAL VIA ALIMENTAÇÃO\n• Pimenta (TRPV1 ativa termogênese)\n• Canela (sensibilidade à insulina)\n• Gengibre (efeito sobre termogênese e digestão)\n\n3) MINI-ATIVIDADE DE ALTA FREQUÊNCIA\n3 séries de 1 min, 3x ao dia:\n• 20–30s polichinelos leves\n• 20–30s agachamentos lentos\n• 20–30s marcha rápida no lugar`},
+    ],
+    recipes:[
+      {e:"🫖",name:"Chá Termogênico Dourado",ing:["250ml de água quente","½ col. chá de cúrcuma","½ col. chá de canela","Pitada de pimenta-do-reino","1cm de gengibre ralado"],how:["Aqueça a água até ferver.","Adicione os ingredientes. Infusione 5 min.","Coe e beba morno."],sci:"Compostos que aumentam gasto energético leve, promovem calor interno e apoiam digestão."},
+    ],
+    refs:[
+      {l:"Gordura marrom ativa por frio (PMC)",u:"https://pmc.ncbi.nlm.nih.gov/articles/PMC3701264/"},
+      {l:"Termogênese e metabolismo (PubMed)",u:"https://pubmed.ncbi.nlm.nih.gov/30689230/"},
+    ]
+  },
+  4:{
+    emoji:"🌱", color:"#9dd9b8", bg:"linear-gradient(135deg,#1f4d35,#5da37a)",
+    title:"A Raiz — Intestino, Microbioma e Eixo Intestino-Cérebro",
+    intro:`O intestino é conhecido como o "segundo cérebro". Ele produz neurotransmissores como a serotonina, que regulam humor, sono e saciedade. A saúde do intestino está intimamente ligada ao microbioma.\n\nQuando há desequilíbrio nesse microbioma — chamado disbiose — ocorre maior inflamação, retenção de líquidos, digestão lenta e até maior acúmulo de gordura abdominal.\n\nO objetivo de hoje é nutrir e equilibrar o microbioma de forma prática e acessível.`,
+    sections:[
+      {title:"🌱 O que é o microbioma e por que importa?",content:`O microbioma intestinal é composto por trilhões de microrganismos que desempenham papel fundamental em:\n\n• DIGESTÃO E ABSORÇÃO: fibras viram ácidos graxos de cadeia curta (SCFAs), que contribuem para saciedade e regulam inflamação.\n• PRODUÇÃO DE NEUROTRANSMISSORES: serotonina e GABA influenciam humor, estresse e comportamento alimentar.\n• COMUNICAÇÃO COM O CÉREBRO via nervo vago — o gut-brain axis.`},
+      {title:"🍽️ Estratégias para alimentar o microbioma",content:`1. FIBRA EM TODAS AS REFEIÇÕES\nAveia, feijão, lentilha, brócolis, cenoura, batata doce, banana e maçã.\n\n2. PREBIÓTICOS NATURAIS\nBanana verde, alho, cebola, aveia, raiz de chicória.\n\n3. PROBIÓTICOS ACESSÍVEIS\nIogurte natural, kefir caseiro ou coalhada.\n\n4. RESPIRAÇÃO DIAFRAGMÁTICA\nEstimula o nervo vago — principal conexão entre intestino e cérebro.`},
+    ],
+    recipes:[
+      {e:"🥣",name:"Café Prebiótico — Aveia com Banana e Chia",ing:["½ xícara de aveia","1 banana (verde-madura)","1 colher de chia","Água ou leite simples"],how:["Misture tudo em um recipiente.","Mexa e coma."],sci:"Prebióticos da aveia e banana alimentam Bifidobacterium e Lactobacillus; chia adiciona fibra e ômega-3."},
+      {e:"🍵",name:"Chá Calmante Intestinal — Camomila com Erva-Doce",ing:["1 col. chá de camomila","1 col. chá de erva-doce","200ml de água quente"],how:["Infusione 5 min. Tome à tarde."],sci:"Camomila + erva-doce reduzem gases, relaxam o intestino e apoiam o eixo intestino-cérebro via nervo vago."},
+    ],
+    refs:[
+      {l:"Microbiota intestinal e obesidade — Nature Reviews",u:"https://www.nature.com/articles/s41574-022-00794-0"},
+      {l:"Eixo microbiota-intestino-cérebro (NIH/PMC)",u:"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9102524/"},
+    ]
+  },
+  5:{
+    emoji:"🛡️", color:"#c9a4e8", bg:"linear-gradient(135deg,#3d2363,#7c5cb0)",
+    title:"O Escudo — Quebrando o Ciclo Cortisol-Compulsão",
+    intro:`Você já teve aquele dia em que estava indo bem, de verdade — e aí chegou às 16h e deu uma vontade absurda de comer chocolate?\n\nA resposta não está na sua força de vontade. Está no seu cortisol.\n\nO cortisol é o hormônio do estresse — quando ele sobe, o cérebro pede energia rápida. Não porque você é fraca. Porque você é humana, e seu sistema nervoso está em modo de sobrevivência.\n\nHoje, vamos interromper esse ciclo. De forma prática, segura e gentil com você mesma. 🛡️`,
+    sections:[
+      {title:"🧠 O que o Cortisol faz com seu Metabolismo",content:`Quando o cortisol permanece cronicamente elevado:\n\n• RESISTÊNCIA À INSULINA AUMENTA → favorece acúmulo de gordura abdominal\n• LEPTINA (saciedade) CAI → você não percebe quando está satisfeita\n• GRELINA (fome) SOBE → intensifica apetite por açúcar e gordura\n• GORDURA VISCERAL ACUMULA → abdômen concentra receptores de cortisol\n• COMPULSÃO EMOCIONAL → sistema de recompensa ativado`},
+      {title:"🛡️ A Mega Estratégia: Eixo Estresse-Fome",content:`FRENTE 1 — RESPIRAÇÃO E SISTEMA NERVOSO\n\nTécnica 4-7-8 (3x ao dia):\n• Inspire pelo nariz contando até 4\n• Segure contando até 7\n• Expire lentamente pela boca contando até 8\n• Repita 4 ciclos\n\nGrounding nos momentos de compulsão:\nAntes de abrir a geladeira — 5 coisas que você vê, 3 que pode tocar, 1 que pode cheirar.\n\nFRENTE 2 — ALIMENTAÇÃO ANTI-CORTISOL\n• Magnésio: espinafre, couve, feijão preto, aveia, banana, amendoim\n• Vitamina C: acerola, kiwi, laranja, caju, pimentão\n• Proteína no café: estabiliza glicemia e reduz picos de cortisol\n• Máximo 2 cafés/dia\n\nFRENTE 3 — MOVIMENTO ANTI-ESTRESSE\n• Caminhada de 15–20 min ao ar livre\n• Alongamento suave de 10 min antes de dormir`},
+    ],
+    recipes:[
+      {e:"🥚",name:"Omelete de Espinafre + Queijo + Banana",ing:["2 ovos","1 punhado de espinafre fresco","1 col. sopa de queijo branco ou ricota","½ banana","Azeite, sal"],how:["Bata os ovos com sal.","Refogue o espinafre 1 min.","Despeje os ovos e queijo, tampe 2 min.","Sirva com a banana."],sci:"Ovos = proteína completa. Espinafre = magnésio que modula eixo do estresse. Banana = vitamina B6, precursora da serotonina."},
+      {e:"🫖",name:"Chá Anti-Estresse da Tarde",ing:["1 col. chá de camomila","½ col. chá de canela","200ml de água quente","Mel opcional"],how:["Misture em água quente. Infusione 5 min coberto.","Beba sem telas."],sci:"Camomila: ação ansiolítica leve documentada. Canela: estabiliza glicemia, reduz picos da fome emocional."},
+    ],
+    refs:[
+      {l:"Cortisol, estresse e comportamento alimentar (Obesity Reviews)",u:"https://pubmed.ncbi.nlm.nih.gov/30047053/"},
+      {l:"Respiração lenta e cortisol salivar",u:"https://pubmed.ncbi.nlm.nih.gov/30356789/"},
+    ]
+  },
+  6:{
+    emoji:"🌙", color:"#a4b4e8", bg:"linear-gradient(135deg,#1f2255,#5862a8)",
+    title:"O Reboot — O Sono que Emagrece",
+    intro:`Você sabia que uma noite de sono ruim pode fazer com que você coma, em média, 300 calorias a mais no dia seguinte — sem perceber? 😳\n\nNão é falta de força de vontade. É bioquímica pura.\n\nQuando o sono é fragmentado, leptina (saciedade) cai e grelina (fome) sobe. O corpo chega ao dia seguinte com fome desproporcional, cansaço que pede açúcar e metabolismo reduzido.\n\nÉ durante o sono profundo que o GH (hormônio de crescimento) é liberado em maior quantidade — principal responsável pela queima de gordura.\n\nHoje, você vai transformar o seu sono em uma das ferramentas mais poderosas do protocolo. 🌙✨`,
+    sections:[
+      {title:"💤 O que acontece enquanto você dorme?",content:`O sono é um processo ativo e profundamente metabólico:\n\n• SONO PROFUNDO (NREM 3): pico de GH, reparação celular, regulação da insulina, queima de gordura\n• SONO REM: processamento emocional, redução de cortisol residual\n\nEstudo de Chicago: participantes em dieta que dormiam 5,5h/noite perderam 55% MENOS gordura e 60% MAIS massa muscular do que quem dormia 8,5h — comendo as mesmas calorias.`},
+      {title:"🌙 Protocolo do Sono Metabólico",content:`1️⃣ A JANELA DE LUZ\n• 20h–20h30: dimeie as luzes\n• A partir das 21h: sem telas com luz branca/azul\n• Manhã: nos primeiros 30 min após acordar, exponha-se à luz natural\n\n2️⃣ RITUAL DE DESACELERAÇÃO (a partir das 21h)\n• Chá calmante morno\n• Banho morno (queda de temperatura sinaliza ao cérebro)\n• Leitura física ou 3 gratidões escritas\n• 5 min de alongamento ou respiração 4-7-8\n\n3️⃣ ALIMENTAÇÃO PRÓ-SONO\nConsuma: carboidratos complexos moderados + triptofano (frango, ovo, iogurte, banana, amendoim) + magnésio.\nEvite: cafeína após 14h, álcool, refeição pesada nas 2h antes, açúcar à noite.`},
+    ],
+    recipes:[
+      {e:"🍌",name:"Lanche Pró-Sono — Iogurte com Banana e Amendoim",ing:["1 pote iogurte natural integral","½ banana madura","1 col. sopa amendoim torrado sem sal","Canela"],how:["Misture tudo numa tigela.","Coma entre 15h e 16h."],sci:"Triptofano do iogurte e banana = precursor de serotonina → melatonina. Amendoim = magnésio para relaxamento."},
+      {e:"🍵",name:"Chá do Ritual — Melissa, Maracujá e Erva-Doce",ing:["1 col. chá melissa","1 col. chá erva-doce","1 sachê de maracujá","200ml água quente"],how:["Infusione 5–8 min coberto. Coe e beba morno, sem telas."],sci:"Melissa: ação sedativa leve comprovada. Maracujá: flavonoides com ação calmante."},
+    ],
+    refs:[
+      {l:"Sono e perda de gordura (Annals of Internal Medicine)",u:"https://pubmed.ncbi.nlm.nih.gov/20921542/"},
+      {l:"Leptina, grelina e privação de sono (PLoS Medicine)",u:"https://pubmed.ncbi.nlm.nih.gov/15602591/"},
+    ]
+  },
+  7:{
+    emoji:"💪", color:"#f4c896", bg:"linear-gradient(135deg,#5e3614,#a86a2c)",
+    title:"A Virada — Proteína, NEAT e o Metabolismo que Não Para",
+    intro:`Chegamos ao último dia. E ele foi guardado com cuidado — porque a estratégia de hoje é a que sustenta tudo o que você construiu.\n\nNão é a mais complexa. Mas é a mais poderosa a longo prazo.\n\nA resposta está em dois conceitos simples que, juntos, podem transformar seu metabolismo de forma permanente: proteína e NEAT.\n\nEsse é o seu ponto de virada. 🔑`,
+    sections:[
+      {title:"🥩 Por que a Proteína é a Rainha do Emagrecimento",content:`• EFEITO TERMOGÊNICO: 25–30% das calorias da proteína são gastas na própria digestão.\n\n• SACIEDADE SUPERIOR: estimula PYY e GLP-1 e reduz grelina.\n\n• PRESERVAÇÃO MUSCULAR: massa muscular é metabolicamente ativa — queima calorias em repouso.\n\nMETA PRÁTICA:\n• Café da manhã: 20–25g (3 ovos + iogurte)\n• Almoço: 25–35g (frango, sardinha, feijão + ovo)\n• Jantar: 20–25g (omelete, peixe, leguminosas)\n\nFONTES ACESSÍVEIS: Ovos (6–7g/un), frango (25g/100g), sardinha (21g/100g), iogurte (5–6g/100g), feijão (7–8g/100g), amendoim (25g/100g).`},
+      {title:"🚶 NEAT — pode valer mais que sua academia",content:`NEAT (Non-Exercise Activity Thermogenesis) = todo gasto calórico fora do exercício estruturado: caminhar, subir escadas, cozinhar, gesticular, ficar de pé.\n\nNEAT INTENCIONAL — escolha 6 micro-ações:\n• ☀️ Caminhar até um ponto mais distante\n• 🪜 Subir escadas em vez de elevador\n• 🧹 Limpar um cômodo com disposição\n• 🍳 Ficar de pé enquanto cozinha\n• 💃 Dançar 5 minutos — de verdade\n• 🏃 Caminhada pós-jantar de 10–15 min\n\nREFLEXÃO DOS 7 DIAS (10 min):\n• O que mudou no meu corpo nesses 7 dias?\n• O que aprendi sobre mim mesma?\n• Qual hábito quero manter?`},
+    ],
+    recipes:[
+      {e:"🥚",name:"Panqueca de Banana com Ovo — Café Proteico",ing:["2 ovos","1 banana madura amassada","2 col. sopa de aveia","1 col. sopa de amendoim","Canela","Azeite"],how:["Misture ovos, banana e aveia.","Cozinhe em frigideira untada.","Vire quando dourar. Sirva com amendoim."],sci:"Proteína completa + carboidrato lento + gordura boa = saciedade prolongada e termogênese ativada."},
+      {e:"🐟",name:"Bowl de Sardinha — Almoço Anti-inflamatório",ing:["1 lata sardinha em azeite","½ xícara arroz integral","1 tomate picado","Rúcula","Azeite, limão, orégano"],how:["Monte: arroz, rúcula, tomate.","Sardinha por cima. Finalize com azeite e limão."],sci:"Sardinha = proteína completa + ômega-3 anti-inflamatório + sensibilidade à insulina."},
+    ],
+    refs:[
+      {l:"Proteína e saciedade (Am. J. Clin. Nutr.)",u:"https://pubmed.ncbi.nlm.nih.gov/16002798/"},
+      {l:"NEAT e gasto calórico (Mayo Clinic)",u:"https://pubmed.ncbi.nlm.nih.gov/11836452/"},
+    ]
+  }
+};
+
+// ── MISSÕES ───────────────────────────────────────────────────
+const MISSIONS = {
+  1:[{id:"1a",t:"💧 Água morna com limão ao acordar",xp:30},{id:"1b",t:"⏰ Janela alimentar de 10h",xp:50},{id:"1c",t:"🥚 Café com proteína + fibra + gordura boa",xp:40},{id:"1d",t:"🥗 Almoço equilibrado (metade vegetal)",xp:40},{id:"1e",t:"🌙 Respiração 4-4-8 antes de dormir",xp:30},{id:"1f",t:"📸 Foto dos pratos + calça de referência",xp:70}],
+  2:[{id:"2a",t:"💧 Ativação linfática matinal (10 min)",xp:50},{id:"2b",t:"🚶 Caminhada leve pós-almoço",xp:40},{id:"2c",t:"🥤 Suco verde da drenagem",xp:30},{id:"2d",t:"🦵 Pernas na parede antes de dormir",xp:40},{id:"2e",t:"💆 Automassagem linfática suave",xp:40},{id:"2f",t:"📸 Foto da área inchada",xp:70}],
+  3:[{id:"3a",t:"🚿 Banho com ciclos frio/morno (3x)",xp:50},{id:"3b",t:"☕ Chá Termogênico Dourado",xp:30},{id:"3c",t:"💪 3 séries de micro-movimento",xp:50},{id:"3d",t:"🌶️ Especiarias termogênicas",xp:30},{id:"3e",t:"⏰ Manter janela de 10h",xp:40},{id:"3f",t:"📸 Foto com a calça de referência",xp:70}],
+  4:[{id:"4a",t:"🥣 Aveia com banana e chia",xp:40},{id:"4b",t:"🫙 Fermentado no almoço ou jantar",xp:50},{id:"4c",t:"🧘 5 min respiração diafragmática",xp:30},{id:"4d",t:"🍵 Chá calmante intestinal",xp:30},{id:"4e",t:"🥦 3 refeições com fibra",xp:40},{id:"4f",t:"📸 Foto dos pratos e da barriga",xp:70}],
+  5:[{id:"5a",t:"🌬️ Respiração 4-7-8 em 3 momentos",xp:50},{id:"5b",t:"🧘 Pausa de 2 min antes de cada refeição",xp:40},{id:"5c",t:"🧠 Grounding nos momentos de compulsão",xp:60},{id:"5d",t:"🚶 Caminhada 15–20 min ao ar livre",xp:40},{id:"5e",t:"🌙 Alongamento antes de dormir",xp:30},{id:"5f",t:"📸 Foto com a calça — compare com Dia 1!",xp:80}],
+  6:[{id:"6a",t:"☀️ Luz natural nos primeiros 30 min",xp:40},{id:"6b",t:"☕✗ Sem cafeína após 14h",xp:30},{id:"6c",t:"🍽️ Jantar leve com triptofano",xp:40},{id:"6d",t:"🌙 Ritual noturno completo",xp:60},{id:"6e",t:"📵 Celular fora do quarto",xp:50},{id:"6f",t:"📸 Foto pela manhã ao acordar!",xp:70}],
+  7:[{id:"7a",t:"💪 20–25g de proteína em CADA refeição",xp:60},{id:"7b",t:"🚶 6+ micro-ações de NEAT",xp:50},{id:"7c",t:"💧 Ativação linfática matinal",xp:40},{id:"7d",t:"✍️ Escrever reflexão dos 7 dias",xp:70},{id:"7e",t:"🌙 Ritual do sono",xp:40},{id:"7f",t:"🎉📸 Foto FINAL + post na comunidade!",xp:100}],
+  extra:[{id:"e1",t:"💧 Beber 2L de água",xp:20},{id:"e2",t:"💬 Compartilhar na comunidade",xp:30},{id:"e3",t:"🥘 Meal prep antecipado",xp:25},{id:"e4",t:"🌙 Dormir antes das 22h30",xp:25},{id:"e5",t:"✍️ 10 min de journaling",xp:20},{id:"e6",t:"👭 Convidar uma amiga",xp:35}]
+};
+
+// ── PROTOCOLOS PREMIUM ────────────────────────────────────────
+const PROTOCOLS_SHOP = [
+  {id:"p1",emoji:"🌙",color:"#3d2363",colorAccent:"#c9a4e8",name:"SONO DE PEDRA",tag:"21 Dias",tagline:"Durma profundo. Acorde transformada.",cover_copy:"Enquanto você dorme, seu corpo queima gordura, reseta hormônios e reconstrói energia. Mas só se o sono for real.",cta:"Quero Dormir Profundo",price:"R$ 97",full_copy:`VOCÊ DORME. MAS NÃO DESCANSA.\n\nO PROTOCOLO SONO DE PEDRA é um programa de 21 dias que reprograma o seu ciclo circadiano, equilibra os hormônios do sono e ativa a queima de gordura que só acontece durante o sono profundo.\n\n🌙 O QUE VOCÊ VAI RECEBER:\n• Programa completo de 21 dias com estratégias diárias\n• Protocolo de alimentação noturna pró-sono\n• 21 chás noturnos com receitas e explicações\n• Rastreador de qualidade do sono`,badges:["Baseado em evidências","Sem suplementos","Acesso vitalício"]},
+  {id:"p2",emoji:"👗",color:"#5d2c44",colorAccent:"#f0a8c4",name:"CALÇA LARGA 21D",tag:"21 Dias · Intensivo",tagline:"21 dias. Uma calça. Uma virada de chave.",cover_copy:"Uma calça jeans. Tirada na segunda-feira. Devolvida 21 dias depois — diferente. Você também.",cta:"Quero a Calça Larga",price:"R$ 147",full_copy:`A CALÇA QUE NÃO FECHAVA.\n\nO CALÇA LARGA 21D é o protocolo mais completo de recomposição corporal — sem restringir calorias de forma agressiva, sem exercícios impossíveis, sem culpa.\n\n👗 O QUE VOCÊ VAI RECEBER:\n• Protocolo completo de 21 dias\n• Plano alimentar anti-inflamatório\n• Programa de ativação linfática progressiva\n• Estratégia de NEAT + movimento funcional\n• Comunidade exclusiva`,badges:["21 missões diárias","Sem academia","Resultados visíveis"]},
+  {id:"p3",emoji:"⚡",color:"#3a1f55",colorAccent:"#d4b4f5",name:"DOMÍNIO HORMONAL",tag:"30 Dias · Avançado",tagline:"Seus hormônios, suas regras.",cover_copy:"Cortisol alto. Insulina resistente. Estrogênio dominante. Leptina insensível. Seu corpo não está contra você.",cta:"Quero Dominar meus Hormônios",price:"R$ 197",full_copy:`SEUS HORMÔNIOS ESTÃO GRITANDO. VOCÊ ESTÁ INTERPRETANDO ERRADO.\n\nO DOMÍNIO HORMONAL é o protocolo mais avançado do ecossistema RESET — 30 dias para entender, identificar e equilibrar os principais hormônios femininos.\n\n⚡ O QUE VOCÊ VAI RECEBER:\n• Protocolo de 30 dias\n• Mapeamento do seu perfil hormonal\n• Plano alimentar adaptado às fases do ciclo\n• Protocolo de detox hepático\n• Comunidade premium`,badges:["30 dias completos","Foco no ciclo feminino","Suporte premium"]}
+];
+
+// ── POSTS INICIAIS DA COMUNIDADE ──────────────────────────────
+const INIT_POSTS = [
+  {id:1,user:"Ana Carolina",day:3,time:"2h",text:"Dia 3 concluído! 🔥 O banho frio foi um choque mas amei a sensação depois! Minha barriga já está visivelmente menos inchada!",likes:{"❤️":14,"🔥":9,"💪":16},comments:[{u:"Mariana",t:"Eu também! Diferença enorme! 💧"},{u:"Renata",t:"O chá termogênico é incrível 🫖"}],hasPhoto:true},
+  {id:2,user:"Priscila M.",day:1,time:"5h",text:"Primeira foto com a calça de referência! Estava com vergonha mas decidi registrar. Esse é meu ponto de partida. Volto em 7 dias! 💜📸",likes:{"❤️":38,"🌟":24,"💜":20},comments:[{u:"Carla",t:"Que coragem linda! ✨"},{u:"Ju Lima",t:"Atitude já é metade do caminho! 💪"}],hasPhoto:true},
+  {id:3,user:"Fernanda O.",day:5,time:"1d",text:"Dia 5 foi surreal. Usei o grounding pela primeira vez quando quase comi o pacote inteiro de biscoito e FUNCIONOU 🤯 Técnica simples, poder enorme.",likes:{"❤️":29,"🧠":20,"🔥":15},comments:[{u:"Beth",t:"Grounding mudou minha vida!"},{u:"Tati",t:"Orgulho de você! ❤️"}],hasPhoto:false},
+  {id:4,user:"Luciana F.",day:7,time:"2d",text:"🎉 CONCLUÍ O RESET 7D! A calça que estava apertada agora fecha com folga. Não passei fome nenhuma vez. Obrigada a todas! 💜✨",likes:{"❤️":72,"🎉":50,"🔥":41,"💜":55},comments:[{u:"Carol",t:"Parabéns! Inspiração!"},{u:"Gi",t:"Que resultado lindo!! 🌟"},{u:"Dani",t:"Vou começar amanhã! 💪"}],hasPhoto:true}
+];
+
+// ── BANCO LOCAL ───────────────────────────────────────────────
+const DB = {
+  users:()=> JSON.parse(localStorage.getItem("r7d_users")||"[]"),
+  save:(u)=> localStorage.setItem("r7d_users", JSON.stringify(u)),
+  session:()=> JSON.parse(sessionStorage.getItem("r7d_user")||"null"),
+  setSession:(u)=> sessionStorage.setItem("r7d_user", JSON.stringify(u)),
+  clearSession:()=> { sessionStorage.removeItem("r7d_user"); sessionStorage.removeItem("r7d_token"); },
+  xp:(email)=> JSON.parse(localStorage.getItem(`r7d_xp_${email}`)||"0"),
+  saveXp:(email,v)=> localStorage.setItem(`r7d_xp_${email}`, JSON.stringify(v)),
+  missions:(email)=> JSON.parse(localStorage.getItem(`r7d_miss_${email}`)||"{}"),
+  saveMissions:(email,v)=> localStorage.setItem(`r7d_miss_${email}`, JSON.stringify(v)),
+  currentDay:(email)=> JSON.parse(localStorage.getItem(`r7d_day_${email}`)||"1"),
+  saveCurrentDay:(email,v)=> localStorage.setItem(`r7d_day_${email}`, JSON.stringify(v)),
+};
+
+function getAuthHeader() {
+  const t = sessionStorage.getItem("r7d_token");
+  return t ? { "Authorization": "Bearer " + t } : {};
+}
+
+// ── UTIL ───────────────────────────────────────────────────────
+function hashPassword(password) {
+  // Hash simples para demo (não use em produção)
+  let hash = 0;
+  for (let i = 0; i < password.length; i++) {
+    const char = password.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash.toString();
+}
+
+// ── API RESEND ─────────────────────────────────────────────────
+async function sendRecoveryEmail(toEmail) {
+  let res;
+  try {
+    res = await fetch(`${window.BACKEND_URL}/api/send-recovery-email`,{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({email:toEmail}),
+    });
+  } catch { throw new Error("BACKEND_OFFLINE"); }
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error||"SEND_FAILED");
+  return data;
+}
+
+function getTokenFromURL() {
+  const raw = new URLSearchParams(window.location.search).get("reset");
+  if(!raw) return null;
+  return { token: raw };
+}
+
+// ── COMPONENTES UTILITÁRIOS ───────────────────────────────────
+function Spinner() { return <span className="spinner"/>; }
+
+function ErrMsg({msg,th}) {
+  const c = th||T;
+  if(!msg) return null;
+  return <p style={{fontSize:"12px",color:c.primary,marginTop:"6px",display:"flex",alignItems:"center",gap:"5px"}}>⚠️ {msg}</p>;
+}
+
+function PassBar({pw}) {
+  if(!pw) return null;
+  const score=[pw.length>=8,/[A-Z]/.test(pw),/[0-9]/.test(pw),/[^A-Za-z0-9]/.test(pw)].filter(Boolean).length;
+  const s=score<=1?{p:25,l:"Muito fraca",c:"#ef4444"}:score===2?{p:50,l:"Razoável",c:T.accent}:score===3?{p:75,l:"Boa",c:"#22c55e"}:{p:100,l:"Forte 💪",c:T.green};
+  return <div style={{marginTop:"8px"}}><div className="pass-bar-track"><div className="pass-bar" style={{width:`${s.p}%`,background:s.c}}/></div><p style={{fontSize:"11px",color:s.c,fontWeight:"700",marginTop:"4px"}}>Senha {s.l}</p></div>;
+}
+
+function Label({children,th}) {
+  const c = th||T;
+  return <label style={{display:"block",fontSize:"11px",fontWeight:"700",letterSpacing:"0.5px",color:c.text2,marginBottom:"7px"}}>{children}</label>;
+}
+
+// ── AV / XPBADGE / SECTIONCARD ────────────────────────────────
+function Av({name, size=38, color="#d6628e"}) {
+  const ini = (name||"U").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+  return <div style={{width:size,height:size,borderRadius:"50%",background:`linear-gradient(135deg,${color},#f0a8c4)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:size*0.35,fontWeight:800,color:"white",flexShrink:0}}>{ini}</div>;
+}
+
+function XPBadge({xp, th}) {
+  const lvl = Math.floor(xp/200)+1;
+  const names=["Iniciante","Determinada","Focada","Guerreira","Poderosa","Transformada","Lendária"];
+  return <div style={{display:"flex",alignItems:"center",gap:7,background:th.accentL,border:"1px solid rgba(244,200,150,.3)",borderRadius:20,padding:"5px 13px"}}>
+    <span style={{fontSize:14}}>⚡</span>
+    <div><div style={{fontSize:11,color:th.accent,fontWeight:700}}>{xp} XP</div><div style={{fontSize:9,color:th.text3}}>Nv.{lvl} · {names[Math.min(lvl-1,6)]}</div></div>
+  </div>;
+}
+
+function SectionCard({title, children, th, accent}) {
+  const [open,setOpen]=useState(false);
+  return <div style={{borderRadius:16,marginBottom:10,overflow:"hidden",border:`1px solid ${th.border}`,background:th.card}}>
+    <div onClick={()=>setOpen(!open)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 16px",cursor:"pointer"}}>
+      <span style={{fontSize:13,fontWeight:700,color:th.text}}>{title}</span>
+      <span style={{fontSize:18,color:accent||th.primary,transform:open?"rotate(180deg)":"none",transition:"transform .2s"}}>⌄</span>
+    </div>
+    {open && <div style={{padding:"0 16px 16px",fontSize:12.5,color:th.text,lineHeight:1.75,whiteSpace:"pre-wrap"}}>{children}</div>}
+  </div>;
+}
+
+// ── QUIZ ──────────────────────────────────────────────────────
+function QuizScreen({onDone, th}) {
+  const [step,setStep]=useState(0);
+  const [answers,setAnswers]=useState([]);
+  const [showResult,setShowResult]=useState(false);
+  const choose=(opt)=>{
+    setAnswers(a=>[...a,opt]);
+    if(step<QUIZ.length-1){setStep(step+1);}else{setShowResult(true);}
+  };
+  const chartData=[{name:"Inchaço",pct:67},{name:"Energia",pct:78},{name:"Compulsão",pct:54},{name:"Peso",pct:71},{name:"Hormônios",pct:61}];
+  if(showResult) return (
+    <div style={{flex:1,overflowY:"auto",padding:"24px 20px 40px",display:"flex",flexDirection:"column",gap:16,background:th.bg}}>
+      <div className="slide-up" style={{textAlign:"center"}}>
+        <div style={{fontSize:64,marginBottom:8}}>👩‍⚕️</div>
+        <div className="serif" style={{fontSize:28,fontWeight:600,color:th.primary,marginBottom:6}}>Sua Análise está Pronta!</div>
+        <div style={{fontSize:13,color:th.text3,lineHeight:1.6}}>Baseado nas suas respostas, identificamos seu perfil.</div>
+      </div>
+      <div style={{borderRadius:18,padding:18,background:th.primaryL,border:`1px solid ${th.border2}`}}>
+        <div style={{fontSize:13,fontWeight:700,color:th.primary,marginBottom:10}}>📊 Comparação com outras mulheres</div>
+        {ResponsiveContainer ? (
+          <ResponsiveContainer width="100%" height={140}>
+            <BarChart data={chartData} margin={{top:0,right:0,bottom:0,left:-20}}>
+              <XAxis dataKey="name" tick={{fill:th.text3,fontSize:10}} axisLine={false} tickLine={false}/>
+              <YAxis tick={{fill:th.text3,fontSize:10}} axisLine={false} tickLine={false} domain={[0,100]}/>
+              <Tooltip contentStyle={{background:th.cardSolid,border:`1px solid ${th.border}`,borderRadius:10,color:th.text,fontSize:11}}/>
+              <Bar dataKey="pct" fill={th.primary} radius={[4,4,0,0]}/>
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div style={{height:140,display:"flex",alignItems:"center",justifyContent:"center",opacity:.5}}>
+            {chartData.map(d=>(
+              <div key={d.name} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,flex:1}}>
+                <div style={{width:24,background:th.primary,borderRadius:4,height:`${d.pct*1.2}px`}}/>
+                <div style={{fontSize:9,color:th.text3}}>{d.name}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div style={{borderRadius:18,padding:20,background:th.greenL,border:"1px solid rgba(157,217,184,.3)"}}>
+        <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+          <div style={{fontSize:40,flexShrink:0}}>👩‍⚕️</div>
+          <div>
+            <div style={{fontSize:13,fontWeight:800,color:th.green,marginBottom:4}}>Olá! Sou a Dra. Ana Paula 💚</div>
+            <div style={{fontSize:12,color:th.text,lineHeight:1.7}}>
+              <strong>Parabéns por dar esse passo!</strong> Baseado no seu perfil, você se encaixa perfeitamente no <strong>RESET 7D</strong>. Você faz parte dos <strong>73% das mulheres</strong> que lutam contra os mesmos desafios.
+            </div>
+            <div style={{marginTop:10,fontSize:12,color:th.text,lineHeight:1.7}}>A boa notícia? Seu corpo não está quebrado. Ele está pedindo direção. 🌟</div>
+          </div>
+        </div>
+      </div>
+      <div style={{borderRadius:16,padding:14,background:th.primaryL,border:`2px solid ${th.border2}`,textAlign:"center"}}>
+        <div style={{fontSize:28,fontWeight:900,color:th.primary}}>73%</div>
+        <div style={{fontSize:12,color:th.text}}>das mulheres com seu perfil percebem diferença nos primeiros 3 dias.</div>
+      </div>
+      <button className="btn-p" onClick={onDone}>Começar o RESET 7D agora →</button>
+    </div>
+  );
+  const q=QUIZ[step];
+  return (
+    <div style={{flex:1,display:"flex",flexDirection:"column",padding:"24px 20px",gap:16,background:th.bg}}>
+      <div>
+        <div style={{display:"flex",gap:6,marginBottom:20}}>
+          {QUIZ.map((_,i)=><div key={i} style={{flex:1,height:4,borderRadius:2,background:i<=step?th.primary:th.border,transition:"background .3s"}}/>)}
+        </div>
+        <div style={{fontSize:11,color:th.text3,marginBottom:6}}>Pergunta {step+1} de {QUIZ.length}</div>
+        <div className="serif" style={{fontSize:24,fontWeight:600,color:th.text,lineHeight:1.3,marginBottom:4}}>{q.q}</div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:10,flex:1,justifyContent:"center"}}>
+        {q.opts.map((o,i)=>(
+          <div key={i} onClick={()=>choose(o)} className="hover-scale" style={{padding:"16px 18px",borderRadius:15,background:th.card,border:`1.5px solid ${th.border}`,cursor:"pointer",fontSize:13,color:th.text,lineHeight:1.4}}>
+            <span style={{display:"inline-block",width:24,height:24,borderRadius:"50%",background:th.primaryL,border:`1.5px solid ${th.border2}`,textAlign:"center",lineHeight:"22px",fontSize:11,fontWeight:700,color:th.primary,marginRight:10}}>
+              {["A","B","C","D"][i]}
+            </span>
+            {o}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── TELA: REGISTER ────────────────────────────────────────────
+function RegisterScreen({onBack, onSuccess}) {
+  const [f,setF] = useState({name:"",email:"",pw:"",pw2:""});
+  const [err,setErr] = useState({});
+  const [loading,setLoading] = useState(false);
+  const [showPw,setShowPw] = useState(false);
+
+  const upd = (k,v) => { setF(p=>({...p,[k]:v})); setErr(p=>({...p,[k]:""})); };
+
+  const submit = async () => {
+    const e={};
+    if(!f.name.trim()) e.name="Digite seu nome.";
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email="E-mail inválido.";
+    if(f.pw.length<6) e.pw="Mínimo 6 caracteres.";
+    if(f.pw!==f.pw2) e.pw2="Senhas não conferem.";
+    setErr(e);
+    if(Object.keys(e).length) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch(`${window.BACKEND_URL}/api/register`,{
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({name:f.name.trim(), email:f.email.toLowerCase(), password:f.pw}),
+      });
+      const data = await res.json();
+      if(!res.ok) { setErr({email: data.error==="EMAIL_EXISTS"?"E-mail já cadastrado.": data.message||"Erro ao criar conta."}); return; }
+      if(data.token) sessionStorage.setItem("r7d_token", data.token);
+      const newUser = {name:data.name||f.name.trim(), email:data.email||f.email.trim().toLowerCase()};
+      DB.setSession(newUser);
+      onSuccess(newUser);
+    } catch { setErr({email:"Não foi possível conectar ao servidor."}); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="fade" style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px 24px 80px"}}>
+      <div className="glass slide-up" style={{width:"100%",maxWidth:"400px",borderRadius:"26px",padding:"36px 28px"}}>
+        <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",color:T.text3,marginBottom:"20px",fontSize:"13px",fontFamily:"'Manrope',sans-serif",padding:0}}>← Voltar ao login</button>
+
+        <div style={{textAlign:"center",marginBottom:"28px"}}>
+          <div style={{fontSize:"48px",marginBottom:"10px"}}>🌱</div>
+          <h2 className="serif" style={{fontSize:"26px",color:T.text,marginBottom:"8px"}}>Criar Conta</h2>
+          <p style={{fontSize:"13px",color:T.text3}}>Comece sua transformação de 7 dias</p>
+        </div>
+
+        <div style={{marginBottom:"14px"}}>
+          <Label>SEU NOME</Label>
+          <input className={`inp${err.name?" err":""}`} placeholder="Como podemos te chamar?" value={f.name} onChange={e=>upd("name",e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/>
+          <ErrMsg msg={err.name}/>
+        </div>
+
+        <div style={{marginBottom:"14px"}}>
+          <Label>E-MAIL</Label>
+          <input className={`inp${err.email?" err":""}`} type="email" placeholder="seu@email.com" value={f.email} onChange={e=>upd("email",e.target.value)} autoComplete="email"/>
+          <ErrMsg msg={err.email}/>
+        </div>
+
+        <div style={{marginBottom:"14px"}}>
+          <Label>SENHA</Label>
+          <div className="inp-wrap">
+            <input className={`inp${err.pw?" err":""}`} type={showPw?"text":"password"} placeholder="Mínimo 6 caracteres" value={f.pw} onChange={e=>upd("pw",e.target.value)} style={{paddingRight:"44px"}} autoComplete="new-password"/>
+            <button className="eye-btn" type="button" onClick={()=>setShowPw(v=>!v)}>{showPw?"🙈":"👁️"}</button>
+          </div>
+          <PassBar pw={f.pw}/>
+          <ErrMsg msg={err.pw}/>
+        </div>
+
+        <div style={{marginBottom:"22px"}}>
+          <Label>CONFIRMAR SENHA</Label>
+          <input className={`inp${err.pw2?" err":""}`} type="password" placeholder="Repita a senha" value={f.pw2} onChange={e=>upd("pw2",e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} autoComplete="new-password"/>
+          <ErrMsg msg={err.pw2}/>
+        </div>
+
+        <button className="btn-p" onClick={submit} disabled={loading} style={{fontSize:"15px",padding:"14px"}}>
+          {loading ? <><Spinner/> <span style={{marginLeft:"8px"}}>Criando conta...</span></> : "Criar conta e começar →"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── TELA: LOGIN ───────────────────────────────────────────────
+function LoginScreen({onLogin, onRegister, onForgot}) {
+  const [email,setEmail] = useState("");
+  const [pw,setPw]       = useState("");
+  const [showPw,setShowPw] = useState(false);
+  const [loading,setLoading] = useState(false);
+  const [err,setErr] = useState("");
+  const [shake,setShake] = useState(false);
+
+  const triggerShake = () => { setShake(true); setTimeout(()=>setShake(false),400); };
+
+  const submit = async () => {
+    if(!email.trim()||!pw) { setErr("Preencha e-mail e senha."); triggerShake(); return; }
+    setLoading(true); setErr("");
+    try {
+      const res = await fetch(`${window.BACKEND_URL}/api/login`,{
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({email:email.trim().toLowerCase(), password:pw}),
+      });
+      const data = await res.json();
+      if(!res.ok) { setErr(data.message||"E-mail ou senha incorretos."); triggerShake(); return; }
+      if(data.token) sessionStorage.setItem("r7d_token", data.token);
+      const user = {name:data.name, email:data.email};
+      DB.setSession(user);
+      onLogin(user);
+    } catch { setErr("Não foi possível conectar ao servidor."); triggerShake(); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="fade" style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px 24px 60px"}}>
+      <div className={`glass slide-up${shake?" shake":""}`} style={{width:"100%",maxWidth:"400px",borderRadius:"26px",padding:"40px 28px"}}>
+        <div style={{textAlign:"center",marginBottom:"32px"}}>
+          <div style={{width:"64px",height:"64px",borderRadius:"20px",background:`linear-gradient(135deg,${T.primary},#fb7185)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"28px",margin:"0 auto 14px",boxShadow:`0 8px 24px ${T.primaryL}`}}>🔥</div>
+          <h1 className="serif grad-text" style={{fontSize:"32px",marginBottom:"6px"}}>Reset 7D</h1>
+          <p style={{fontSize:"14px",color:T.text3}}>Sua transformação começa aqui</p>
+        </div>
+
+        <div style={{marginBottom:"14px"}}>
+          <Label>E-MAIL</Label>
+          <input className="inp" type="email" placeholder="seu@email.com" value={email} onChange={e=>{setEmail(e.target.value);setErr("");}} autoComplete="email" style={{fontSize:"15px"}}/>
+        </div>
+
+        <div style={{marginBottom:"6px"}}>
+          <Label>SENHA</Label>
+          <div className="inp-wrap">
+            <input className="inp" type={showPw?"text":"password"} placeholder="Sua senha" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&submit()} style={{paddingRight:"44px",fontSize:"15px"}} autoComplete="current-password"/>
+            <button className="eye-btn" type="button" onClick={()=>setShowPw(v=>!v)}>{showPw?"🙈":"👁️"}</button>
+          </div>
+        </div>
+
+        <div style={{textAlign:"right",marginBottom:"18px"}}>
+          <button onClick={onForgot} style={{background:"none",border:"none",cursor:"pointer",color:T.primary,fontSize:"13px",fontWeight:"600",fontFamily:"'Manrope',sans-serif",padding:0,textDecoration:"underline"}}>
+            Esqueci minha senha
+          </button>
+        </div>
+
+        {err && <p style={{fontSize:"13px",color:T.primary,marginBottom:"12px",textAlign:"center"}}>⚠️ {err}</p>}
+
+        <button className="btn-p" onClick={submit} disabled={loading} style={{fontSize:"15px",padding:"14px",marginBottom:"16px"}}>
+          {loading ? <><Spinner/><span style={{marginLeft:"8px"}}>Entrando...</span></> : "Entrar →"}
+        </button>
+
+        <p style={{textAlign:"center",fontSize:"13px",color:T.text3}}>
+          Não tem conta?{" "}
+          <button onClick={onRegister} style={{background:"none",border:"none",cursor:"pointer",color:T.primary,fontWeight:"700",fontFamily:"'Manrope',sans-serif",fontSize:"13px",padding:0}}>
+            Criar conta grátis
+          </button>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── RECUPERAÇÃO DE SENHA ──────────────────────────────────────
+function ForgotScreen({onBack}) {
+  const [step,setStep] = useState("email"); // email | sent | reset | success
+  const [email,setEmail] = useState("");
+  const [loading,setLoading] = useState(false);
+  const [err,setErr] = useState("");
+  const [pw,setPw] = useState(""); const [pw2,setPw2] = useState("");
+  const [resetToken,setResetToken] = useState("");
+
+  const sendEmail = async () => {
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr("E-mail inválido."); return; }
+    setLoading(true); setErr("");
+    try {
+      await sendRecoveryEmail(email.trim().toLowerCase());
+      setStep("sent");
+    } catch(e) {
+      setErr(e.message==="BACKEND_OFFLINE"?"Backend offline (rode npm start em backend/).":
+             e.message==="RESEND_NOT_CONFIGURED"?"Resend não configurado (backend/.env).":
+             "Falha ao enviar. Tente novamente.");
+    } finally { setLoading(false); }
+  };
+
+  const resetPw = async () => {
+    if(pw.length<6) { setErr("Mínimo 6 caracteres."); return; }
+    if(pw!==pw2) { setErr("Senhas não conferem."); return; }
+    setLoading(true); setErr("");
+    try {
+      const res = await fetch(`${window.BACKEND_URL}/api/reset-password`,{
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({token:resetToken, newPassword:pw}),
+      });
+      const data = await res.json();
+      if(!res.ok){
+        const msg = data.error==="TOKEN_EXPIRED"?"Link expirado. Solicite um novo.": data.message||"Erro ao redefinir senha.";
+        setErr(msg);
+        if(data.error==="TOKEN_EXPIRED"||data.error==="INVALID_TOKEN") setStep("email");
+        return;
+      }
+      window.history.replaceState({},"",window.location.pathname);
+      setStep("success");
+    } catch { setErr("Não foi possível conectar ao servidor."); }
+    finally { setLoading(false); }
+  };
+
+  // Token da URL (quando usuário clica no link do email)
+  useEffect(()=>{
+    const t = getTokenFromURL();
+    if(t){ setResetToken(t.token); setStep("reset"); window.history.replaceState({},"",window.location.pathname); }
+  },[]);
+
+  const cardStyle = {width:"100%",maxWidth:"400px",borderRadius:"26px",padding:"36px 28px"};
+
+  if(step==="sent") return (
+    <div className="fade" style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px"}}>
+      <div className="glass slide-up" style={{...cardStyle,textAlign:"center"}}>
+        <div style={{fontSize:"56px",marginBottom:"14px"}}>📬</div>
+        <h2 className="serif" style={{fontSize:"26px",color:T.text,marginBottom:"10px"}}>E-mail enviado!</h2>
+        <p style={{fontSize:"14px",color:T.text3,lineHeight:"1.65",marginBottom:"16px"}}>Link de recuperação enviado para:</p>
+        <div style={{background:T.primaryL,border:`1.5px solid ${T.border2}`,borderRadius:"12px",padding:"10px 18px",display:"inline-block",marginBottom:"24px"}}>
+          <span style={{fontSize:"14px",color:T.primary,fontWeight:"700"}}>{email}</span>
+        </div>
+        <p style={{fontSize:"12px",color:T.text3,marginBottom:"20px"}}>⏱️ O link expira em <strong>30 minutos</strong>. Verifique o spam.</p>
+        <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",color:T.text3,fontSize:"13px",textDecoration:"underline",fontFamily:"'Manrope',sans-serif"}}>← Voltar ao login</button>
+      </div>
+    </div>
+  );
+
+  if(step==="reset") return (
+    <div className="fade" style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px"}}>
+      <div className="glass slide-up" style={cardStyle}>
+        <div style={{textAlign:"center",marginBottom:"28px"}}>
+          <div style={{fontSize:"48px",marginBottom:"10px"}}>🔐</div>
+          <h2 className="serif" style={{fontSize:"26px",color:T.text,marginBottom:"8px"}}>Nova Senha</h2>
+          <p style={{fontSize:"13px",color:T.text3}}>Para: <strong style={{color:T.text2}}>{email}</strong></p>
+        </div>
+        <div style={{marginBottom:"14px"}}>
+          <Label>NOVA SENHA</Label>
+          <input className="inp" type="password" placeholder="Mínimo 6 caracteres" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} autoComplete="new-password"/>
+          <PassBar pw={pw}/>
+        </div>
+        <div style={{marginBottom:"22px"}}>
+          <Label>CONFIRMAR SENHA</Label>
+          <input className="inp" type="password" placeholder="Repita a senha" value={pw2} onChange={e=>{setPw2(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&resetPw()} autoComplete="new-password"/>
+        </div>
+        {err && <ErrMsg msg={err}/>}
+        <button className="btn-p" onClick={resetPw} style={{fontSize:"15px",padding:"14px",marginTop:"8px"}}>Salvar nova senha →</button>
+      </div>
+    </div>
+  );
+
+  if(step==="success") return (
+    <div className="fade" style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px"}}>
+      <div className="glass slide-up" style={{...cardStyle,textAlign:"center"}}>
+        <div className="check-circle">✓</div>
+        <h2 className="serif" style={{fontSize:"28px",color:T.text,marginBottom:"12px"}}>Senha alterada!</h2>
+        <p style={{fontSize:"14px",color:T.text3,lineHeight:"1.65",marginBottom:"28px"}}>Sua senha foi redefinida. Faça login com a nova senha.</p>
+        <button className="btn-p" onClick={onBack} style={{fontSize:"15px",padding:"14px"}}>Entrar agora →</button>
+      </div>
+    </div>
+  );
+
+  // step === "email"
+  return (
+    <div className="fade" style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px"}}>
+      <div className="glass slide-up" style={cardStyle}>
+        <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",color:T.text3,marginBottom:"22px",fontSize:"13px",fontFamily:"'Manrope',sans-serif",padding:0}}>← Voltar ao login</button>
+        <div style={{textAlign:"center",marginBottom:"28px"}}>
+          <div style={{fontSize:"48px",marginBottom:"10px"}}>🔑</div>
+          <h2 className="serif" style={{fontSize:"26px",color:T.text,marginBottom:"8px"}}>Recuperar Senha</h2>
+          <p style={{fontSize:"13px",color:T.text3,lineHeight:"1.6"}}>Digite o e-mail da sua conta. Enviaremos um link de recuperação.</p>
+        </div>
+        <div style={{marginBottom:"18px"}}>
+          <Label>E-MAIL CADASTRADO</Label>
+          <input className="inp" type="email" placeholder="seu@email.com" value={email} onChange={e=>{setEmail(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&sendEmail()} autoComplete="email" style={{fontSize:"15px"}}/>
+          <ErrMsg msg={err}/>
+        </div>
+        <button className="btn-p" onClick={sendEmail} disabled={loading} style={{fontSize:"15px",padding:"14px"}}>
+          {loading ? <><Spinner/><span style={{marginLeft:"8px"}}>Enviando...</span></> : "Enviar link de recuperação →"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── HAMBURGER MENU ────────────────────────────────────────────
+function HamburgerMenu({open, onClose, th, darkMode, setDarkMode, lang, setLang, onLogout, onChangePw, onNextLevel}) {
+  if(!open) return null;
+  return (
+    <div className="overlay fade" onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={{position:"absolute",top:0,left:0,width:"78%",maxWidth:300,height:"100%",background:th.bg2,display:"flex",flexDirection:"column",boxShadow:"4px 0 30px rgba(0,0,0,.3)"}}>
+        <div style={{padding:"52px 20px 20px",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,borderBottom:`1px solid ${th.border}`}}>
+          <div className="serif" style={{fontSize:26,fontWeight:600,color:th.primary}}>RESET 7D</div>
+          <div style={{fontSize:11,color:th.text3,marginTop:2}}>Menu Principal</div>
+        </div>
+        <div style={{flex:1,overflowY:"auto"}}>
+          <div onClick={()=>{onNextLevel();onClose();}} className="hover-scale" style={{display:"flex",flexDirection:"column",gap:4,padding:"18px 20px",cursor:"pointer",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,borderBottom:`1px solid ${th.border2}`,borderLeft:`4px solid ${th.primary}`}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:24}}>🚀</span>
+              <div><div style={{fontSize:15,fontWeight:800,color:th.primary}}>Next Level</div><div style={{fontSize:10,fontWeight:700,color:th.green}}>PROTOCOLOS PREMIUM</div></div>
+            </div>
+            <div style={{fontSize:11,color:th.text3,paddingLeft:34}}>Descubra como se transformar por completo!</div>
+          </div>
+          <div onClick={()=>setDarkMode(!darkMode)} style={{display:"flex",alignItems:"center",gap:14,padding:"15px 20px",cursor:"pointer",borderBottom:`1px solid ${th.border}`}}>
+            <span style={{fontSize:22,width:30,textAlign:"center"}}>{darkMode?"☀️":"🌙"}</span>
+            <div style={{flex:1}}><div style={{fontSize:14,fontWeight:700,color:th.text}}>Tema {darkMode?"Claro":"Escuro"}</div></div>
+            <div style={{width:40,height:22,borderRadius:11,background:darkMode?th.primary:th.border,position:"relative",transition:".3s"}}>
+              <div style={{position:"absolute",top:3,left:darkMode?20:3,width:16,height:16,borderRadius:"50%",background:"white",transition:".3s"}}/>
+            </div>
+          </div>
+          <div style={{padding:"15px 20px",borderBottom:`1px solid ${th.border}`}}>
+            <div style={{fontSize:13,fontWeight:700,color:th.text,marginBottom:8}}>🌍 Idioma</div>
+            <div style={{display:"flex",gap:8}}>
+              {[["pt","🇧🇷 PT"],["en","🇺🇸 EN"],["es","🇪🇸 ES"]].map(([l,label])=>(
+                <button key={l} onClick={()=>setLang(l)} style={{flex:1,padding:"7px",borderRadius:10,background:lang===l?th.primaryL:"transparent",border:`1.5px solid ${lang===l?th.primary:th.border}`,color:lang===l?th.primary:th.text3,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Manrope',sans-serif"}}>{label}</button>
+              ))}
+            </div>
+          </div>
+          <div onClick={()=>{onChangePw();onClose();}} className="hover-scale" style={{display:"flex",alignItems:"center",gap:14,padding:"15px 20px",cursor:"pointer",borderBottom:`1px solid ${th.border}`}}>
+            <span style={{fontSize:22,width:30,textAlign:"center"}}>🔐</span>
+            <div style={{flex:1}}><div style={{fontSize:14,fontWeight:700,color:th.text}}>Mudar Senha</div></div>
+            <span style={{fontSize:12,color:th.text3}}>›</span>
+          </div>
+          <div onClick={()=>{onLogout();onClose();}} className="hover-scale" style={{display:"flex",alignItems:"center",gap:14,padding:"15px 20px",cursor:"pointer",marginTop:8}}>
+            <span style={{fontSize:22,width:30,textAlign:"center"}}>🚪</span>
+            <div style={{fontSize:14,fontWeight:700,color:"#e57373"}}>Sair da Conta</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── NEXT LEVEL OVERLAY ────────────────────────────────────────
+function NextLevelOverlay({onClose, th}) {
+  const [detail,setDetail]=useState(null);
+  if(detail) return (
+    <div className="overlay fade" style={{display:"flex",flexDirection:"column"}}>
+      <div style={{flex:1,overflowY:"auto",background:th.bg}}>
+        <div style={{height:200,background:detail.color,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative"}}>
+          <button onClick={()=>setDetail(null)} style={{position:"absolute",top:16,left:16,background:"rgba(255,255,255,.18)",border:"none",borderRadius:20,color:"white",padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Manrope',sans-serif"}}>← Voltar</button>
+          <div style={{fontSize:52,marginBottom:8}}>{detail.emoji}</div>
+          <div className="serif" style={{fontSize:30,fontWeight:600,color:"white",textAlign:"center",padding:"0 20px"}}>{detail.name}</div>
+          <div style={{fontSize:12,color:"rgba(255,255,255,.8)",marginTop:4}}>{detail.tag}</div>
+        </div>
+        <div style={{padding:"24px 20px 100px"}}>
+          <div className="serif" style={{fontSize:20,fontWeight:600,color:th.text,marginBottom:6}}>{detail.tagline}</div>
+          <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+            {detail.badges.map(b=><span key={b} style={{fontSize:10,fontWeight:700,color:detail.colorAccent,background:`${detail.colorAccent}25`,border:`1px solid ${detail.colorAccent}50`,borderRadius:20,padding:"3px 10px"}}>{b}</span>)}
+          </div>
+          <div style={{fontSize:13,color:th.text,lineHeight:1.8,whiteSpace:"pre-wrap",marginBottom:24}}>{detail.full_copy}</div>
+          <div style={{borderRadius:18,padding:20,background:`${detail.colorAccent}18`,border:`2px solid ${detail.colorAccent}40`,textAlign:"center",marginBottom:16}}>
+            <div className="serif" style={{fontSize:32,fontWeight:700,color:detail.colorAccent,marginBottom:4}}>{detail.price}</div>
+            <div style={{fontSize:11,color:th.text3,marginBottom:14}}>Acesso completo + Comunidade exclusiva</div>
+            <button className="btn-p" style={{background:`linear-gradient(135deg,${detail.colorAccent},${detail.color})`,color:"white"}}>{detail.cta} →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+  return (
+    <div className="overlay fade" style={{display:"flex",flexDirection:"column"}}>
+      <div style={{flex:1,overflowY:"auto",background:th.bg}}>
+        <div style={{padding:"56px 20px 20px",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,borderBottom:`1px solid ${th.border}`,position:"relative"}}>
+          <button onClick={onClose} style={{position:"absolute",top:16,left:16,background:th.card,border:`1px solid ${th.border}`,borderRadius:20,color:th.text,padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Manrope',sans-serif"}}>✕ Fechar</button>
+          <div className="serif" style={{fontSize:30,fontWeight:600,color:th.primary,marginTop:24}}>🚀 Next Level</div>
+          <div style={{fontSize:13,color:th.text3,marginTop:4}}>Descubra como se transformar por completo</div>
+          <div style={{fontSize:12,color:th.text,marginTop:8,lineHeight:1.5}}>Você concluiu o RESET 7D. O que vem depois é ainda mais poderoso.</div>
+        </div>
+        <div style={{padding:"20px 16px 40px",display:"flex",flexDirection:"column",gap:16}}>
+          {PROTOCOLS_SHOP.map(p=>(
+            <div key={p.id} onClick={()=>setDetail(p)} className="hover-scale" style={{borderRadius:20,overflow:"hidden",boxShadow:th.shadow,cursor:"pointer"}}>
+              <div style={{height:140,background:p.color,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",padding:"0 20px",textAlign:"center"}}>
+                <span style={{fontSize:36,marginBottom:6}}>{p.emoji}</span>
+                <div className="serif" style={{fontSize:24,fontWeight:600,color:"white"}}>{p.name}</div>
+                <div style={{fontSize:10,color:"rgba(255,255,255,.7)",marginTop:2}}>{p.tag}</div>
+                <div style={{position:"absolute",top:12,right:12,background:"rgba(255,255,255,.2)",borderRadius:20,padding:"3px 10px",fontSize:10,fontWeight:700,color:"white"}}>🔒 Premium</div>
+              </div>
+              <div style={{padding:"16px 18px",background:th.card,borderTop:`3px solid ${p.colorAccent}`}}>
+                <div className="serif" style={{fontSize:17,fontWeight:600,color:th.text,marginBottom:4}}>{p.tagline}</div>
+                <div style={{fontSize:12,color:th.text3,marginBottom:12,lineHeight:1.5}}>{p.cover_copy}</div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div className="serif" style={{fontSize:22,fontWeight:700,color:p.colorAccent}}>{p.price}</div>
+                  <div style={{fontSize:12,fontWeight:700,color:p.colorAccent,background:`${p.colorAccent}20`,border:`1px solid ${p.colorAccent}50`,borderRadius:20,padding:"5px 14px"}}>{p.cta} →</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── CHANGE PW MODAL ───────────────────────────────────────────
+function ChangePwModal({onClose, user, th}) {
+  const [cur,setCur]=useState("");
+  const [nw,setNw]=useState("");
+  const [nw2,setNw2]=useState("");
+  const [err,setErr]=useState("");
+  const [ok,setOk]=useState("");
+
+  const [loading,setLoading]=useState(false);
+
+  const save=async()=>{
+    setErr(""); setOk("");
+    if(!cur||!nw||!nw2){setErr("Preencha todos os campos.");return;}
+    if(nw.length<6){setErr("Mínimo 6 caracteres.");return;}
+    if(nw!==nw2){setErr("Senhas não conferem.");return;}
+    setLoading(true);
+    try {
+      const res = await fetch(`${window.BACKEND_URL}/api/change-password`,{
+        method:"POST", headers:{"Content-Type":"application/json",...getAuthHeader()},
+        body: JSON.stringify({currentPassword:cur, newPassword:nw}),
+      });
+      const data = await res.json();
+      if(!res.ok){setErr(data.message||"Erro ao alterar senha.");return;}
+      setOk("Senha alterada com sucesso! ✅");
+      setTimeout(onClose,1500);
+    } catch { setErr("Não foi possível conectar ao servidor."); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="modal-wrap fade">
+      <div style={{background:th.bg2,borderRadius:22,padding:24,width:"100%",maxWidth:360}}>
+        <div className="serif" style={{fontSize:22,fontWeight:600,color:th.text,marginBottom:16}}>🔐 Mudar Senha</div>
+        {err && <div style={{background:"rgba(214,98,142,.13)",borderRadius:10,padding:"9px 12px",fontSize:12,color:th.primary,marginBottom:12}}>{err}</div>}
+        {ok && <div style={{background:th.greenL,borderRadius:10,padding:"9px 12px",fontSize:12,color:th.green,marginBottom:12}}>{ok}</div>}
+        <Label th={th}>Senha Atual</Label>
+        <input className="inp" type="password" placeholder="Sua senha atual" value={cur} onChange={e=>setCur(e.target.value)} style={{marginBottom:12}}/>
+        <Label th={th}>Nova Senha</Label>
+        <input className="inp" type="password" placeholder="Nova senha (mín. 6 caracteres)" value={nw} onChange={e=>setNw(e.target.value)} style={{marginBottom:12}}/>
+        <Label th={th}>Confirmar Nova Senha</Label>
+        <input className="inp" type="password" placeholder="Repita" value={nw2} onChange={e=>setNw2(e.target.value)} style={{marginBottom:16}}/>
+        <div style={{display:"flex",gap:10}}>
+          <button onClick={onClose} className="btn-s" style={{flex:1}}>Cancelar</button>
+          <button onClick={save} disabled={loading} className="btn-p" style={{flex:1}}>{loading?<Spinner/>:"Salvar"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── HOME TAB ──────────────────────────────────────────────────
+function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th}) {
+  const [tipIdx,setTipIdx]=useState(0);
+  const TIPS=[
+    {i:"🧠",t:"Compulsão às 16h?",b:"Seu cortisol está no pico. Antes de abrir a geladeira: respire fundo 4 vezes, pés no chão e beba água. Espere 10 minutos — a vontade passa."},
+    {i:"🌙",t:"Noite difícil de dormir?",b:"Desligue as telas 30 min antes. O chá de melissa + banho morno enviam o sinal certo. Luz azul bloqueia melatonina — é bioquímica."},
+    {i:"☀️",t:"Sem energia pela manhã?",b:"Exponha-se à luz natural nos primeiros 30 min. Isso ancora seu relógio biológico e eleva o cortisol saudável do amanhecer."},
+    {i:"💧",t:"Barriga inchada?",b:"Pode ser gás, não gordura! Mastigue devagar e tome o chá calmante. Sistema linfático: faça a ativação matinal!"},
+    {i:"🎯",t:"Fome fora de hora?",b:"Pergunte: é fome física ou emocional? Se emocional, o grounding resolve em 2 min. Se física, uma proteína resolve em 5."},
+  ];
+  const dayMissions=MISSIONS[currentDay]||[];
+  const dayDone=(completedMissions[currentDay]||[]).length;
+  const totalDone=Object.values(completedMissions).flat().length;
+  const totalAll=Object.values(MISSIONS).flat().length;
+  const pct=Math.round((totalDone/totalAll)*100);
+
+  return (
+    <div style={{padding:"16px 16px 100px",display:"flex",flexDirection:"column",gap:14}}>
+      <div className="slide-up glass" style={{borderRadius:22,padding:"22px 20px",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,border:`1px solid ${th.border2}`}}>
+        <div style={{fontSize:12,color:th.text2,marginBottom:4,fontWeight:600}}>✨ Protocolo RESET 7D</div>
+        <div className="serif" style={{fontSize:30,fontWeight:600,color:th.text,lineHeight:1.15,marginBottom:6}}>
+          Olá, <span style={{color:th.primary}}>{user?.name?.split(" ")[0] || "Guerreira"}</span>! 💜
+        </div>
+        <div className="serif" style={{fontSize:14,fontStyle:"italic",color:th.text3,lineHeight:1.5,marginBottom:14}}>
+          "Você não precisa ser perfeita. Você só precisa continuar."
+        </div>
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+            <span style={{fontSize:11,color:th.text2}}>Progresso Geral</span>
+            <span style={{fontSize:11,color:th.text2,fontWeight:700}}>{pct}%</span>
+          </div>
+          <div style={{height:8,background:th.border,borderRadius:4}}>
+            <div className="pbar pb-rose" style={{width:`${pct}%`}}/>
+          </div>
+        </div>
+      </div>
+
+      <div className="glass slide-up" style={{borderRadius:20,padding:18,animationDelay:".05s"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+          <div>
+            <div style={{fontSize:11,color:th.text3,marginBottom:2}}>HOJE</div>
+            <div className="serif" style={{fontSize:18,fontWeight:600,color:th.text}}>{PC[currentDay]?.emoji} Dia {currentDay}: Missões</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div className="serif" style={{fontSize:26,fontWeight:700,color:th.primary}}>{dayDone}/{dayMissions.length}</div>
+            <div style={{fontSize:10,color:th.text3}}>concluídas</div>
+          </div>
+        </div>
+        {dayMissions.slice(0,3).map(m=>(
+          <div key={m.id} style={{display:"flex",gap:8,alignItems:"center",marginBottom:5}}>
+            <span style={{fontSize:15}}>{(completedMissions[currentDay]||[]).includes(m.id)?"✅":"⭕"}</span>
+            <span style={{fontSize:12,color:(completedMissions[currentDay]||[]).includes(m.id)?th.text3:th.text,textDecoration:(completedMissions[currentDay]||[]).includes(m.id)?"line-through":"none"}}>{m.t}</span>
+          </div>
+        ))}
+        <button onClick={()=>setActiveTab("mission")} className="btn-p" style={{marginTop:10,padding:"10px"}}>Ver Todas as Missões →</button>
+      </div>
+
+      <div className="glass slide-up" style={{borderRadius:20,padding:18,animationDelay:".1s",border:`1px solid ${th.accent}30`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+          <div style={{fontSize:12,fontWeight:800,color:th.accent}}>🧠 Estratégia IA para você</div>
+          <div style={{display:"flex",gap:6}}>
+            <button onClick={()=>setTipIdx(i=>(i-1+TIPS.length)%TIPS.length)} style={{background:th.card2,border:`1px solid ${th.border}`,borderRadius:8,color:th.text3,cursor:"pointer",padding:"3px 8px",fontSize:12,fontFamily:"'Manrope',sans-serif"}}>‹</button>
+            <button onClick={()=>setTipIdx(i=>(i+1)%TIPS.length)} style={{background:th.card2,border:`1px solid ${th.border}`,borderRadius:8,color:th.text3,cursor:"pointer",padding:"3px 8px",fontSize:12,fontFamily:"'Manrope',sans-serif"}}>›</button>
+          </div>
+        </div>
+        <div style={{fontSize:18,marginBottom:4}}>{TIPS[tipIdx].i}</div>
+        <div className="serif" style={{fontSize:16,fontWeight:600,color:th.text,marginBottom:4}}>{TIPS[tipIdx].t}</div>
+        <div style={{fontSize:12,color:th.text3,lineHeight:1.6}}>{TIPS[tipIdx].b}</div>
+      </div>
+
+      <div className="slide-up" style={{borderRadius:20,padding:16,background:`linear-gradient(135deg,${th.primaryL},${th.primaryL})`,border:`1px solid ${th.border2}`,animationDelay:".15s"}}>
+        <div style={{fontSize:13,fontWeight:800,color:th.primary,marginBottom:6}}>📸 Missão de Registro Diário</div>
+        <div style={{fontSize:12,color:th.text,lineHeight:1.6}}>
+          Vista a mesma <strong>calça de referência</strong> e tire a foto! Frente, lado e costas. Fotografe também a área mais inchada. Sua evolução mora nos detalhes. 💜
+        </div>
+      </div>
+
+      <div className="slide-up" style={{animationDelay:".2s"}}>
+        <div style={{fontSize:13,fontWeight:800,color:th.text,marginBottom:10}}>📚 Módulos do Protocolo</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          {Object.keys(PC).map(k=>{
+            const d=PC[k]; const day=parseInt(k); const unlocked=day<=currentDay;
+            const done=(completedMissions[k]||[]).length>=(MISSIONS[k]?.length||1)*.8;
+            return (
+              <div key={k} onClick={()=>unlocked && setActiveTab("content")} className="hover-scale" style={{borderRadius:16,padding:"14px 12px",background:unlocked?`${d.color}20`:th.card2,border:unlocked?`1px solid ${d.color}40`:`1px solid ${th.border}`,opacity:unlocked?1:.5,cursor:unlocked?"pointer":"not-allowed",position:"relative"}}>
+                {!unlocked && <span style={{position:"absolute",top:8,right:8,fontSize:11}}>🔒</span>}
+                {done && <span style={{position:"absolute",top:8,right:8,fontSize:11}}>✅</span>}
+                <div style={{fontSize:22,marginBottom:4}}>{d.emoji}</div>
+                <div style={{fontSize:10,fontWeight:700,color:unlocked?th.text:th.text3}}>Dia {k}</div>
+                <div style={{fontSize:10,color:unlocked?d.color:th.text3,lineHeight:1.3}}>{d.title.split("—")[0]}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── MISSION TAB ───────────────────────────────────────────────
+function MissionTab({user, currentDay, completedMissions, setCompletedMissions, xp, setXp, th}) {
+  const [showXP,setShowXP]=useState(null);
+  const dayMissions=MISSIONS[currentDay]||[];
+  const dayDone=(completedMissions[currentDay]||[]).length;
+  const extraDone=(completedMissions["extra"]||[]).length;
+
+  const toggle=(dayKey, mId, mXp, isExtra=false)=>{
+    setCompletedMissions(prev=>{
+      const key=isExtra?"extra":dayKey;
+      const curr=prev[key]||[];
+      let newXp;
+      if(curr.includes(mId)){
+        newXp=Math.max(0,xp-mXp);
+        setXp(newXp); DB.saveXp(user.email,newXp);
+        return{...prev,[key]:curr.filter(x=>x!==mId)};
+      } else {
+        newXp=xp+mXp;
+        setXp(newXp); DB.saveXp(user.email,newXp);
+        setShowXP(mXp); setTimeout(()=>setShowXP(null),1100);
+        return{...prev,[key]:[...curr,mId]};
+      }
+    });
+  };
+
+  return (
+    <div style={{padding:"16px 16px 100px",display:"flex",flexDirection:"column",gap:14}}>
+      {showXP && <div className="xp-fly">+{showXP} XP ⚡</div>}
+      <div className="glass" style={{borderRadius:20,padding:18}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}>
+          <div className="serif" style={{fontSize:18,fontWeight:600,color:th.text}}>{PC[currentDay]?.emoji} Dia {currentDay}</div>
+          <div className="serif" style={{fontSize:22,fontWeight:700,color:th.primary}}>{dayDone}/{dayMissions.length}</div>
+        </div>
+        <div style={{height:10,background:th.border,borderRadius:5,marginBottom:6}}>
+          <div className="pbar pb-rose" style={{width:`${(dayDone/dayMissions.length)*100}%`}}/>
+        </div>
+        {dayDone===dayMissions.length && <div style={{textAlign:"center",fontSize:12,color:th.green,fontWeight:700}}>🎉 Todas as missões concluídas!</div>}
+      </div>
+      <div style={{fontSize:12,fontWeight:800,color:th.text2,textTransform:"uppercase",letterSpacing:1}}>🎯 Missões do Dia {currentDay}</div>
+      {dayMissions.map(m=>{
+        const done=(completedMissions[currentDay]||[]).includes(m.id);
+        return (
+          <div key={m.id} onClick={()=>toggle(currentDay,m.id,m.xp)} className="hover-scale glass" style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",borderRadius:16,cursor:"pointer",border:done?`1px solid ${th.border2}`:`1px solid ${th.border}`,background:done?th.primaryL:th.card}}>
+            <span style={{fontSize:20}}>{done?"✅":"⭕"}</span>
+            <div style={{flex:1,fontSize:13,color:done?th.text3:th.text,textDecoration:done?"line-through":"none"}}>{m.t}</div>
+            <div style={{fontSize:11,fontWeight:700,color:th.accent,background:th.accentL,padding:"3px 8px",borderRadius:10}}>+{m.xp}</div>
+          </div>
+        );
+      })}
+      <div style={{borderRadius:18,padding:16,background:`linear-gradient(135deg,${th.primaryL},${th.primaryL})`,border:`2px solid ${th.border2}`}}>
+        <div style={{fontSize:13,fontWeight:800,color:th.primary,marginBottom:6}}>📸 Missão de Registro — Não Pule!</div>
+        <div style={{fontSize:12,color:th.text,lineHeight:1.7}}>
+          <strong>Vista a mesma calça de referência todos os dias.</strong> Compare dia a dia — a evolução aparece nos detalhes! 💜
+        </div>
+      </div>
+      <div style={{fontSize:12,fontWeight:800,color:th.accent,textTransform:"uppercase",letterSpacing:1,marginTop:4}}>⭐ Missões Extras ({extraDone}/{MISSIONS.extra.length})</div>
+      {MISSIONS.extra.map(m=>{
+        const done=(completedMissions["extra"]||[]).includes(m.id);
+        return (
+          <div key={m.id} onClick={()=>toggle("extra",m.id,m.xp,true)} className="hover-scale" style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderRadius:14,cursor:"pointer",background:done?th.accentL:th.card2,border:done?`1px solid ${th.accent}40`:`1px solid ${th.border}`}}>
+            <span style={{fontSize:16}}>{done?"⭐":"☆"}</span>
+            <div style={{flex:1,fontSize:12,color:done?th.text3:th.text,textDecoration:done?"line-through":"none"}}>{m.t}</div>
+            <div style={{fontSize:11,fontWeight:700,color:th.accent}}>+{m.xp}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── CONTENT TAB ───────────────────────────────────────────────
+function ContentTab({currentDay, th}) {
+  const [selDay,setSelDay]=useState(currentDay);
+  const d=PC[selDay];
+  return (
+    <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
+      <div style={{padding:"12px 16px 0",overflowX:"auto",flexShrink:0}}>
+        <div style={{display:"flex",gap:8,paddingBottom:12}}>
+          {Object.keys(PC).map(k=>{
+            const locked=parseInt(k)>currentDay; const active=parseInt(k)===selDay;
+            return (
+              <button key={k} onClick={()=>!locked && setSelDay(parseInt(k))} style={{flexShrink:0,width:50,height:50,borderRadius:14,border:active?`2px solid ${th.primary}`:`1px solid ${th.border}`,background:active?th.primaryL:locked?"transparent":th.card2,cursor:locked?"not-allowed":"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",opacity:locked?.45:1,fontFamily:"'Manrope',sans-serif"}}>
+                <span style={{fontSize:16}}>{locked?"🔒":PC[k].emoji}</span>
+                <span style={{fontSize:9,color:active?th.primary:th.text3,fontWeight:700}}>D{k}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"0 16px 100px"}}>
+        <div style={{borderRadius:20,padding:"22px 18px",marginBottom:14,background:d.bg}}>
+          <div style={{fontSize:36,marginBottom:6}}>{d.emoji}</div>
+          <div className="serif" style={{fontSize:22,fontWeight:600,color:"white",marginBottom:8}}>Dia {selDay}: {d.title}</div>
+          <div style={{fontSize:12,color:"rgba(255,255,255,.85)",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{d.intro}</div>
+        </div>
+        {d.sections.map((s,i)=>(
+          <SectionCard key={i} title={s.title} th={th} accent={d.color}>{s.content}</SectionCard>
+        ))}
+        <div style={{fontSize:12,fontWeight:800,color:th.accent,textTransform:"uppercase",letterSpacing:1,marginBottom:10,marginTop:4}}>🍽️ Receitas do Dia {selDay}</div>
+        {d.recipes.map((r,i)=>(
+          <div key={i} style={{borderRadius:16,overflow:"hidden",marginBottom:12,border:`1px solid ${th.accent}40`}}>
+            <div style={{padding:"10px 14px",background:th.accentL}}>
+              <div style={{fontSize:13,fontWeight:800,color:th.accent}}>{r.e} {r.name}</div>
+            </div>
+            <div style={{padding:"12px 14px",background:th.card}}>
+              <div style={{fontSize:12,fontWeight:700,color:th.text,marginBottom:6}}>Ingredientes:</div>
+              {r.ing.map((item,j)=><div key={j} style={{fontSize:12,color:th.text3,marginBottom:3}}>• {item}</div>)}
+              <div style={{fontSize:12,fontWeight:700,color:th.text,marginTop:10,marginBottom:6}}>Como fazer:</div>
+              {r.how.map((step,j)=><div key={j} style={{fontSize:12,color:th.text3,marginBottom:3}}>{j+1}. {step}</div>)}
+              <div style={{marginTop:10,padding:"8px 10px",background:th.greenL,borderRadius:8,border:`1px solid ${th.green}30`}}>
+                <div style={{fontSize:11,color:th.green,fontWeight:700,marginBottom:2}}>🔬 Por que funciona:</div>
+                <div style={{fontSize:11,color:th.text3,lineHeight:1.6,fontStyle:"italic"}}>{r.sci}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+        <div style={{borderRadius:16,overflow:"hidden",border:"1px solid rgba(86,182,133,.3)",marginBottom:10}}>
+          <div style={{padding:"10px 14px",background:th.greenL}}>
+            <div style={{fontSize:12,fontWeight:800,color:th.green}}>📚 Referências Científicas — Dia {selDay}</div>
+          </div>
+          <div style={{padding:"10px 14px",background:th.card,display:"flex",flexDirection:"column",gap:8}}>
+            {d.refs.map((r,i)=>(
+              <div key={i}>
+                <div style={{fontSize:11,color:th.text,marginBottom:2}}>📌 {r.l}</div>
+                <a href={r.u} target="_blank" rel="noopener" style={{fontSize:10,color:th.green,wordBreak:"break-all",textDecoration:"none"}}>🔗 {r.u}</a>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── EVOLUTION TAB ─────────────────────────────────────────────
+function EvolutionTab({xp, completedMissions, currentDay, th}) {
+  const lvl=Math.floor(xp/200)+1;
+  const lvlProg=(xp%200)/200*100;
+  const totalDone=Object.values(completedMissions).flat().length;
+  const streak=Math.min(currentDay,7);
+  const xpData=Object.keys(PC).slice(0,currentDay).map((k,i)=>({name:`D${k}`,xp:Math.min(xp,(i+1)*230+Math.floor(Math.random()*60))}));
+  const radarData=[
+    {m:"Hidratação",v:Math.min(100,xp/14)},{m:"Sono",v:currentDay>=6?88:50},
+    {m:"Movimento",v:Math.min(100,totalDone*7)},{m:"Nutrição",v:Math.min(100,xp/12)},
+    {m:"Mindset",v:Math.min(100,xp/11)},{m:"Linfático",v:currentDay>=2?82:28},
+  ];
+  const ACHIEVS=[
+    {n:"Primeiro Passo",i:"🌸",d:"Dia 1 concluído",need:200},{n:"Drenagem Ativa",i:"💧",d:"Dia 2 concluído",need:400},
+    {n:"Forno Ligado",i:"🔥",d:"Dia 3 concluído",need:600},{n:"Intestino Feliz",i:"🌱",d:"Dia 4 concluído",need:800},
+    {n:"Escudo Ativo",i:"🛡️",d:"Dia 5 concluído",need:1000},{n:"Rainha do Sono",i:"🌙",d:"Dia 6 concluído",need:1200},
+    {n:"A Virada",i:"💪",d:"7 dias concluídos!",need:1500},{n:"Consistência",i:"🏅",d:"70% das missões",need:700},
+  ];
+  return (
+    <div style={{padding:"16px 16px 100px",display:"flex",flexDirection:"column",gap:14}}>
+      <div className="glass" style={{borderRadius:20,padding:20,background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16,textAlign:"center"}}>
+          {[{l:"XP Total",v:`${xp}`,s:"⚡",c:th.accent},{l:"Nível",v:`${lvl}`,s:"🌟",c:th.primary},{l:"Sequência",v:`${streak}`,s:"🔥",c:"#e8a872"}].map(s=>(
+            <div key={s.l} style={{background:th.card2,borderRadius:14,padding:"12px 8px"}}>
+              <div className="serif" style={{fontSize:22,fontWeight:700,color:s.c}}>{s.s} {s.v}</div>
+              <div style={{fontSize:10,color:th.text3}}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+            <span style={{fontSize:11,color:th.text2}}>Nível {lvl} → {lvl+1}</span>
+            <span style={{fontSize:11,color:th.text2}}>{xp%200}/200 XP</span>
+          </div>
+          <div style={{height:10,background:th.border,borderRadius:5}}>
+            <div className="pbar pb-rose" style={{width:`${lvlProg}%`}}/>
+          </div>
+        </div>
+      </div>
+      <div className="glass" style={{borderRadius:20,padding:20}}>
+        <div style={{fontSize:13,fontWeight:800,color:th.text,marginBottom:14}}>📈 Evolução de XP por Dia</div>
+        {ResponsiveContainer ? (
+          <ResponsiveContainer width="100%" height={150}>
+            <AreaChart data={xpData}>
+              <defs>
+                <linearGradient id="xpG" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={th.primary} stopOpacity={0.5}/>
+                  <stop offset="95%" stopColor={th.primary} stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke={th.border}/>
+              <XAxis dataKey="name" tick={{fill:th.text3,fontSize:10}} axisLine={false} tickLine={false}/>
+              <YAxis tick={{fill:th.text3,fontSize:10}} axisLine={false} tickLine={false}/>
+              <Tooltip contentStyle={{background:th.cardSolid,border:`1px solid ${th.border}`,borderRadius:10,color:th.text,fontSize:11}}/>
+              <Area type="monotone" dataKey="xp" stroke={th.primary} fill="url(#xpG)" strokeWidth={2}/>
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : <div style={{height:150,display:"flex",alignItems:"center",justifyContent:"center",color:th.text3,fontSize:12}}>📈 Gráfico de evolução</div>}
+      </div>
+      <div className="glass" style={{borderRadius:20,padding:20}}>
+        <div style={{fontSize:13,fontWeight:800,color:th.text,marginBottom:8}}>🕸️ Radar de Bem-Estar</div>
+        {ResponsiveContainer ? (
+          <ResponsiveContainer width="100%" height={190}>
+            <RadarChart data={radarData}>
+              <PolarGrid stroke={th.border}/>
+              <PolarAngleAxis dataKey="m" tick={{fill:th.text3,fontSize:10}}/>
+              <Radar dataKey="v" stroke={th.primary} fill={th.primary} fillOpacity={0.25} strokeWidth={2}/>
+            </RadarChart>
+          </ResponsiveContainer>
+        ) : <div style={{height:190,display:"flex",alignItems:"center",justifyContent:"center",color:th.text3,fontSize:12}}>🕸️ Radar de bem-estar</div>}
+      </div>
+      <div>
+        <div style={{fontSize:13,fontWeight:800,color:th.text,marginBottom:12}}>🏆 Conquistas</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          {ACHIEVS.map(a=>{
+            const earned=xp>=a.need;
+            return (
+              <div key={a.n} className="hover-scale" style={{borderRadius:16,padding:"14px 12px",background:earned?th.primaryL:th.card2,border:earned?`1px solid ${th.border2}`:`1px solid ${th.border}`,opacity:earned?1:.5}}>
+                <div style={{fontSize:24,marginBottom:4,filter:earned?"none":"grayscale(1)"}}>{a.i}</div>
+                <div style={{fontSize:11,fontWeight:700,color:earned?th.text:th.text3}}>{a.n}</div>
+                <div style={{fontSize:10,color:earned?th.text2:th.text3}}>{a.d}</div>
+                {!earned && <div style={{fontSize:9,color:th.text3,marginTop:2}}>{a.need} XP necessário</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── UTIL: compressão de imagem ────────────────────────────────
+function compressImage(file, maxW=800, quality=0.75) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxW / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── PROFILE TAB ───────────────────────────────────────────────
+function ProfileTab({user, xp, currentDay, completedMissions, onChangePw, th}) {
+  const totalDone = Object.values(completedMissions).flat().length;
+  const lvl = Math.floor(xp/200)+1;
+
+  const [photos, setPhotos] = useState(() => {
+    const p = {};
+    for (let d = 1; d <= 7; d++) {
+      const v = localStorage.getItem(`r7d_photo_${user?.email}_${d}`);
+      if (v) p[d] = v;
+    }
+    return p;
+  });
+
+  const handlePhoto = async (day, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const compressed = await compressImage(file);
+    localStorage.setItem(`r7d_photo_${user?.email}_${day}`, compressed);
+    setPhotos(p => ({...p, [day]: compressed}));
+    e.target.value = "";
+  };
+
+  return (
+    <div style={{padding:"16px 16px 100px",display:"flex",flexDirection:"column",gap:14}}>
+      <div className="glass" style={{borderRadius:22,padding:22,textAlign:"center",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`}}>
+        <div style={{width:76,height:76,borderRadius:"50%",background:`linear-gradient(135deg,${th.primary},${th.text2})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,margin:"0 auto 12px",border:`3px solid ${th.primary}40`}}>
+          {(user?.name||"U").charAt(0).toUpperCase()}
+        </div>
+        <div className="serif" style={{fontSize:24,fontWeight:600,color:th.text,marginBottom:4}}>{user?.name||"Guerreira Reset"}</div>
+        <div style={{fontSize:12,color:th.text3,marginBottom:12}}>{user?.email} · Dia {currentDay}/7</div>
+        <XPBadge xp={xp} th={th}/>
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+        {[{l:"Missões",v:totalDone,i:"✅"},{l:"Nível",v:lvl,i:"⚡"},{l:"Dias",v:currentDay,i:"📅"}].map(s=>(
+          <div key={s.l} className="glass" style={{borderRadius:14,padding:"12px 8px",textAlign:"center"}}>
+            <div style={{fontSize:16}}>{s.i}</div>
+            <div className="serif" style={{fontSize:20,fontWeight:700,color:th.text}}>{s.v}</div>
+            <div style={{fontSize:9,color:th.text3}}>{s.l}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="glass" style={{borderRadius:20,padding:18}}>
+        <div className="serif" style={{fontSize:18,fontWeight:600,color:th.text,marginBottom:2}}>📸 Álbum Privado da Evolução</div>
+        <div style={{fontSize:11,color:th.text3,marginBottom:12}}>🔒 Somente você vê estas fotos · Vista a calça de referência!</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+          {[1,2,3,4,5,6,7].map(d => {
+            const photo = photos[d];
+            const unlocked = d <= currentDay;
+            const isToday = d === currentDay;
+            if (photo) return (
+              <div key={d} style={{position:"relative",height:88,borderRadius:12,overflow:"hidden"}}>
+                <img src={photo} style={{width:"100%",height:"100%",objectFit:"cover"}} alt={`Dia ${d}`}/>
+                <div style={{position:"absolute",bottom:0,left:0,right:0,background:"rgba(0,0,0,.55)",padding:"3px 6px",fontSize:9,color:"white",fontWeight:700,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span>Dia {d}</span>
+                  {isToday && (
+                    <label style={{cursor:"pointer",fontSize:11}}>
+                      📷
+                      <input type="file" accept="image/*" capture="user" style={{display:"none"}} onChange={e=>handlePhoto(d,e)}/>
+                    </label>
+                  )}
+                </div>
+              </div>
+            );
+            if (unlocked) return (
+              <label key={d} style={{height:88,borderRadius:12,background:`linear-gradient(135deg,${PC[d]?.color||th.primary}35,${PC[d]?.color||th.primary}15)`,border:`2px dashed ${isToday?th.primary:th.border}`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"pointer",gap:3}}>
+                <span style={{fontSize:isToday?22:16}}>{isToday?"📷":PC[d]?.emoji||"🌸"}</span>
+                <span style={{fontSize:9,color:isToday?th.primary:th.text3,fontWeight:700}}>{isToday?"Tirar foto":"Dia "+d}</span>
+                <input type="file" accept="image/*" capture="user" style={{display:"none"}} onChange={e=>handlePhoto(d,e)}/>
+              </label>
+            );
+            return (
+              <div key={d} style={{height:88,borderRadius:12,background:th.card2,border:`1px dashed ${th.border}`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3}}>
+                <span style={{fontSize:18}}>🔒</span>
+                <span style={{fontSize:9,color:th.text3}}>Dia {d}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <button onClick={onChangePw} className="btn-s" style={{borderRadius:14,padding:"13px"}}>🔐 Mudar Senha</button>
+    </div>
+  );
+}
+
+// ── COMMUNITY TAB ─────────────────────────────────────────────
+function CommunityTab({user, currentDay, th}) {
+  const [posts,setPosts]     = useState([]);
+  const [loading,setLoading] = useState(true);
+  const [txt,setTxt]         = useState("");
+  const [selDay,setSelDay]   = useState(null);
+  const [photo,setPhoto]     = useState(null);
+  const [posting,setPosting] = useState(false);
+  const [comments,setComments] = useState({});
+  const [expComm,setExpComm]   = useState({});
+  const EMOJIS = ["❤️","🔥","💪","💜","🌟","👏","✨","🎉"];
+
+  const loadPosts = async () => {
+    try {
+      const res = await fetch(`${window.BACKEND_URL}/api/community`);
+      const data = await res.json();
+      if (res.ok) setPosts(data.posts || []);
+    } catch {}
+    finally { setLoading(false); }
+  };
+  useEffect(()=>{ loadPosts(); },[]);
+
+  const handlePhotoSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhoto(await compressImage(file));
+    e.target.value = "";
+  };
+
+  const addPost = async () => {
+    if (!txt.trim() && !photo) return;
+    setPosting(true);
+    try {
+      const res = await fetch(`${window.BACKEND_URL}/api/community`,{
+        method:"POST", headers:{"Content-Type":"application/json",...getAuthHeader()},
+        body: JSON.stringify({email:user?.email, name:user?.name||"Guerreira", day:selDay||currentDay, text:txt.trim(), photo:photo||null}),
+      });
+      const data = await res.json();
+      if (res.ok) { setPosts(p=>[data.post,...p]); setTxt(""); setSelDay(null); setPhoto(null); }
+    } catch {}
+    finally { setPosting(false); }
+  };
+
+  const react = async (pid, emoji) => {
+    setPosts(p=>p.map(post=>{
+      if(post.id!==pid) return post;
+      return{...post, reactions:{...(post.reactions||{}), [emoji]:((post.reactions||{})[emoji]||0)+1}};
+    }));
+    try { await fetch(`${window.BACKEND_URL}/api/community/${pid}/react`,{method:"PATCH",headers:{"Content-Type":"application/json",...getAuthHeader()},body:JSON.stringify({emoji})}); } catch {}
+  };
+
+  const addComment = async (pid) => {
+    const t = comments[pid];
+    if (!t?.trim()) return;
+    const name = user?.name?.split(" ")[0]||"Você";
+    setPosts(p=>p.map(post=>{
+      if(post.id!==pid) return post;
+      return{...post, comments:[...(post.comments||[]),{u:name,t}]};
+    }));
+    setComments(c=>({...c,[pid]:""}));
+    try { await fetch(`${window.BACKEND_URL}/api/community/${pid}/comment`,{method:"POST",headers:{"Content-Type":"application/json",...getAuthHeader()},body:JSON.stringify({name,text:t})}); } catch {}
+  };
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
+      {/* Criação de post */}
+      <div className="glass" style={{margin:"12px 16px 0",borderRadius:20,padding:16,flexShrink:0}}>
+        <div style={{fontSize:12,fontWeight:800,color:th.primary,marginBottom:8}}>✨ Compartilhe sua jornada</div>
+        <textarea value={txt} onChange={e=>setTxt(e.target.value)} placeholder="Como foi o seu dia? 💜" style={{width:"100%",minHeight:64,background:th.inputBg,border:`1px solid ${th.border}`,borderRadius:12,padding:12,color:th.text,fontSize:12,resize:"none",lineHeight:1.6,outline:"none",fontFamily:"'Manrope',sans-serif"}}/>
+        {photo && (
+          <div style={{position:"relative",marginTop:8,borderRadius:12,overflow:"hidden"}}>
+            <img src={photo} style={{width:"100%",maxHeight:180,objectFit:"cover",borderRadius:12}} alt="preview"/>
+            <button onClick={()=>setPhoto(null)} style={{position:"absolute",top:6,right:6,background:"rgba(0,0,0,.6)",border:"none",borderRadius:6,color:"white",cursor:"pointer",padding:"2px 8px",fontSize:13,fontFamily:"'Manrope',sans-serif"}}>✕</button>
+          </div>
+        )}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10,gap:6}}>
+          <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
+            <label style={{width:28,height:28,borderRadius:8,background:th.primaryL,border:`1px solid ${th.border2}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:14,flexShrink:0}}>
+              📷<input type="file" accept="image/*" capture="user" style={{display:"none"}} onChange={handlePhotoSelect}/>
+            </label>
+            {[1,2,3,4,5,6,7].map(d=>(
+              <button key={d} onClick={()=>setSelDay(selDay===d?null:d)} style={{width:26,height:26,borderRadius:7,border:selDay===d?`2px solid ${th.primary}`:`1px solid ${th.border}`,background:selDay===d?th.primaryL:"transparent",color:selDay===d?th.primary:th.text3,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"'Manrope',sans-serif"}}>D{d}</button>
+            ))}
+          </div>
+          <button onClick={addPost} disabled={posting||(!txt.trim()&&!photo)} className="btn-p" style={{padding:"8px 16px",width:"auto",fontSize:12,flexShrink:0}}>
+            {posting?<Spinner/>:"Postar 💜"}
+          </button>
+        </div>
+      </div>
+
+      {/* Lista de posts */}
+      <div style={{flex:1,overflowY:"auto",padding:"12px 16px 100px",display:"flex",flexDirection:"column",gap:12}}>
+        {loading && <div style={{textAlign:"center",color:th.text3,fontSize:13,padding:24}}><Spinner/> Carregando posts...</div>}
+        {!loading && posts.length===0 && (
+          <div style={{textAlign:"center",padding:32}}>
+            <div style={{fontSize:40,marginBottom:10}}>💜</div>
+            <div style={{fontSize:13,color:th.text3}}>Seja a primeira a compartilhar!</div>
+          </div>
+        )}
+        {posts.map(post=>(
+          <div key={post.id} className="glass" style={{borderRadius:20,padding:16}}>
+            <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:10}}>
+              <Av name={post.user_name} size={40} color={PC[post.day||1]?.color||th.primary}/>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:700,color:th.text}}>{post.user_name}</div>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  <span style={{fontSize:10,color:th.text3}}>{new Date(post.created_at).toLocaleDateString("pt-BR")}</span>
+                  {post.day&&<span style={{fontSize:10,background:th.primaryL,color:th.primary,padding:"1px 7px",borderRadius:8,fontWeight:700}}>Dia {post.day} {PC[post.day]?.emoji}</span>}
+                </div>
+              </div>
+            </div>
+            {post.photo&&<img src={post.photo} style={{width:"100%",borderRadius:14,marginBottom:10,maxHeight:280,objectFit:"cover"}} alt="foto"/>}
+            {post.text&&<div style={{fontSize:13,color:th.text,lineHeight:1.7,marginBottom:12}}>{post.text}</div>}
+            <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:10}}>
+              {EMOJIS.map(e=>{
+                const cnt=(post.reactions||{})[e]||0;
+                return <button key={e} onClick={()=>react(post.id,e)} style={{background:cnt>0?th.primaryL:th.card2,border:cnt>0?`1px solid ${th.border2}`:`1px solid ${th.border}`,borderRadius:20,padding:"4px 10px",cursor:"pointer",fontSize:12,color:th.text,fontWeight:cnt>0?700:400,fontFamily:"'Manrope',sans-serif"}}>{e}{cnt>0&&` ${cnt}`}</button>;
+              })}
+            </div>
+            {(post.comments||[]).length>0&&(
+              <div>
+                <button onClick={()=>setExpComm(c=>({...c,[post.id]:!c[post.id]}))} style={{fontSize:11,color:th.primary,background:"none",border:"none",cursor:"pointer",marginBottom:6,fontWeight:700,fontFamily:"'Manrope',sans-serif"}}>
+                  💬 {(post.comments||[]).length} comentário{(post.comments||[]).length>1?"s":""}
+                </button>
+                {expComm[post.id]&&(post.comments||[]).map((c,i)=>(
+                  <div key={i} style={{display:"flex",gap:8,marginBottom:6}}>
+                    <Av name={c.u} size={28} color={th.green}/>
+                    <div style={{background:th.card2,borderRadius:12,padding:"6px 10px",flex:1}}>
+                      <div style={{fontSize:11,fontWeight:700,color:th.primary}}>{c.u}</div>
+                      <div style={{fontSize:11,color:th.text}}>{c.t}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{display:"flex",gap:8,marginTop:8}}>
+              <input value={comments[post.id]||""} onChange={e=>setComments(c=>({...c,[post.id]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addComment(post.id)} placeholder="Comentar..." style={{flex:1,background:th.inputBg,border:`1px solid ${th.border}`,borderRadius:10,padding:"7px 12px",color:th.text,fontSize:12,outline:"none",fontFamily:"'Manrope',sans-serif"}}/>
+              <button onClick={()=>addComment(post.id)} style={{background:th.primary,border:"none",borderRadius:10,color:"white",padding:"7px 12px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Manrope',sans-serif"}}>→</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── DASHBOARD PRINCIPAL ───────────────────────────────────────
+function Dashboard({user, onLogout, darkMode, setDarkMode, lang, setLang, th}) {
+  const [activeTab, setActiveTab] = useState("home");
+  const [menuOpen, setMenuOpen]   = useState(false);
+  const [showNextLevel, setShowNextLevel] = useState(false);
+  const [showChangePw, setShowChangePw]   = useState(false);
+  const [showDayPicker, setShowDayPicker] = useState(false);
+
+  const [xp, setXp] = useState(()=> DB.xp(user.email));
+  const [completedMissions, setCompletedMissions] = useState(()=> DB.missions(user.email));
+  const [currentDay, setCurrentDay] = useState(()=> DB.currentDay(user.email));
+
+  // Persistir missions quando mudam
+  useEffect(()=>{ DB.saveMissions(user.email, completedMissions); }, [completedMissions]);
+
+  const changeDay = (d) => { setCurrentDay(d); DB.saveCurrentDay(user.email,d); setShowDayPicker(false); };
+
+  const TABS=[
+    {id:"home",      icon:"🏠", label:"Home"},
+    {id:"mission",   icon:"🎯", label:"Missão"},
+    {id:"content",   icon:"📖", label:"Conteúdo"},
+    {id:"evolution", icon:"📊", label:"Evolução"},
+    {id:"profile",   icon:"👤", label:"Perfil"},
+    {id:"community", icon:"💬", label:"Comunidade"},
+  ];
+
+  return (
+    <div style={{maxWidth:430,margin:"0 auto",height:"100vh",display:"flex",flexDirection:"column",background:th.bg,position:"relative",overflow:"hidden"}}>
+      {/* Header */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 16px 10px",background:th.bg2,borderBottom:`1px solid ${th.border}`,zIndex:10,flexShrink:0}}>
+        <button onClick={()=>setMenuOpen(true)} style={{width:38,height:38,borderRadius:12,background:th.card,border:`1px solid ${th.border}`,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}>
+          {[1,2,3].map(i=><div key={i} style={{width:16,height:2,borderRadius:1,background:th.primary}}/>)}
+        </button>
+        <div className="serif" style={{fontSize:24,fontWeight:600,color:th.primary}}>RESET 7D</div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <button onClick={()=>setShowDayPicker(!showDayPicker)} style={{background:th.primaryL,border:`1px solid ${th.border2}`,borderRadius:20,padding:"5px 11px",color:th.primary,fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"'Manrope',sans-serif"}}>
+            {PC[currentDay]?.emoji} D{currentDay}
+          </button>
+          <XPBadge xp={xp} th={th}/>
+        </div>
+      </div>
+
+      {/* Day picker */}
+      {showDayPicker && (
+        <div onClick={()=>setShowDayPicker(false)} style={{position:"absolute",top:60,right:16,zIndex:100}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:th.bg2,border:`1px solid ${th.border}`,borderRadius:16,padding:12,boxShadow:"0 16px 48px rgba(0,0,0,.4)"}}>
+            <div style={{fontSize:11,color:th.text3,marginBottom:8,fontWeight:700}}>Simular Dia</div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",maxWidth:210}}>
+              {[1,2,3,4,5,6,7].map(d=>(
+                <button key={d} onClick={()=>changeDay(d)} style={{width:34,height:34,borderRadius:10,border:currentDay===d?`2px solid ${th.primary}`:`1px solid ${th.border}`,background:currentDay===d?th.primaryL:th.card2,color:currentDay===d?th.primary:th.text3,fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"'Manrope',sans-serif"}}>D{d}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Content */}
+      <div style={{flex:1,overflowY:"auto"}} onClick={()=>showDayPicker&&setShowDayPicker(false)}>
+        {activeTab==="home"      && <HomeTab      user={user} currentDay={currentDay} xp={xp} completedMissions={completedMissions} setActiveTab={setActiveTab} th={th}/>}
+        {activeTab==="mission"   && <MissionTab   user={user} currentDay={currentDay} completedMissions={completedMissions} setCompletedMissions={setCompletedMissions} xp={xp} setXp={setXp} th={th}/>}
+        {activeTab==="content"   && <ContentTab   currentDay={currentDay} th={th}/>}
+        {activeTab==="evolution" && <EvolutionTab xp={xp} completedMissions={completedMissions} currentDay={currentDay} th={th}/>}
+        {activeTab==="profile"   && <ProfileTab   user={user} xp={xp} currentDay={currentDay} completedMissions={completedMissions} onChangePw={()=>setShowChangePw(true)} th={th}/>}
+        {activeTab==="community" && <CommunityTab user={user} currentDay={currentDay} th={th}/>}
+      </div>
+
+      {/* Tab bar */}
+      <div style={{display:"flex",background:th.bg2,borderTop:`1px solid ${th.border}`,padding:"6px 0 14px",flexShrink:0,zIndex:10}}>
+        {TABS.map(tab=>(
+          <button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:"none",border:"none",cursor:"pointer",padding:"4px 2px",position:"relative",fontFamily:"'Manrope',sans-serif"}}>
+            {activeTab===tab.id && <div style={{position:"absolute",top:-6,left:"50%",transform:"translateX(-50%)",width:28,height:3,background:`linear-gradient(90deg,${th.primary},${th.text2})`,borderRadius:"0 0 3px 3px"}}/>}
+            <span style={{fontSize:activeTab===tab.id?22:17,transition:"font-size .2s"}}>{tab.icon}</span>
+            <span style={{fontSize:9,color:activeTab===tab.id?th.primary:th.text3,fontWeight:activeTab===tab.id?800:400}}>{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <HamburgerMenu open={menuOpen} onClose={()=>setMenuOpen(false)} th={th} darkMode={darkMode} setDarkMode={setDarkMode} lang={lang} setLang={setLang} onLogout={onLogout} onChangePw={()=>setShowChangePw(true)} onNextLevel={()=>setShowNextLevel(true)}/>
+      {showNextLevel && <NextLevelOverlay onClose={()=>setShowNextLevel(false)} th={th}/>}
+      {showChangePw  && <ChangePwModal   onClose={()=>setShowChangePw(false)} user={user} th={th}/>}
+    </div>
+  );
+}
+
+// ── APP PRINCIPAL ─────────────────────────────────────────────
+function App() {
+  const [darkMode, setDarkMode] = useState(true);
+  const [lang, setLang]         = useState("pt");
+  const th = darkMode ? THEMES.dark : THEMES.light;
+
+  const [screen, setScreen] = useState(()=>{
+    const token = getTokenFromURL();
+    if(token) return "forgot";
+    if(DB.session()) return "app";
+    return "quiz";
+  });
+  const [user, setUser] = useState(()=> DB.session());
+
+  const doLogin  = (u) => { DB.setSession(u); setUser(u); setScreen("app"); };
+  const doLogout = () => { DB.clearSession(); setUser(null); setScreen("quiz"); };
+
+  const cssStr = makeCSS(th);
+
+  return (
+    <>
+      <style>{cssStr}</style>
+      {screen==="quiz"     && (
+        <div style={{maxWidth:430,margin:"0 auto",height:"100vh",display:"flex",flexDirection:"column",background:th.bg}}>
+          <div style={{padding:"52px 20px 20px",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,textAlign:"center",borderBottom:`1px solid ${th.border}`}}>
+            <div className="serif" style={{fontSize:34,fontWeight:600,color:th.primary}}>RESET 7D</div>
+            <div style={{fontSize:12,color:th.text3}}>Descubra seu perfil de transformação</div>
+          </div>
+          <QuizScreen th={th} onDone={()=>setScreen("login")}/>
+        </div>
+      )}
+      {screen==="login"    && <LoginScreen    onLogin={doLogin} onRegister={()=>setScreen("register")} onForgot={()=>setScreen("forgot")}/>}
+      {screen==="register" && <RegisterScreen onBack={()=>setScreen("login")} onSuccess={doLogin}/>}
+      {screen==="forgot"   && <ForgotScreen   onBack={()=>setScreen("login")}/>}
+      {screen==="app"      && user && <Dashboard user={user} onLogout={doLogout} darkMode={darkMode} setDarkMode={setDarkMode} lang={lang} setLang={setLang} th={th}/>}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

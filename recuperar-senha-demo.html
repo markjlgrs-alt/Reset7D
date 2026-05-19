@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reset 7D — Recuperação de Senha</title>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; }
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-thumb { background: #f43f5e; border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- ════════════════════════════════════════════════
+       ⚙️  CONFIGURAÇÃO DO BACKEND RESEND
+       ════════════════════════════════════════════════
+       1. Entre na pasta backend/ e edite o .env
+       2. Cole sua RESEND_API_KEY (começa com re_)
+       3. Rode: npm install && npm start
+       4. Acesse: http://localhost:3001/recuperar-senha-demo.html
+       ════════════════════════════════════════════════ -->
+  <script>
+    // URL do backend — mude se hospedar em outro servidor
+    window.BACKEND_URL = "http://localhost:3001";
+  </script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // ════════════════════════════════════════
+    // TEMAS
+    // ════════════════════════════════════════
+    const T = {
+      dark: {
+        bg:"#140810", bg2:"#21101a",
+        card:"rgba(255,240,245,0.07)", card2:"rgba(255,240,245,0.04)",
+        text:"#fdf2f8", text2:"#fba8c4", text3:"#9c8a94",
+        border:"rgba(255,200,220,0.12)", border2:"rgba(244,63,94,0.35)",
+        primary:"#f43f5e", primaryL:"rgba(244,63,94,0.18)",
+        green:"#10b981", greenL:"rgba(16,185,129,0.15)",
+        accent:"#fbbf24",
+        inputBg:"rgba(255,240,245,0.09)",
+      },
+      light: {
+        bg:"#fff0f4", bg2:"#ffe0ea",
+        card:"#ffffff", card2:"#fff5f8",
+        text:"#1a0810", text2:"#be185d", text3:"#6b7280",
+        border:"rgba(0,0,0,0.07)", border2:"rgba(225,29,72,0.22)",
+        primary:"#e11d48", primaryL:"rgba(225,29,72,0.09)",
+        green:"#059669", greenL:"rgba(5,150,105,0.1)",
+        accent:"#d97706",
+        inputBg:"#f9f0f3",
+      }
+    };
+
+    // ════════════════════════════════════════
+    // ENVIO DE E-MAIL VIA BACKEND (RESEND)
+    // ════════════════════════════════════════
+    async function sendRecoveryEmail(toEmail) {
+      const token = btoa(`${toEmail}:${Date.now()}`);
+      const base  = window.location.origin + window.location.pathname;
+      const resetLink = `${base}?reset=${encodeURIComponent(token)}`;
+
+      let res;
+      try {
+        res = await fetch(`${window.BACKEND_URL}/api/send-recovery-email`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ email: toEmail, resetLink }),
+        });
+      } catch {
+        throw new Error("BACKEND_OFFLINE");
+      }
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "SEND_FAILED");
+      return data;
+    }
+
+    // Lê e valida o token da URL (quando usuário clica no link do e-mail)
+    function getResetTokenFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      const raw = params.get("reset");
+      if (!raw) return null;
+      try {
+        const decoded = atob(decodeURIComponent(raw));
+        const [email, ts] = decoded.split(":");
+        const age = Date.now() - parseInt(ts, 10);
+        if (age > 30 * 60 * 1000) return { expired: true };
+        return { email, expired: false };
+      } catch { return null; }
+    }
+
+    // ════════════════════════════════════════
+    // CSS DINÂMICO
+    // ════════════════════════════════════════
+    function applyCSS(th) {
+      const id = "dynamic-css";
+      let el = document.getElementById(id);
+      if (!el) { el = document.createElement("style"); el.id = id; document.head.appendChild(el); }
+      el.textContent = `
+        body { background:${th.bg}; color:${th.text}; font-family:'Nunito',sans-serif; transition:background .3s,color .3s; }
+        .serif { font-family:'Cormorant Garamond',serif; }
+        .glass { background:${th.card}; backdrop-filter:blur(14px); border:1px solid ${th.border}; }
+        .grad-text { background:linear-gradient(135deg,${th.primary},#fb7185,${th.green}); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .slide-up { animation:su .38s ease forwards; }
+        .fade     { animation:fi .3s  ease forwards; }
+        @keyframes su       { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fi       { from{opacity:0} to{opacity:1} }
+        @keyframes spin     { to{transform:rotate(360deg)} }
+        @keyframes checkPop { 0%{transform:scale(0) rotate(-20deg);opacity:0} 65%{transform:scale(1.25) rotate(5deg);opacity:1} 100%{transform:scale(1) rotate(0);opacity:1} }
+        @keyframes pulseRing{ 0%,100%{transform:scale(0.95);opacity:.8} 50%{transform:scale(1.05);opacity:1} }
+        @keyframes shake    { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
+        .shake { animation:shake .4s ease; }
+        .inp {
+          width:100%; padding:13px 16px;
+          background:${th.inputBg}; border:1.5px solid ${th.border};
+          border-radius:13px; color:${th.text}; font-size:14px;
+          font-family:'Nunito',sans-serif; outline:none; transition:border-color .2s;
+        }
+        .inp:focus { border-color:${th.primary}; }
+        .inp::placeholder { color:${th.text3}; }
+        .inp.err { border-color:${th.primary}; }
+        .btn-p {
+          background:linear-gradient(135deg,${th.primary},#fb7185); border:none;
+          border-radius:14px; color:white; font-weight:700; font-size:14px;
+          padding:13px; cursor:pointer; width:100%; font-family:'Nunito',sans-serif;
+          transition:.15s; box-shadow:0 4px 14px ${th.primaryL};
+        }
+        .btn-p:active { transform:scale(0.98); }
+        .btn-p:disabled { opacity:.45; cursor:not-allowed; }
+        .btn-s {
+          background:${th.primaryL}; border:1.5px solid ${th.border2};
+          border-radius:13px; color:${th.primary}; font-weight:700; font-size:13px;
+          padding:11px 18px; cursor:pointer; font-family:'Nunito',sans-serif; transition:.15s;
+        }
+        .btn-s:disabled { opacity:.5; cursor:not-allowed; }
+        .btn-g {
+          background:${th.greenL}; border:1.5px solid rgba(16,185,129,.3);
+          border-radius:13px; color:${th.green}; font-weight:700; font-size:13px;
+          padding:11px 18px; cursor:pointer; font-family:'Nunito',sans-serif;
+        }
+        .spinner {
+          display:inline-block; width:16px; height:16px;
+          border:2px solid rgba(255,255,255,.35); border-top:2px solid #fff;
+          border-radius:50%; animation:spin .65s linear infinite; vertical-align:middle;
+        }
+        .inp-wrap { position:relative; }
+        .eye-btn {
+          position:absolute; right:13px; top:50%; transform:translateY(-50%);
+          background:none; border:none; cursor:pointer; padding:4px;
+          font-size:15px; color:${th.text3}; line-height:1;
+        }
+        .pass-bar-track { height:5px; border-radius:99px; background:${th.border}; overflow:hidden; margin-top:8px; }
+        .pass-bar { height:5px; border-radius:99px; transition:width .45s,background .45s; }
+        .step-track { display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:28px; }
+        .step-seg { height:5px; border-radius:99px; transition:all .4s ease; }
+        .req-row { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+        .recovery-tip { background:${th.card2}; border:1.5px solid ${th.border}; border-radius:14px; padding:14px 16px; }
+        .step-list-row { display:flex; align-items:flex-start; gap:10px; margin-bottom:9px; }
+        .step-num {
+          width:22px; height:22px; border-radius:50%;
+          background:${th.primaryL}; border:1.5px solid ${th.border2};
+          display:flex; align-items:center; justify-content:center;
+          flex-shrink:0; font-size:10px; font-weight:700; color:${th.primary};
+        }
+        .check-circle {
+          width:84px; height:84px; border-radius:50%;
+          background:${th.greenL}; border:2.5px solid ${th.green};
+          display:flex; align-items:center; justify-content:center;
+          margin:0 auto 20px; font-size:38px; color:${th.green};
+          animation:checkPop .55s ease forwards, pulseRing 2.5s ease-in-out 0.6s infinite;
+        }
+        .email-badge {
+          background:${th.primaryL}; border:1.5px solid ${th.border2};
+          border-radius:12px; padding:9px 18px; display:inline-block; margin-bottom:20px;
+          word-break:break-all;
+        }
+        .divider-line { display:flex; align-items:center; gap:10px; margin:14px 0; }
+        .divider-line::before,.divider-line::after { content:''; flex:1; height:1px; background:${th.border}; }
+        .resent-toast { background:${th.greenL}; border:1px solid rgba(16,185,129,.35); border-radius:12px; padding:10px 14px; margin-bottom:12px; text-align:center; }
+        .error-box { background:rgba(244,63,94,0.1); border:1.5px solid ${th.border2}; border-radius:13px; padding:14px 16px; margin-bottom:16px; }
+        .config-banner {
+          position:fixed; bottom:0; left:0; right:0; z-index:9999;
+          background:linear-gradient(135deg,#7c2d12,#b45309);
+          color:white; padding:12px 20px; font-size:13px; font-family:'Nunito',sans-serif;
+          display:flex; align-items:center; gap:10px; justify-content:center;
+        }
+        .theme-toggle {
+          position:fixed; top:16px; right:16px; z-index:999;
+          background:${th.card}; border:1px solid ${th.border};
+          border-radius:99px; padding:8px 16px; cursor:pointer;
+          color:${th.text2}; font-size:13px; font-weight:700;
+          font-family:'Nunito',sans-serif; backdrop-filter:blur(10px); transition:.2s;
+        }
+        .nav-tabs {
+          position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:998;
+          display:flex; gap:6px; background:${th.card}; border:1px solid ${th.border};
+          border-radius:99px; padding:6px; backdrop-filter:blur(10px); flex-wrap:wrap;
+        }
+        .nav-tab {
+          padding:6px 14px; border-radius:99px; border:none; cursor:pointer;
+          font-size:12px; font-weight:700; font-family:'Nunito',sans-serif;
+          transition:.2s; white-space:nowrap;
+        }
+        .nav-tab.active { background:${th.primary}; color:white; }
+        .nav-tab:not(.active) { background:transparent; color:${th.text3}; }
+        .nav-tab:not(.active):hover { color:${th.text2}; }
+      `;
+    }
+
+    // ════════════════════════════════════════
+    // COMPONENTES AUXILIARES
+    // ════════════════════════════════════════
+    function StepIndicator({ step, th }) {
+      return (
+        <div className="step-track">
+          {[1,2,3].map(s => (
+            <div key={s} className="step-seg" style={{
+              width: step===s ? "40px" : "20px",
+              background: step>s ? th.green : step===s ? th.primary : th.border,
+            }} />
+          ))}
+        </div>
+      );
+    }
+
+    function PasswordStrengthBar({ password, th }) {
+      if (!password) return null;
+      const score = [password.length>=8, /[A-Z]/.test(password), /[0-9]/.test(password), /[^A-Za-z0-9]/.test(password)].filter(Boolean).length;
+      const s = score<=1 ? {pct:25,label:"Muito fraca",color:"#ef4444"}
+              : score===2 ? {pct:50,label:"Razoável",  color:th.accent}
+              : score===3 ? {pct:75,label:"Boa",       color:"#22c55e"}
+              :             {pct:100,label:"Forte 💪",  color:th.green};
+      return (
+        <div style={{marginTop:"8px"}}>
+          <div className="pass-bar-track">
+            <div className="pass-bar" style={{width:`${s.pct}%`,background:s.color}} />
+          </div>
+          <p style={{fontSize:"11px",color:s.color,fontWeight:"700",marginTop:"4px"}}>Senha {s.label}</p>
+        </div>
+      );
+    }
+
+    // Aviso de status do backend / SendGrid
+    function ConfigBanner({ backendStatus }) {
+      if (!backendStatus || backendStatus === "ok") return null;
+      const msgs = {
+        offline:        { icon:"🔴", text: <><strong>Backend offline.</strong> Rode <code style={{background:"rgba(255,255,255,0.2)",padding:"1px 6px",borderRadius:"4px"}}>npm start</code> dentro da pasta <code style={{background:"rgba(255,255,255,0.2)",padding:"1px 6px",borderRadius:"4px"}}>backend/</code> para ativar o envio de e-mails.</> },
+        not_configured: { icon:"⚙️", text: <><strong>Resend não configurado.</strong> Preencha <code style={{background:"rgba(255,255,255,0.2)",padding:"1px 6px",borderRadius:"4px"}}>RESEND_API_KEY</code> e <code style={{background:"rgba(255,255,255,0.2)",padding:"1px 6px",borderRadius:"4px"}}>FROM_EMAIL</code> no arquivo <code style={{background:"rgba(255,255,255,0.2)",padding:"1px 6px",borderRadius:"4px"}}>backend/.env</code></> },
+      };
+      const m = msgs[backendStatus];
+      return (
+        <div className="config-banner">
+          {m.icon} {m.text}
+        </div>
+      );
+    }
+
+    // ════════════════════════════════════════
+    // TELA 1 — ESQUECI MINHA SENHA
+    // ════════════════════════════════════════
+    function ForgotPasswordScreen({ th, onBack, onSubmit }) {
+      const [email,   setEmail]   = useState("");
+      const [loading, setLoading] = useState(false);
+      const [error,   setError]   = useState("");     // string de erro ou "NOT_CONFIGURED"
+      const [shake,   setShake]   = useState(false);
+      const inpRef = useRef();
+
+      const triggerShake = () => {
+        setShake(true);
+        setTimeout(() => setShake(false), 450);
+      };
+
+      const handle = async () => {
+        if (!email.trim())                               { setError("Digite seu e-mail."); triggerShake(); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))  { setError("E-mail inválido. Verifique e tente novamente."); triggerShake(); return; }
+
+        setLoading(true);
+        setError("");
+        try {
+          await sendRecoveryEmail(email.trim().toLowerCase());
+          onSubmit(email.trim().toLowerCase());
+        } catch (e) {
+          if (e.message === "BACKEND_OFFLINE") {
+            setError("BACKEND_OFFLINE");
+          } else if (e.message === "RESEND_NOT_CONFIGURED") {
+            setError("NOT_CONFIGURED");
+          } else if (e.message === "DOMAIN_NOT_VERIFIED") {
+            setError("Domínio não verificado no Resend. Adicione em resend.com/domains ou use onboarding@resend.dev como FROM.");
+          } else {
+            setError("Não foi possível enviar o e-mail. Tente novamente em instantes.");
+          }
+          triggerShake();
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="fade" style={{minHeight:"100vh",background:th.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 24px 80px"}}>
+          <div className="glass slide-up" style={{width:"100%",maxWidth:"400px",borderRadius:"26px",padding:"36px 28px"}}>
+            <StepIndicator step={1} th={th} />
+
+            <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",color:th.text3,marginBottom:"22px",display:"flex",alignItems:"center",gap:"5px",fontSize:"13px",fontFamily:"Nunito,sans-serif",padding:0}}>
+              ← Voltar ao login
+            </button>
+
+            <div style={{textAlign:"center",marginBottom:"30px"}}>
+              <div style={{fontSize:"54px",marginBottom:"12px"}}>🔑</div>
+              <h2 className="serif" style={{fontSize:"28px",color:th.text,marginBottom:"10px",lineHeight:"1.2"}}>Recuperar Senha</h2>
+              <p style={{fontSize:"14px",color:th.text3,lineHeight:"1.65"}}>
+                Digite o e-mail vinculado à sua conta. Enviaremos um link de recuperação.
+              </p>
+            </div>
+
+            {/* Backend offline */}
+            {error === "BACKEND_OFFLINE" && (
+              <div className="error-box" style={{marginBottom:"16px"}}>
+                <p style={{fontSize:"13px",color:th.primary,fontWeight:"700",marginBottom:"6px"}}>🔴 Backend não está rodando</p>
+                <p style={{fontSize:"12px",color:th.text3,lineHeight:"1.6"}}>
+                  Abra o terminal, entre na pasta <strong>backend/</strong> e rode <strong>npm start</strong>.
+                </p>
+              </div>
+            )}
+
+            {/* Resend não configurado */}
+            {error === "NOT_CONFIGURED" && (
+              <div className="error-box" style={{marginBottom:"16px"}}>
+                <p style={{fontSize:"13px",color:th.primary,fontWeight:"700",marginBottom:"6px"}}>⚙️ Resend não configurado</p>
+                <p style={{fontSize:"12px",color:th.text3,lineHeight:"1.6"}}>
+                  Preencha <strong>RESEND_API_KEY</strong> e <strong>FROM_EMAIL</strong> no arquivo <strong>backend/.env</strong>.
+                </p>
+              </div>
+            )}
+
+            {/* Erro genérico */}
+            {error && error !== "NOT_CONFIGURED" && error !== "BACKEND_OFFLINE" && (
+              <p style={{fontSize:"12px",color:th.primary,marginBottom:"12px",display:"flex",alignItems:"center",gap:"5px"}}>
+                ⚠️ {error}
+              </p>
+            )}
+
+            <div style={{marginBottom:"18px"}}>
+              <label style={{display:"block",fontSize:"11px",fontWeight:"700",letterSpacing:"0.5px",color:th.text2,marginBottom:"7px"}}>E-MAIL CADASTRADO</label>
+              <input
+                ref={inpRef}
+                className={`inp${shake?" shake":""}`}
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                autoComplete="email"
+                onChange={e=>{setEmail(e.target.value);setError("");}}
+                onKeyDown={e=>e.key==="Enter"&&handle()}
+                style={{fontSize:"15px"}}
+              />
+            </div>
+
+            <button className="btn-p" onClick={handle} disabled={loading} style={{fontSize:"15px",padding:"14px",marginBottom:"20px"}}>
+              {loading
+                ? <><span className="spinner" style={{marginRight:"8px"}} />Enviando e-mail...</>
+                : "Enviar link de recuperação →"
+              }
+            </button>
+
+            <div className="recovery-tip">
+              <p style={{fontSize:"12px",color:th.text3,lineHeight:"1.65"}}>
+                💡 <strong style={{color:th.text2}}>Não lembra o e-mail?</strong> Entre em contato com o suporte para verificarmos sua conta manualmente.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ════════════════════════════════════════
+    // TELA 2 — E-MAIL ENVIADO
+    // ════════════════════════════════════════
+    function EmailSentScreen({ th, email, onBack, onResend, onSimulateLink }) {
+      const [cooldown,    setCooldown]    = useState(0);
+      const [resendCount, setResendCount] = useState(0);
+      const [justResent,  setJustResent]  = useState(false);
+      const [resendError, setResendError] = useState("");
+      const [resendLoading, setResendLoading] = useState(false);
+
+      const handleResend = async () => {
+        if (cooldown > 0 || resendLoading) return;
+        setResendLoading(true);
+        setResendError("");
+        try {
+          await sendRecoveryEmail(email);
+          const count = resendCount + 1;
+          setResendCount(count);
+          setJustResent(true);
+          const secs = count >= 2 ? 120 : 60;
+          setCooldown(secs);
+          const id = setInterval(() => setCooldown(p => { if (p<=1){clearInterval(id);return 0;} return p-1; }), 1000);
+          setTimeout(() => setJustResent(false), 3500);
+        } catch(e) {
+          setResendError(
+            e.message === "BACKEND_OFFLINE"        ? "Backend offline. Rode npm start em backend/." :
+            e.message === "RESEND_NOT_CONFIGURED"  ? "Configure o Resend em backend/.env." :
+            e.message === "DOMAIN_NOT_VERIFIED"    ? "Domínio não verificado. Veja resend.com/domains." :
+            "Falha ao reenviar. Tente novamente."
+          );
+        } finally {
+          setResendLoading(false);
+        }
+      };
+
+      return (
+        <div className="fade" style={{minHeight:"100vh",background:th.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 24px 80px"}}>
+          <div className="glass slide-up" style={{width:"100%",maxWidth:"400px",borderRadius:"26px",padding:"36px 28px",textAlign:"center"}}>
+            <StepIndicator step={2} th={th} />
+
+            <div style={{fontSize:"60px",marginBottom:"14px"}}>📬</div>
+            <h2 className="serif" style={{fontSize:"28px",color:th.text,marginBottom:"10px"}}>E-mail enviado!</h2>
+            <p style={{fontSize:"14px",color:th.text3,lineHeight:"1.65",marginBottom:"16px"}}>
+              Enviamos as instruções de recuperação para:
+            </p>
+            <div className="email-badge">
+              <span style={{fontSize:"14px",color:th.primary,fontWeight:"700"}}>{email}</span>
+            </div>
+
+            <div style={{background:th.card2,border:`1px solid ${th.border}`,borderRadius:"16px",padding:"18px 16px",marginBottom:"20px",textAlign:"left"}}>
+              <p style={{fontSize:"12px",color:th.text2,fontWeight:"700",marginBottom:"12px",letterSpacing:"0.4px"}}>PRÓXIMOS PASSOS:</p>
+              {["Abra o e-mail de recuperação","Clique em 'Redefinir minha senha'","Crie uma senha nova e segura","Faça login normalmente"].map((s,i)=>(
+                <div key={i} className="step-list-row">
+                  <div className="step-num">{i+1}</div>
+                  <span style={{fontSize:"13px",color:th.text3,lineHeight:"1.5"}}>{s}</span>
+                </div>
+              ))}
+            </div>
+
+            {justResent && (
+              <div className="resent-toast fade">
+                <p style={{fontSize:"13px",color:th.green,fontWeight:"700"}}>✓ E-mail reenviado com sucesso!</p>
+              </div>
+            )}
+
+            {resendError && (
+              <p style={{fontSize:"12px",color:th.primary,marginBottom:"10px"}}>⚠️ {resendError}</p>
+            )}
+
+            <button
+              className="btn-s"
+              onClick={handleResend}
+              disabled={cooldown>0 || resendLoading}
+              style={{width:"100%",marginBottom:"10px",fontSize:"14px"}}
+            >
+              {resendLoading
+                ? <><span className="spinner" style={{marginRight:"6px",borderTopColor:th.primary}} />Reenviando...</>
+                : cooldown>0 ? `🔄 Reenviar em ${cooldown}s` : "🔄 Reenviar e-mail"
+              }
+            </button>
+
+            <div className="divider-line">
+              <span style={{fontSize:"11px",color:th.text3,whiteSpace:"nowrap"}}>ou para testar sem e-mail</span>
+            </div>
+
+            <button className="btn-g" onClick={onSimulateLink} style={{width:"100%",marginBottom:"18px",fontSize:"14px"}}>
+              🔗 Simular clique no link (demo)
+            </button>
+
+            <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",color:th.text3,fontSize:"13px",textDecoration:"underline",fontFamily:"Nunito,sans-serif"}}>
+              ← Voltar ao login
+            </button>
+
+            <p style={{fontSize:"11px",color:th.text3,marginTop:"16px"}}>
+              ⏱️ O link expira em <strong>30 minutos</strong> · Verifique também o spam
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // ════════════════════════════════════════
+    // TELA 3 — NOVA SENHA
+    // ════════════════════════════════════════
+    function ResetPasswordScreen({ th, onSuccess, onCancel }) {
+      const [password,     setPassword]     = useState("");
+      const [confirm,      setConfirm]      = useState("");
+      const [showPass,     setShowPass]     = useState(false);
+      const [showConfirm,  setShowConfirm]  = useState(false);
+      const [loading,      setLoading]      = useState(false);
+      const [errors,       setErrors]       = useState({});
+
+      const reqs = [
+        {label:"Mínimo 8 caracteres",       ok:password.length>=8},
+        {label:"Letra maiúscula (A–Z)",      ok:/[A-Z]/.test(password)},
+        {label:"Número (0–9)",               ok:/[0-9]/.test(password)},
+        {label:"Caractere especial (!@#$)",  ok:/[^A-Za-z0-9]/.test(password)},
+      ];
+
+      const validate = () => {
+        const e = {};
+        if (password.length < 8)                                      e.password = "Mínimo 8 caracteres";
+        else if (!/[A-Z]/.test(password) && !/[0-9]/.test(password)) e.password = "Use maiúsculas ou números";
+        if (!confirm)           e.confirm = "Confirme sua nova senha";
+        else if (password !== confirm) e.confirm = "As senhas não conferem";
+        setErrors(e);
+        return Object.keys(e).length === 0;
+      };
+
+      const handle = () => {
+        if (!validate()) return;
+        setLoading(true);
+        // Aqui você chamaria sua API real para salvar a nova senha
+        setTimeout(() => { setLoading(false); onSuccess(); }, 1800);
+      };
+
+      const matchOk = confirm.length > 0 && password === confirm;
+
+      return (
+        <div className="fade" style={{minHeight:"100vh",background:th.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 24px 80px"}}>
+          <div className="glass slide-up" style={{width:"100%",maxWidth:"400px",borderRadius:"26px",padding:"36px 28px"}}>
+            <StepIndicator step={3} th={th} />
+
+            <div style={{textAlign:"center",marginBottom:"30px"}}>
+              <div style={{fontSize:"54px",marginBottom:"12px"}}>🔐</div>
+              <h2 className="serif" style={{fontSize:"28px",color:th.text,marginBottom:"10px",lineHeight:"1.2"}}>Crie nova senha</h2>
+              <p style={{fontSize:"14px",color:th.text3,lineHeight:"1.65"}}>Escolha uma senha forte para proteger sua conta.</p>
+            </div>
+
+            {/* Nova senha */}
+            <div style={{marginBottom:"14px"}}>
+              <label style={{display:"block",fontSize:"11px",fontWeight:"700",letterSpacing:"0.5px",color:th.text2,marginBottom:"7px"}}>NOVA SENHA</label>
+              <div className="inp-wrap">
+                <input className={`inp${errors.password?" err":""}`} type={showPass?"text":"password"}
+                  placeholder="Mínimo 8 caracteres" value={password} autoComplete="new-password"
+                  onChange={e=>{setPassword(e.target.value);setErrors(p=>({...p,password:""}));}}
+                  style={{paddingRight:"44px"}}
+                />
+                <button className="eye-btn" type="button" onClick={()=>setShowPass(v=>!v)}>{showPass?"🙈":"👁️"}</button>
+              </div>
+              <PasswordStrengthBar password={password} th={th} />
+              {errors.password && <p style={{fontSize:"12px",color:th.primary,marginTop:"5px"}}>⚠️ {errors.password}</p>}
+            </div>
+
+            {/* Confirmar */}
+            <div style={{marginBottom:"20px"}}>
+              <label style={{display:"block",fontSize:"11px",fontWeight:"700",letterSpacing:"0.5px",color:th.text2,marginBottom:"7px"}}>CONFIRMAR SENHA</label>
+              <div className="inp-wrap">
+                <input className={`inp${errors.confirm?" err":""}`} type={showConfirm?"text":"password"}
+                  placeholder="Digite novamente" value={confirm} autoComplete="new-password"
+                  onChange={e=>{setConfirm(e.target.value);setErrors(p=>({...p,confirm:""}));}}
+                  onKeyDown={e=>e.key==="Enter"&&handle()}
+                  style={{paddingRight:"44px",borderColor:matchOk?th.green:undefined}}
+                />
+                <button className="eye-btn" type="button" onClick={()=>setShowConfirm(v=>!v)}>{showConfirm?"🙈":"👁️"}</button>
+              </div>
+              {matchOk    && <p style={{fontSize:"12px",color:th.green,marginTop:"5px",fontWeight:"600"}}>✓ Senhas conferem</p>}
+              {errors.confirm && <p style={{fontSize:"12px",color:th.primary,marginTop:"5px"}}>⚠️ {errors.confirm}</p>}
+            </div>
+
+            {/* Requisitos */}
+            <div style={{background:th.card2,border:`1px solid ${th.border}`,borderRadius:"14px",padding:"14px 16px",marginBottom:"22px"}}>
+              <p style={{fontSize:"11px",color:th.text3,fontWeight:"700",letterSpacing:"0.4px",marginBottom:"10px"}}>REQUISITOS DE SEGURANÇA:</p>
+              {reqs.map(({label,ok})=>(
+                <div key={label} className="req-row">
+                  <span style={{fontSize:"12px",width:"16px",color:ok?th.green:th.text3}}>{ok?"✓":"○"}</span>
+                  <span style={{fontSize:"12px",color:ok?th.green:th.text3,fontWeight:ok?"600":"400"}}>{label}</span>
+                </div>
+              ))}
+            </div>
+
+            <button className="btn-p" onClick={handle} disabled={loading} style={{fontSize:"15px",padding:"14px",marginBottom:"12px"}}>
+              {loading ? <><span className="spinner" style={{marginRight:"8px"}} />Salvando...</> : "Salvar nova senha →"}
+            </button>
+
+            <button onClick={onCancel} style={{background:"none",border:"none",cursor:"pointer",color:th.text3,fontSize:"13px",textDecoration:"underline",fontFamily:"Nunito,sans-serif",width:"100%"}}>
+              ← Cancelar
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ════════════════════════════════════════
+    // TELA 4 — SUCESSO
+    // ════════════════════════════════════════
+    function PasswordResetSuccessScreen({ th, onLogin }) {
+      return (
+        <div className="fade" style={{minHeight:"100vh",background:th.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 24px 80px"}}>
+          <div className="glass slide-up" style={{width:"100%",maxWidth:"400px",borderRadius:"26px",padding:"44px 28px",textAlign:"center"}}>
+            <div className="check-circle">✓</div>
+            <h2 className="serif" style={{fontSize:"30px",color:th.text,marginBottom:"12px",lineHeight:"1.2"}}>Senha alterada!</h2>
+            <p style={{fontSize:"15px",color:th.text3,lineHeight:"1.75",marginBottom:"8px"}}>Sua senha foi redefinida com sucesso.</p>
+            <p style={{fontSize:"14px",color:th.text3,lineHeight:"1.65",marginBottom:"32px"}}>Agora você pode entrar na sua conta usando a nova senha.</p>
+            <div style={{background:th.greenL,border:"1px solid rgba(16,185,129,.3)",borderRadius:"14px",padding:"14px 16px",marginBottom:"28px",textAlign:"left"}}>
+              <p style={{fontSize:"13px",color:th.green,fontWeight:"700",marginBottom:"6px"}}>🛡️ Dica de segurança</p>
+              <p style={{fontSize:"12px",color:th.text3,lineHeight:"1.6"}}>Nunca compartilhe sua senha. Use senhas únicas para cada serviço.</p>
+            </div>
+            <button className="btn-p" onClick={onLogin} style={{fontSize:"15px",padding:"14px",width:"100%"}}>Entrar agora →</button>
+          </div>
+        </div>
+      );
+    }
+
+    // ════════════════════════════════════════
+    // TELA DE LOGIN
+    // ════════════════════════════════════════
+    function LoginScreen({ th, onLogin, onForgot }) {
+      const [email,    setEmail]    = useState("");
+      const [password, setPassword] = useState("");
+      const [showPass, setShowPass] = useState(false);
+      const [loading,  setLoading]  = useState(false);
+      const [error,    setError]    = useState("");
+
+      const handle = () => {
+        if (!email.trim() || !password) { setError("Preencha e-mail e senha."); return; }
+        setLoading(true); setError("");
+        setTimeout(() => { setLoading(false); onLogin({email}); }, 1600);
+      };
+
+      return (
+        <div className="fade" style={{minHeight:"100vh",background:th.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 24px 80px"}}>
+          <div className="glass slide-up" style={{width:"100%",maxWidth:"400px",borderRadius:"26px",padding:"40px 28px"}}>
+            <div style={{textAlign:"center",marginBottom:"32px"}}>
+              <div style={{width:"64px",height:"64px",borderRadius:"20px",background:`linear-gradient(135deg,${th.primary},#fb7185)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"28px",margin:"0 auto 14px",boxShadow:`0 8px 24px ${th.primaryL}`}}>🔥</div>
+              <h1 className="serif grad-text" style={{fontSize:"30px",marginBottom:"6px"}}>Reset 7D</h1>
+              <p style={{fontSize:"14px",color:th.text3}}>Acesse sua conta para continuar</p>
+            </div>
+
+            <div style={{marginBottom:"14px"}}>
+              <label style={{display:"block",fontSize:"11px",fontWeight:"700",letterSpacing:"0.5px",color:th.text2,marginBottom:"7px"}}>E-MAIL</label>
+              <input className="inp" type="email" placeholder="seu@email.com" value={email} autoComplete="email"
+                onChange={e=>{setEmail(e.target.value);setError("");}} style={{fontSize:"15px"}} />
+            </div>
+
+            <div style={{marginBottom:"6px"}}>
+              <label style={{display:"block",fontSize:"11px",fontWeight:"700",letterSpacing:"0.5px",color:th.text2,marginBottom:"7px"}}>SENHA</label>
+              <div className="inp-wrap">
+                <input className="inp" type={showPass?"text":"password"} placeholder="Sua senha" value={password} autoComplete="current-password"
+                  onChange={e=>{setPassword(e.target.value);setError("");}}
+                  onKeyDown={e=>e.key==="Enter"&&handle()}
+                  style={{paddingRight:"44px",fontSize:"15px"}} />
+                <button className="eye-btn" type="button" onClick={()=>setShowPass(v=>!v)}>{showPass?"🙈":"👁️"}</button>
+              </div>
+            </div>
+
+            <div style={{textAlign:"right",marginBottom:"18px"}}>
+              <button onClick={onForgot} style={{background:"none",border:"none",cursor:"pointer",color:th.primary,fontSize:"13px",fontWeight:"600",fontFamily:"Nunito,sans-serif",padding:0,textDecoration:"underline"}}>
+                Esqueci minha senha
+              </button>
+            </div>
+
+            {error && <p style={{fontSize:"13px",color:th.primary,marginBottom:"12px",textAlign:"center"}}>⚠️ {error}</p>}
+
+            <button className="btn-p" onClick={handle} disabled={loading} style={{fontSize:"15px",padding:"14px"}}>
+              {loading ? <><span className="spinner" style={{marginRight:"8px"}} />Entrando...</> : "Entrar →"}
+            </button>
+
+            <p style={{fontSize:"12px",color:th.text3,textAlign:"center",marginTop:"20px",lineHeight:"1.6"}}>
+              Demo: qualquer e-mail e senha funcionam para testar o login
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // ════════════════════════════════════════
+    // TELA: TOKEN EXPIRADO
+    // ════════════════════════════════════════
+    function ExpiredTokenScreen({ th, onRequestNew }) {
+      return (
+        <div className="fade" style={{minHeight:"100vh",background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",padding:"24px"}}>
+          <div className="glass slide-up" style={{width:"100%",maxWidth:"400px",borderRadius:"26px",padding:"40px 28px",textAlign:"center"}}>
+            <div style={{fontSize:"56px",marginBottom:"16px"}}>⏱️</div>
+            <h2 className="serif" style={{fontSize:"26px",color:th.text,marginBottom:"10px"}}>Link expirado</h2>
+            <p style={{fontSize:"14px",color:th.text3,lineHeight:"1.7",marginBottom:"28px"}}>
+              Este link de recuperação expirou (válido por 30 minutos). Solicite um novo para continuar.
+            </p>
+            <button className="btn-p" onClick={onRequestNew} style={{fontSize:"15px",padding:"14px"}}>
+              Solicitar novo link →
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ════════════════════════════════════════
+    // APP PRINCIPAL
+    // ════════════════════════════════════════
+    function App() {
+      const [themeKey,      setThemeKey]      = useState("dark");
+      const [screen,        setScreen]        = useState("login");
+      const [recoveryEmail, setRecoveryEmail] = useState("");
+      // "ok" | "offline" | "not_configured"
+      const [backendStatus, setBackendStatus] = useState(null);
+
+      const th = T[themeKey];
+
+      // Verifica saúde do backend na inicialização
+      useEffect(() => {
+        fetch(`${window.BACKEND_URL}/api/health`)
+          .then(r => r.json())
+          .then(d => setBackendStatus(d.resend ? "ok" : "not_configured"))
+          .catch(() => setBackendStatus("offline"));
+      }, []);
+
+      // Detecta link de redefinição na URL (?reset=TOKEN)
+      useEffect(() => {
+        const token = getResetTokenFromURL();
+        if (token) {
+          if (token.expired) {
+            setScreen("expired");
+          } else {
+            setRecoveryEmail(token.email || "");
+            setScreen("reset");
+          }
+          // Limpa a URL sem recarregar
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+      }, []);
+
+      useEffect(() => { applyCSS(th); }, [themeKey]);
+
+      const tabs = [
+        {id:"login",   label:"🔐 Login"},
+        {id:"forgot",  label:"1 · E-mail"},
+        {id:"sent",    label:"2 · Enviado"},
+        {id:"reset",   label:"3 · Nova Senha"},
+        {id:"success", label:"4 · Sucesso"},
+      ];
+
+      const renderScreen = () => {
+        if (screen === "login")
+          return <LoginScreen th={th} onLogin={()=>setScreen("login")} onForgot={()=>setScreen("forgot")} />;
+
+        if (screen === "forgot")
+          return <ForgotPasswordScreen th={th}
+            onBack={()=>setScreen("login")}
+            onSubmit={mail=>{setRecoveryEmail(mail);setScreen("sent");}}
+          />;
+
+        if (screen === "sent")
+          return <EmailSentScreen th={th}
+            email={recoveryEmail || "voce@email.com"}
+            onBack={()=>setScreen("login")}
+            onSimulateLink={()=>setScreen("reset")}
+          />;
+
+        if (screen === "reset")
+          return <ResetPasswordScreen th={th}
+            onSuccess={()=>setScreen("success")}
+            onCancel={()=>setScreen("login")}
+          />;
+
+        if (screen === "success")
+          return <PasswordResetSuccessScreen th={th} onLogin={()=>setScreen("login")} />;
+
+        if (screen === "expired")
+          return <ExpiredTokenScreen th={th} onRequestNew={()=>setScreen("forgot")} />;
+      };
+
+      return (
+        <>
+          <button className="theme-toggle" onClick={()=>setThemeKey(k=>k==="dark"?"light":"dark")}>
+            {themeKey==="dark" ? "☀️ Claro" : "🌙 Escuro"}
+          </button>
+
+          <div className="nav-tabs">
+            {tabs.map(t=>(
+              <button key={t.id} className={`nav-tab${screen===t.id?" active":""}`} onClick={()=>setScreen(t.id)}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {renderScreen()}
+
+          <ConfigBanner backendStatus={backendStatus} />
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+
+  <!--
+  ════════════════════════════════════════════════════════════════
+  📧  GUIA DE CONFIGURAÇÃO — RESEND (3 MINUTOS)
+  ════════════════════════════════════════════════════════════════
+
+  PASSO 1 — Criar conta gratuita (3.000 e-mails/mês no plano free)
+    https://resend.com → Get Started
+
+  PASSO 2 — Criar API Key
+    Dashboard → API Keys → Create API Key
+    Nome: Reset7D | Permissão: Full Access (ou "Sending access")
+    Copie a chave (começa com re_) — ela aparece UMA ÚNICA VEZ
+
+  PASSO 3 — FROM_EMAIL (duas opções):
+    A) SEM domínio verificado (modo teste):
+       FROM_EMAIL=onboarding@resend.dev
+       ⚠️  Só envia para o e-mail da sua conta Resend
+
+    B) COM domínio verificado (produção):
+       Dashboard → Domains → Add Domain → siga as instruções DNS
+       FROM_EMAIL=seuemail@seudominio.com
+       ✅  Envia para qualquer destinatário
+
+  PASSO 4 — Preencher backend/.env
+    RESEND_API_KEY=re_sua_chave_aqui
+    FROM_EMAIL=onboarding@resend.dev   (ou seu domínio verificado)
+    FROM_NAME=Reset 7D
+
+  PASSO 5 — Iniciar o backend
+    No terminal, dentro da pasta backend/:
+      npm install
+      npm start
+    Ou execute iniciar.ps1 na raiz do projeto.
+
+  PASSO 6 — Acessar
+    http://localhost:3001/recuperar-senha-demo.html
+
+  Pronto! Os e-mails serão enviados via Resend.
+
+  ════════════════════════════════════════════════════════════════
+  -->
+</body>
+</html>

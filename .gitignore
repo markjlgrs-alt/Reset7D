@@ -1,0 +1,6 @@
+node_modules/
+backend/.env
+.env
+*.zip
+.DS_Store
+Thumbs.db
