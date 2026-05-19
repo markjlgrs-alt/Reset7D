@@ -491,8 +491,8 @@ function QuizScreen({onDone, th}) {
         <div style={{fontSize:12,color:th.text,lineHeight:1.5}}>das mulheres com seu perfil percebem diferença nos primeiros 3 dias.</div>
       </div>
 
-      <button className="btn-p" onClick={(e)=>{addRipple(e);onDone();}} style={{fontSize:'15px',padding:'15px'}}>
-        Começar o RESET 7D agora →
+      <button className="btn-p" onClick={(e)=>{addRipple(e);onDone();}} style={{fontSize:'15px',padding:'16px 24px',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',whiteSpace:'nowrap',letterSpacing:'0.01em'}}>
+        <span>Começar o RESET 7D agora</span><span style={{fontSize:'18px',lineHeight:1}}>→</span>
       </button>
     </div>
   );
@@ -572,71 +572,58 @@ function QuizScreen({onDone, th}) {
   );
 }
 
-// ── LOGO R7D ──────────────────────────────────────────────────
+// ── LOGO R7D ANIMADO ──────────────────────────────────────────
+// Usa o PNG oficial "logo-r7d.png". Animação ao carregar:
+//   1) arco gradiente se desenha de 0° → 360° (1.2s)
+//   2) logo PNG faz fade-in com scale spring (0.7s, sobreposto)
+//   3) arco SVG desaparece quando o PNG já mostra o arco completo
 function LogoR7D({size=90}) {
-  const uid = `r7d_${size}`;
+  const [phase, setPhase] = useState('init');
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase('arc'),     80);
+    const t2 = setTimeout(() => setPhase('reveal'), 1200);
+    const t3 = setTimeout(() => setPhase('done'),   2100);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, []);
+  const arcVisible = phase === 'arc' || phase === 'reveal';
+  const logoVisible = phase === 'reveal' || phase === 'done';
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{display:'block'}}>
-      <defs>
-        <linearGradient id={uid+'a'} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#e8a4c0"/>
-          <stop offset="100%" stopColor="#9dd9b8"/>
-        </linearGradient>
-        <linearGradient id={uid+'b'} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#f4c896" stopOpacity="0.9"/>
-          <stop offset="100%" stopColor="#e8a4c0" stopOpacity="0.6"/>
-        </linearGradient>
-        <radialGradient id={uid+'c'} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#e8a4c0" stopOpacity="0.18"/>
-          <stop offset="100%" stopColor="#e8a4c0" stopOpacity="0"/>
-        </radialGradient>
-        <filter id={uid+'f'}>
-          <feGaussianBlur stdDeviation="2" result="b"/>
-          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-
-      {/* Background glow */}
-      <circle cx="50" cy="50" r="48" fill={`url(#${uid}c)`}/>
-
-      {/* Outer ring - dashed */}
-      <circle cx="50" cy="50" r="46" fill="none" stroke={`url(#${uid}a)`} strokeWidth="1.2" strokeDasharray="6 4" opacity="0.5"/>
-
-      {/* Inner ring */}
-      <circle cx="50" cy="50" r="40" fill="none" stroke={`url(#${uid}a)`} strokeWidth="0.6" opacity="0.25"/>
-
-      {/* === Woman silhouette === */}
-      {/* Head */}
-      <circle cx="50" cy="19" r="7.5" fill={`url(#${uid}a)`}/>
-
-      {/* Neck */}
-      <path d="M47 26 L47 30 C47 30 50 31 53 30 L53 26 Z" fill={`url(#${uid}a)`}/>
-
-      {/* Torso - feminine shape */}
-      <path d="M39 30 C40 27 44 26 50 26 C56 26 60 27 61 30 L64 49 C63 52 57 54 50 54 C43 54 37 52 36 49 Z" fill={`url(#${uid}a)`}/>
-
-      {/* Left arm — raised triumphant */}
-      <path d="M39 33 Q27 26 18 17" stroke={`url(#${uid}a)`} strokeWidth="4.5" strokeLinecap="round" fill="none"/>
-      {/* Left hand sparkle */}
-      <circle cx="16" cy="15" r="2.8" fill="#e8a4c0" opacity="0.9" filter={`url(#${uid}f)`}/>
-      <circle cx="11" cy="12" r="1.5" fill="#e8a4c0" opacity="0.5"/>
-      <circle cx="14" cy="9" r="1" fill="#f4c896" opacity="0.7"/>
-
-      {/* Right arm — raised triumphant */}
-      <path d="M61 33 Q73 26 82 17" stroke={`url(#${uid}a)`} strokeWidth="4.5" strokeLinecap="round" fill="none"/>
-      {/* Right hand sparkle */}
-      <circle cx="84" cy="15" r="2.8" fill="#9dd9b8" opacity="0.9" filter={`url(#${uid}f)`}/>
-      <circle cx="89" cy="12" r="1.5" fill="#9dd9b8" opacity="0.5"/>
-      <circle cx="86" cy="9" r="1" fill="#f4c896" opacity="0.7"/>
-
-      {/* Left leg */}
-      <path d="M44 54 Q41 64 39 76" stroke={`url(#${uid}a)`} strokeWidth="5.5" strokeLinecap="round" fill="none"/>
-      {/* Right leg */}
-      <path d="M56 54 Q59 64 61 76" stroke={`url(#${uid}a)`} strokeWidth="5.5" strokeLinecap="round" fill="none"/>
-
-      {/* R7D lettering - bold, centered */}
-      <text x="50" y="94" textAnchor="middle" fill={`url(#${uid}a)`} fontSize="11.5" fontWeight="900" fontFamily="Manrope,Arial,sans-serif" letterSpacing="3.5">R7D</text>
-    </svg>
+    <div style={{position:'relative',width:size,height:size,display:'inline-block'}}>
+      {/* Arco animado se desenhando */}
+      <svg viewBox="0 0 100 100" style={{
+        position:'absolute',inset:0,width:'100%',height:'100%',
+        opacity: phase === 'init' ? 0 : phase === 'done' ? 0 : 1,
+        transition:'opacity .55s ease',
+        zIndex:2,pointerEvents:'none',
+      }}>
+        <defs>
+          <linearGradient id={`arcg_${size}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stopColor="#f4c896"/>
+            <stop offset="50%"  stopColor="#e8a4c0"/>
+            <stop offset="100%" stopColor="#9dd9b8"/>
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="44" fill="none"
+          stroke={`url(#arcg_${size})`} strokeWidth="2.2" strokeLinecap="round"
+          style={{
+            strokeDasharray: 276.46,
+            strokeDashoffset: arcVisible ? 0 : 276.46,
+            transition:'stroke-dashoffset 1.15s cubic-bezier(.4,0,.2,1)',
+            transform:'rotate(-90deg)', transformOrigin:'50px 50px',
+            filter:'drop-shadow(0 0 6px rgba(232,164,192,.65))',
+          }}/>
+      </svg>
+      {/* PNG oficial */}
+      <img src="/logo-r7d.png" alt="Reset 7D" draggable={false}
+        style={{
+          width:'100%',height:'100%',objectFit:'contain',display:'block',
+          opacity: logoVisible ? 1 : 0,
+          transform: logoVisible ? 'scale(1)' : 'scale(.78)',
+          transition:'opacity .75s ease, transform .85s cubic-bezier(.34,1.56,.64,1)',
+          filter:'drop-shadow(0 6px 22px rgba(232,164,192,.35))',
+          userSelect:'none',
+        }}/>
+    </div>
   );
 }
 
