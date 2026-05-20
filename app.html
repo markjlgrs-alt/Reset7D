@@ -137,6 +137,8 @@ input,textarea{font-family:'Manrope',sans-serif;}
 .quiz-result-card{animation:quizResultIn .5s cubic-bezier(.2,0,.2,1) both;}
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 .progress-bar-fill{transform-origin:left;animation:progressPop .5s cubic-bezier(.2,0,.2,1) forwards;}
+@keyframes glitterPop{0%,100%{opacity:0;transform:scale(0) rotate(0deg);}38%,62%{opacity:1;transform:scale(1) rotate(160deg);}}
+@keyframes glitterDrift{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-5px) rotate(20deg);}}
 `;
 
 // ── QUIZ ──────────────────────────────────────────────────────
@@ -411,6 +413,194 @@ function addRipple(e) {
   setTimeout(() => ripple.remove(), 650);
 }
 
+// ── GRÁFICO 3D ISOMÉTRICO INTERATIVO ─────────────────────────
+function Chart3D({data}) {
+  const ref = useRef(null);
+  const st  = useRef({raw:0,prog:0,hov:-1,animId:null,pulseT:0,done:false});
+
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const DPR = Math.min(window.devicePixelRatio||1, 2);
+
+    const setup = () => {
+      const pw = (canvas.parentElement?.offsetWidth||320);
+      canvas.width  = pw * DPR;
+      canvas.height = 218 * DPR;
+      canvas.style.width  = pw  + 'px';
+      canvas.style.height = '218px';
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+    };
+    setup();
+
+    const W = canvas.width/DPR, H = canvas.height/DPR;
+    const n = data.length;
+    const PAD = 22, AVAIL = W - PAD*2;
+    const SLOT = AVAIL/n;
+    const BW = Math.min(SLOT*0.46, 40);
+    const DX = BW*0.38, DY = DX*0.52;
+    const MAXH = H - 62;
+    const GY = H - 22;
+
+    const PAL = [
+      {t:'#f9b4cf',f:'#e05890',s:'#b03070',g:'rgba(249,180,207,'},
+      {t:'#fce080',f:'#f4b820',s:'#c08010',g:'rgba(252,224,128,'},
+      {t:'#f5a8e2',f:'#d858b8',s:'#a02880',g:'rgba(245,168,226,'},
+      {t:'#a8e8c4',f:'#50b880',s:'#308050',g:'rgba(168,232,196,'},
+      {t:'#fdc8a0',f:'#e87838',s:'#b84818',g:'rgba(253,200,160,'},
+    ];
+
+    const bx = i => PAD + i*SLOT + SLOT/2;
+    const bh = i => (data[i].pct/100) * MAXH * st.current.prog;
+
+    /* polyfill roundRect */
+    if (!ctx.roundRect) ctx.roundRect = function(x,y,w,h,r){
+      this.moveTo(x+r,y);this.lineTo(x+w-r,y);this.arcTo(x+w,y,x+w,y+r,r);
+      this.lineTo(x+w,y+h-r);this.arcTo(x+w,y+h,x+w-r,y+h,r);
+      this.lineTo(x+r,y+h);this.arcTo(x,y+h,x,y+h-r,r);
+      this.lineTo(x,y+r);this.arcTo(x,y,x+r,y,r);this.closePath();
+    };
+
+    const draw = () => {
+      const s = st.current;
+      ctx.clearRect(0,0,W,H);
+
+      /* floor glow */
+      const fg=ctx.createRadialGradient(W/2,GY,0,W/2,GY,W*0.55);
+      fg.addColorStop(0,'rgba(232,164,192,0.14)'); fg.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=fg; ctx.fillRect(0,GY-8,W,16);
+
+      /* grid lines */
+      for(let g=1;g<=4;g++){
+        const gy=GY-g*(MAXH/4);
+        ctx.strokeStyle=`rgba(232,164,192,${g===4?0.18:0.07})`;
+        ctx.lineWidth=g===4?1.2:0.6;
+        ctx.setLineDash(g===4?[]:[3,5]);
+        ctx.beginPath(); ctx.moveTo(PAD,gy); ctx.lineTo(W-PAD,gy); ctx.stroke();
+        ctx.setLineDash([]);
+        if(g>0){
+          ctx.fillStyle='rgba(168,144,152,0.42)';
+          ctx.font='8px Manrope,sans-serif'; ctx.textAlign='right';
+          ctx.fillText((g*25)+'%', PAD-3, gy+3);
+        }
+      }
+      /* ground */
+      ctx.strokeStyle='rgba(232,164,192,0.28)'; ctx.lineWidth=1.2;
+      ctx.beginPath(); ctx.moveTo(PAD-DX,GY); ctx.lineTo(W-PAD+DX,GY); ctx.stroke();
+
+      /* bars back→front */
+      for(let i=n-1;i>=0;i--){
+        const cx=bx(i), barH=bh(i), top=GY-barH;
+        if(barH<1) continue;
+        const P=PAL[i%PAL.length], isH=i===s.hov;
+
+        /* floor halo */
+        const rg=ctx.createRadialGradient(cx,GY,0,cx,GY,BW*1.3);
+        rg.addColorStop(0, P.g+(isH?'0.55)':'0.22)')); rg.addColorStop(1,P.g+'0)');
+        ctx.fillStyle=rg; ctx.fillRect(cx-BW,GY-5,BW*2+DX,10);
+
+        if(isH){ctx.shadowColor=P.t; ctx.shadowBlur=20;}
+
+        /* front */
+        const gf=ctx.createLinearGradient(cx-BW/2,top,cx-BW/2,GY);
+        gf.addColorStop(0, P.f+'ee'); gf.addColorStop(1, P.s+'88');
+        ctx.fillStyle=gf; ctx.fillRect(cx-BW/2,top,BW,barH);
+
+        ctx.shadowBlur=0;
+
+        /* top face */
+        const gt=ctx.createLinearGradient(cx-BW/2,top-DY,cx+BW/2+DX,top);
+        gt.addColorStop(0,P.t+'ff'); gt.addColorStop(1,P.f+'cc');
+        ctx.fillStyle=gt;
+        ctx.beginPath();
+        ctx.moveTo(cx-BW/2,top); ctx.lineTo(cx-BW/2+DX,top-DY);
+        ctx.lineTo(cx+BW/2+DX,top-DY); ctx.lineTo(cx+BW/2,top);
+        ctx.closePath(); ctx.fill();
+
+        /* side */
+        const gs=ctx.createLinearGradient(cx+BW/2,top,cx+BW/2+DX,GY);
+        gs.addColorStop(0,P.s+'cc'); gs.addColorStop(1,P.s+'33');
+        ctx.fillStyle=gs;
+        ctx.beginPath();
+        ctx.moveTo(cx+BW/2,top); ctx.lineTo(cx+BW/2+DX,top-DY);
+        ctx.lineTo(cx+BW/2+DX,GY-DY); ctx.lineTo(cx+BW/2,GY);
+        ctx.closePath(); ctx.fill();
+
+        /* top glow rim */
+        if(isH){
+          ctx.strokeStyle=P.t+'cc'; ctx.lineWidth=1.4;
+          ctx.beginPath();
+          ctx.moveTo(cx-BW/2,top); ctx.lineTo(cx-BW/2+DX,top-DY);
+          ctx.lineTo(cx+BW/2+DX,top-DY); ctx.lineTo(cx+BW/2,top); ctx.lineTo(cx-BW/2,top);
+          ctx.stroke();
+        }
+
+        /* pct label */
+        if(s.prog>0.82){
+          const a=(s.prog-0.82)/0.18;
+          ctx.globalAlpha=a*(isH?1:0.75);
+          ctx.fillStyle=isH?P.t:'#f0d8e8';
+          ctx.font=`bold ${isH?13:11}px Manrope,sans-serif`;
+          ctx.textAlign='center';
+          ctx.fillText(data[i].pct+'%', cx+DX/2, top-DY-5);
+          ctx.globalAlpha=1;
+        }
+
+        /* name label */
+        ctx.fillStyle=`rgba(168,144,152,${isH?1:0.8})`;
+        ctx.font=`${isH?10:9}px Manrope,sans-serif`; ctx.textAlign='center';
+        ctx.fillText(data[i].name, cx+DX*0.4, GY+14);
+      }
+
+      /* hover tooltip */
+      if(s.hov>=0 && s.prog>=1){
+        const i=s.hov, cx=bx(i), barH=bh(i), P=PAL[i%PAL.length];
+        const tx=Math.max(44,Math.min(W-44,cx+DX/2));
+        const ty=GY-barH-DY-26;
+        ctx.fillStyle='rgba(18,8,24,0.92)';
+        ctx.strokeStyle=P.t+'bb'; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.roundRect(tx-34,ty-18,68,24,7); ctx.fill(); ctx.stroke();
+        ctx.fillStyle=P.t; ctx.font='bold 11px Manrope,sans-serif'; ctx.textAlign='center';
+        ctx.fillText(data[i].name+' · '+data[i].pct+'%', tx, ty-2);
+      }
+    };
+
+    const tick = () => {
+      const s=st.current;
+      s.raw += 0.03;
+      s.prog = s.raw>=1 ? 1 : 1-Math.pow(1-Math.min(s.raw,1),3);
+      s.pulseT += 0.045;
+      draw();
+      s.animId = requestAnimationFrame(s.raw<1 ? tick : pulse);
+    };
+    const pulse = () => {
+      st.current.pulseT += 0.045;
+      draw();
+      st.current.animId = requestAnimationFrame(pulse);
+    };
+    st.current.animId = requestAnimationFrame(tick);
+
+    const hov = e => {
+      const r=canvas.getBoundingClientRect();
+      const mx=(e.clientX-r.left)*(W/r.width);
+      let h=-1;
+      data.forEach((_,i)=>{ if(Math.abs(mx-bx(i))<SLOT/2) h=i; });
+      if(h!==st.current.hov){ st.current.hov=h; draw(); }
+    };
+    const leave = () => { if(st.current.hov!==-1){st.current.hov=-1;draw();} };
+    canvas.addEventListener('mousemove', hov);
+    canvas.addEventListener('mouseleave', leave);
+    return () => {
+      cancelAnimationFrame(st.current.animId);
+      canvas.removeEventListener('mousemove', hov);
+      canvas.removeEventListener('mouseleave', leave);
+    };
+  }, []);
+
+  return <canvas ref={ref} style={{display:'block',width:'100%',cursor:'crosshair'}}/>;
+}
+
 // ── QUIZ ──────────────────────────────────────────────────────
 function QuizScreen({onDone, th}) {
   const [step, setStep]           = useState(0);
@@ -454,23 +644,9 @@ function QuizScreen({onDone, th}) {
       </div>
 
       <div className="quiz-result-card" style={{borderRadius:18,padding:18,background:th.primaryL,border:`1px solid ${th.border2}`,animationDelay:'.1s'}}>
-        <div style={{fontSize:13,fontWeight:700,color:th.primary,marginBottom:12}}>📊 Comparação com outras mulheres</div>
-        {chartData.map((d,i) => (
-          <div key={d.name} style={{marginBottom:10}}>
-            <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-              <span style={{fontSize:11,color:th.text3}}>{d.name}</span>
-              <span style={{fontSize:11,fontWeight:700,color:th.primary}}>{d.pct}%</span>
-            </div>
-            <div style={{height:6,background:th.border,borderRadius:3,overflow:'hidden'}}>
-              <div style={{
-                height:'100%',borderRadius:3,
-                background:`linear-gradient(90deg,${th.primary},${th.green})`,
-                width:`${d.pct}%`,
-                animation:`optionEnter .6s ${i*0.12}s both`,
-              }}/>
-            </div>
-          </div>
-        ))}
+        <div style={{fontSize:13,fontWeight:700,color:th.primary,marginBottom:4}}>📊 Comparação com outras mulheres</div>
+        <div style={{fontSize:11,color:th.text3,marginBottom:12}}>Passe o mouse sobre as barras para detalhes</div>
+        <Chart3D data={chartData}/>
       </div>
 
       <div className="quiz-result-card" style={{borderRadius:18,padding:20,background:th.greenL,border:"1px solid rgba(157,217,184,.3)",animationDelay:'.2s'}}>
@@ -572,57 +748,75 @@ function QuizScreen({onDone, th}) {
   );
 }
 
-// ── LOGO R7D ANIMADO ──────────────────────────────────────────
-// Usa o PNG oficial "logo-r7d.png". Animação ao carregar:
-//   1) arco gradiente se desenha de 0° → 360° (1.2s)
-//   2) logo PNG faz fade-in com scale spring (0.7s, sobreposto)
-//   3) arco SVG desaparece quando o PNG já mostra o arco completo
+// ── LOGO R7D ANIMADO — ELEMENTO POR ELEMENTO + GLITTER ────────
+// Revela o PNG em 4 camadas sobrepostas com clip-path distintos:
+//   1) arco/estrelas topo  2) silhueta  3) flores  4) textos
+// mix-blend-mode:lighten remove o fundo escuro no tema dark.
+// Glitter: 8 faíscas SVG em posições fixas sobre as estrelas da logo.
 function LogoR7D({size=90}) {
-  const [phase, setPhase] = useState('init');
+  const [ph, setPh] = useState(0);
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase('arc'),     80);
-    const t2 = setTimeout(() => setPhase('reveal'), 1200);
-    const t3 = setTimeout(() => setPhase('done'),   2100);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    const ts = [
+      setTimeout(() => setPh(1),  80),
+      setTimeout(() => setPh(2), 230),
+      setTimeout(() => setPh(3), 380),
+      setTimeout(() => setPh(4), 530),
+      setTimeout(() => setPh(5), 680),
+    ];
+    return () => ts.forEach(clearTimeout);
   }, []);
-  const arcVisible = phase === 'arc' || phase === 'reveal';
-  const logoVisible = phase === 'reveal' || phase === 'done';
+
+  // [left%, top%, delay(s), size(px), dur(s), color]
+  const SPARKS = [
+    [74, 9,  0.0, 7, 1.5, '#ffd080'],
+    [88, 20, 0.5, 5, 1.2, '#f9b4cf'],
+    [66, 4,  0.8, 4, 1.7, '#fce080'],
+    [93, 32, 0.3, 4, 1.3, '#f9b4cf'],
+    [58, 2,  1.1, 3, 1.4, '#ffd080'],
+    [82, 38, 0.65,4, 1.6, '#a8e8c4'],
+    [97, 14, 0.9, 3, 1.1, '#fce080'],
+    [70, 28, 1.3, 3, 1.8, '#f9b4cf'],
+  ];
+
+  const layer = (clip, minPh, delay) => ({
+    position:'absolute', inset:0, width:'100%', height:'100%',
+    objectFit:'contain', display:'block', userSelect:'none', draggable:false,
+    mixBlendMode:'lighten',
+    clipPath: clip,
+    opacity:  ph >= minPh ? 1 : 0,
+    transform: ph >= minPh ? 'scale(1) translateY(0)' : 'scale(0.82) translateY(7px)',
+    transition: `opacity .2s ${delay}s ease, transform .38s ${delay}s cubic-bezier(.34,1.56,.64,1)`,
+    filter: 'drop-shadow(0 4px 14px rgba(232,164,192,.28))',
+  });
+
   return (
-    <div style={{position:'relative',width:size,height:size,display:'inline-block'}}>
-      {/* Arco animado se desenhando */}
-      <svg viewBox="0 0 100 100" style={{
-        position:'absolute',inset:0,width:'100%',height:'100%',
-        opacity: phase === 'init' ? 0 : phase === 'done' ? 0 : 1,
-        transition:'opacity .55s ease',
-        zIndex:2,pointerEvents:'none',
-      }}>
-        <defs>
-          <linearGradient id={`arcg_${size}`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%"   stopColor="#f4c896"/>
-            <stop offset="50%"  stopColor="#e8a4c0"/>
-            <stop offset="100%" stopColor="#9dd9b8"/>
-          </linearGradient>
-        </defs>
-        <circle cx="50" cy="50" r="44" fill="none"
-          stroke={`url(#arcg_${size})`} strokeWidth="2.2" strokeLinecap="round"
-          style={{
-            strokeDasharray: 276.46,
-            strokeDashoffset: arcVisible ? 0 : 276.46,
-            transition:'stroke-dashoffset 1.15s cubic-bezier(.4,0,.2,1)',
-            transform:'rotate(-90deg)', transformOrigin:'50px 50px',
-            filter:'drop-shadow(0 0 6px rgba(232,164,192,.65))',
-          }}/>
-      </svg>
-      {/* PNG oficial */}
-      <img src="/logo-r7d.png" alt="Reset 7D" draggable={false}
-        style={{
-          width:'100%',height:'100%',objectFit:'contain',display:'block',
-          opacity: logoVisible ? 1 : 0,
-          transform: logoVisible ? 'scale(1)' : 'scale(.78)',
-          transition:'opacity .75s ease, transform .85s cubic-bezier(.34,1.56,.64,1)',
-          filter:'drop-shadow(0 6px 22px rgba(232,164,192,.35))',
-          userSelect:'none',
-        }}/>
+    <div style={{position:'relative',width:size,height:size,display:'inline-block',flexShrink:0}}>
+      {/* camada 1 — arco + estrelas (topo 44%) */}
+      <img src="/logo-r7d.png" alt="Reset 7D" style={layer('inset(0% 0% 56% 0%)', 1, 0)}/>
+      {/* camada 2 — silhueta (faixa central) */}
+      <img src="/logo-r7d.png" alt="" aria-hidden style={layer('inset(16% 6% 32% 6%)', 2, 0.16)}/>
+      {/* camada 3 — flores / bottom do círculo */}
+      <img src="/logo-r7d.png" alt="" aria-hidden style={layer('inset(50% 10% 14% 10%)', 3, 0.32)}/>
+      {/* camada 4 — textos */}
+      <img src="/logo-r7d.png" alt="" aria-hidden style={layer('inset(66% 0% 0% 0%)', 4, 0.48)}/>
+
+      {/* Glitter */}
+      {ph >= 5 && SPARKS.map(([lx,ty,del,sz,dur,col],i) => (
+        <span key={i} style={{
+          position:'absolute', left:`${lx}%`, top:`${ty}%`,
+          width:sz, height:sz, marginLeft:-sz/2, marginTop:-sz/2,
+          pointerEvents:'none', zIndex:10, lineHeight:1,
+          animation:`glitterPop ${dur}s ${del}s ease-in-out infinite, glitterDrift ${dur*1.4}s ${del*0.5}s ease-in-out infinite`,
+        }}>
+          <svg viewBox="0 0 10 10" width={sz} height={sz} style={{overflow:'visible'}}>
+            <defs>
+              <filter id={`gf${i}`}><feGaussianBlur stdDeviation="0.8" result="b"/><feComposite in="SourceGraphic" in2="b" operator="over"/></filter>
+            </defs>
+            <path d="M5,0.3 L5.85,4.15 L9.7,5 L5.85,5.85 L5,9.7 L4.15,5.85 L0.3,5 L4.15,4.15 Z"
+              fill={col} filter={`url(#gf${i})`} opacity="0.95"/>
+          </svg>
+        </span>
+      ))}
     </div>
   );
 }
@@ -642,6 +836,7 @@ function SilhouetteImage({position='center'}) {
         objectFit:'cover', objectPosition:position,
         userSelect:'none', pointerEvents:'none',
         zIndex:2,
+        filter:'brightness(1.2)',
       }}/>
   );
 }
