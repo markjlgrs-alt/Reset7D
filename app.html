@@ -1041,6 +1041,17 @@ function SectionCard({title, children, th, accent}) {
   </div>;
 }
 
+// ── GLOBAL LANGUAGE PICKER ────────────────────────────────────
+function LangPicker({lang, setLang}) {
+  return (
+    <div style={{display:"flex",gap:4,background:"rgba(0,0,0,0.45)",borderRadius:20,padding:"4px 6px",backdropFilter:"blur(10px)"}}>
+      {[["pt","🇧🇷"],["en","🇺🇸"],["es","🇪🇸"]].map(([l,flag])=>(
+        <button key={l} onClick={()=>setLang(l)} style={{padding:"4px 10px",borderRadius:14,fontSize:11,fontWeight:700,background:lang===l?"rgba(232,164,192,0.45)":"transparent",border:`1.5px solid ${lang===l?"rgba(232,164,192,1)":"rgba(255,255,255,0.2)"}`,color:lang===l?"white":"rgba(255,255,255,0.55)",cursor:"pointer",fontFamily:"'Manrope',sans-serif",transition:"all .2s"}}>{flag} {l.toUpperCase()}</button>
+      ))}
+    </div>
+  );
+}
+
 // ── RIPPLE EFFECT ─────────────────────────────────────────────
 function addRipple(e) {
   const el = e.currentTarget;
@@ -3221,6 +3232,12 @@ function App() {
   return (
     <>
       <style>{cssStr}</style>
+      {/* Seletor de idioma flutuante — visível em todas as telas exceto o Dashboard */}
+      {screen!=="app" && (
+        <div style={{position:"fixed",top:14,right:14,zIndex:9999}}>
+          <LangPicker lang={lang} setLang={setLang}/>
+        </div>
+      )}
       {screen==="quiz"     && (
         <>
           {/* Background cinematográfico em tela cheia — fora do container 430px */}
