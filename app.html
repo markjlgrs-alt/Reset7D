@@ -659,15 +659,13 @@ function QuizScreen({onDone, th}) {
       background:'transparent',
     }}>
 
-      {/* ══ SEÇÃO DA DRA. ANA PAULA — sem bordas, sem quadro ══ */}
-      {/* Fundo creme que absorve o branco da foto — efeito "sem fundo" */}
+      {/* ══ SEÇÃO DA DRA. ANA PAULA — imagem vazada sobre fundo escuro ══ */}
       <div style={{
-        background:'linear-gradient(180deg, #f7f3fc 0%, #ede4f5 55%, #1a0d22 100%)',
+        background:'#1a0d22',
         paddingTop:18,
         textAlign:'center',
         flexShrink:0,
       }}>
-        {/* Foto corpo inteiro — objectFit:contain mostra a imagem completa sem corte */}
         <img
           src="/ana-paula.png"
           alt="Dra. Ana Paula — Nutricionista"
@@ -682,7 +680,7 @@ function QuizScreen({onDone, th}) {
         />
       </div>
 
-      {/* ══ NOME + VEREDICTO — fundo escuro, sem borda com a foto ══ */}
+      {/* ══ NOME + VEREDICTO ══ */}
       <div style={{
         background:'#1a0d22',
         padding:'20px 22px 24px',
