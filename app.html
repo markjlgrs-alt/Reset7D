@@ -348,6 +348,630 @@ function hashPassword(password) {
   return hash.toString();
 }
 
+// ── I18N SYSTEM ───────────────────────────────────────────────
+const LANG_STRINGS = {
+  pt:{
+    login_title:"Sua transformação começa aqui ✨",login_email:"E-MAIL",login_password:"SENHA",
+    login_forgot:"Esqueci minha senha",login_enter:"Entrar →",login_entering:"Entrando...",
+    login_no_account:"Não tem conta?",login_create:"Criar conta grátis",
+    login_fill_fields:"Preencha e-mail e senha.",login_invalid:"E-mail ou senha incorretos.",
+    login_no_server:"Não foi possível conectar ao servidor.",
+    reg_title:"Criar Conta",reg_subtitle:"Comece sua transformação de 7 dias ✨",
+    reg_back:"← Voltar ao login",reg_name:"SEU NOME",reg_name_ph:"Como podemos te chamar?",
+    reg_email:"E-MAIL",reg_pw:"SENHA",reg_pw_ph:"Mínimo 6 caracteres",
+    reg_pw2:"CONFIRMAR SENHA",reg_pw2_ph:"Repita a senha",
+    reg_btn:"Criar conta e começar →",reg_creating:"Criando conta...",
+    reg_err_name:"Digite seu nome.",reg_err_email:"E-mail inválido.",
+    reg_err_email_exists:"E-mail já cadastrado.",reg_err_pw:"Mínimo 6 caracteres.",
+    reg_err_pw2:"Senhas não conferem.",reg_err_server:"Não foi possível conectar ao servidor.",
+    reg_err_create:"Erro ao criar conta.",
+    forgot_title:"Recuperar Senha",forgot_sub:"Digite o e-mail da sua conta para receber um link de recuperação.",
+    forgot_back:"← Voltar ao login",forgot_email_label:"E-MAIL CADASTRADO",
+    forgot_btn:"Enviar link de recuperação →",forgot_sending:"Enviando...",
+    forgot_sent_title:"E-mail enviado!",forgot_sent_msg:"Link de recuperação enviado para:",
+    forgot_sent_expire:"⏱️ O link expira em 30 minutos. Verifique o spam.",
+    forgot_back_login:"← Voltar ao login",forgot_new_pw_title:"Nova Senha",
+    forgot_new_pw_label:"NOVA SENHA",forgot_new_pw_ph:"Mínimo 6 caracteres",
+    forgot_confirm_label:"CONFIRMAR SENHA",forgot_confirm_ph:"Repita a senha",
+    forgot_save:"Salvar nova senha →",forgot_success_title:"Senha alterada!",
+    forgot_success_msg:"Sua senha foi redefinida. Faça login com a nova senha.",
+    forgot_enter_now:"Entrar agora →",forgot_err_email:"E-mail inválido.",
+    forgot_err_pw_min:"Mínimo 6 caracteres.",forgot_err_pw_match:"Senhas não conferem.",
+    forgot_err_offline:"Backend offline (rode npm start em backend/).",
+    forgot_err_resend:"Resend não configurado (backend/.env).",
+    forgot_err_send:"Falha ao enviar. Tente novamente.",forgot_err_expired:"Link expirado. Solicite um novo.",
+    forgot_err_server:"Não foi possível conectar ao servidor.",
+    pw_bar_weak:"Muito fraca",pw_bar_fair:"Razoável",pw_bar_good:"Boa",pw_bar_strong:"Forte 💪",pw_bar_prefix:"Senha",
+    menu_main:"Menu Principal",menu_next_level:"Next Level",menu_protocols:"PROTOCOLOS PREMIUM",
+    menu_next_sub:"Descubra como se transformar por completo!",
+    menu_theme_dark:"Tema Escuro",menu_theme_light:"Tema Claro",menu_language:"🌍 Idioma",
+    menu_change_pw:"Mudar Senha",menu_logout:"Sair da Conta",
+    day_label:"Dia",simulate_day:"Simular Dia",
+    tab_home:"Home",tab_mission:"Missão",tab_content:"Conteúdo",tab_evolution:"Evolução",tab_profile:"Perfil",tab_community:"Comunidade",
+    home_protocol:"✨ Protocolo RESET 7D",home_hello:"Olá, {name}! 💜",
+    home_quote:'"Você não precisa ser perfeita. Você só precisa continuar."',
+    home_progress:"Progresso Geral",home_today:"HOJE",home_today_missions:"{emoji} Dia {day}: Missões",
+    home_done:"concluídas",home_see_missions:"Ver Todas as Missões →",
+    home_ai_tip:"🧠 Estratégia IA para você",home_daily_reg:"📸 Missão de Registro Diário",
+    home_daily_reg_body:"Vista a mesma calça de referência e tire a foto! Frente, lado e costas. Fotografe também a área mais inchada. Sua evolução mora nos detalhes. 💜",
+    home_modules:"📚 Módulos do Protocolo",
+    tip0_t:"Compulsão às 16h?",tip0_b:"Seu cortisol está no pico. Antes de abrir a geladeira: respire fundo 4 vezes, pés no chão e beba água. Espere 10 minutos — a vontade passa.",
+    tip1_t:"Noite difícil de dormir?",tip1_b:"Desligue as telas 30 min antes. O chá de melissa + banho morno enviam o sinal certo. Luz azul bloqueia melatonina — é bioquímica.",
+    tip2_t:"Sem energia pela manhã?",tip2_b:"Exponha-se à luz natural nos primeiros 30 min. Isso ancora seu relógio biológico e eleva o cortisol saudável do amanhecer.",
+    tip3_t:"Barriga inchada?",tip3_b:"Pode ser gás, não gordura! Mastigue devagar e tome o chá calmante. Sistema linfático: faça a ativação matinal!",
+    tip4_t:"Fome fora de hora?",tip4_b:"Pergunte: é fome física ou emocional? Se emocional, o grounding resolve em 2 min. Se física, uma proteína resolve em 5.",
+    mission_all_done:"🎉 Todas as missões concluídas!",mission_day_title:"🎯 Missões do Dia {day}",
+    mission_reg_title:"📸 Missão de Registro — Não Pule!",
+    mission_reg_body:"Vista a mesma calça de referência todos os dias. Compare dia a dia — a evolução aparece nos detalhes! 💜",
+    mission_extras:"⭐ Missões Extras ({done}/{total})",
+    content_recipes:"🍽️ Receitas do Dia {day}",content_ingredients:"Ingredientes:",
+    content_how:"Como fazer:",content_why:"🔬 Por que funciona:",
+    content_refs:"📚 Referências Científicas — Dia {day}",
+    content_btn_done_day:"Dia {day} Concluído!",content_btn_congrats:"PARABÉNS... Aperte aqui",
+    content_btn_complete:"Dia concluído com SUCESSO!!",
+    gratitude_title:"A Mulher Que Voltou Para Si",gratitude_subtitle:"Uma carta especial para você",
+    gratitude_close:"Fechar e continuar minha jornada ✨",
+    evo_streak:"dias seguidos",evo_missions:"missões",evo_xp_prog:"XP para o próximo nível",
+    evo_weekly:"📈 Evolução Semanal de XP",evo_radar:"🕸️ Radar de Habilidades",evo_achievements:"🏅 Conquistas",
+    profile_member:"MEMBRO DESDE",profile_day:"DIA",profile_completed:"MISSÕES",
+    profile_goals_title:"Objetivos:",profile_change_pw:"Alterar Senha",
+    comm_title:"Comunidade RESET 7D",comm_subtitle:"Compartilhe sua evolução com a turma!",
+    comm_share:"Compartilhar evolução",comm_share_placeholder:"Compartilhe como está indo...",comm_share_btn:"Publicar",
+    quiz_q:"Pergunta {step} de {total}",quiz_btn:"Começar o RESET 7D agora",
+    quiz_profile:"Seu perfil identificado",quiz_verdict:"✦ Meu veredicto:",
+    quiz_dra_subtitle:"NUTRICIONISTA • RESET 7D",
+    quiz_dra_p1:"Analisamos cuidadosamente o perfil de mais de {n} mulheres de todo o Brasil e sabemos que mulheres incríveis como você enfrentam desafios silenciosos todos os dias — o inchaço que aparece sem aviso, o cansaço que não passa, a vontade de comer mesmo sem fome real.",
+    quiz_dra_p2:"Cada caso é único, e é exatamente por isso que estamos aqui: para orientar e apoiar você com soluções seguras e personalizadas que respeitam o seu corpo e o seu tempo.",
+    quiz_dra_verdict:'"Seu corpo não está quebrado — ele está pedindo direção. E existe um protocolo de 7 dias desenhado exatamente para o seu caso. Você já esperou tempo suficiente. Comece hoje."',
+    quiz_stat:"das mulheres com seu perfil",quiz_stat_sub:"percebem diferença real nos primeiros 3 dias.",
+    quiz_chart_title:"📊 Comparação com outras mulheres",quiz_chart_sub:"Toque nas barras para ver detalhes",
+    quiz_profile_r1:"Retenção de líquidos",quiz_profile_r2:"Déficit de energia",
+    quiz_profile_r3:"Compulsão alimentar",quiz_profile_r4:"Acúmulo de gordura",quiz_profile_r5:"Desequilíbrio hormonal",
+    quiz_lvl_r1:"Alta",quiz_lvl_r2:"Crítico",quiz_lvl_r3:"Moderado",quiz_lvl_r4:"Alto",quiz_lvl_r5:"Presente",
+    xp_lvl0:"Iniciante",xp_lvl1:"Determinada",xp_lvl2:"Focada",xp_lvl3:"Guerreira",xp_lvl4:"Poderosa",xp_lvl5:"Transformada",xp_lvl6:"Lendária",
+    menu_shop_sub:"Você concluiu o RESET 7D. O que vem depois é ainda mais poderoso.",
+    menu_see_details:"Ver detalhes →",menu_back:"← Voltar",menu_coming:"Em breve",
+    menu_coming_soon:"Checkout disponível em breve",menu_full_access:"Acesso completo + Comunidade exclusiva",
+    evo_level:"Nível",evo_sequence:"Sequência",evo_level_prog:"Nível {a} → {b}",
+    evo_xp_needed:"{n} XP necessário",evo_chart_fallback:"📈 Gráfico de evolução",evo_radar_fallback:"🕸️ Radar de bem-estar",
+    radar_hydration:"Hidratação",radar_sleep:"Sono",radar_move:"Movimento",
+    radar_nutrition:"Nutrição",radar_mindset:"Mindset",radar_lymph:"Linfático",
+    achiev0_n:"Primeiro Passo",achiev0_d:"Dia 1 concluído",achiev1_n:"Drenagem Ativa",achiev1_d:"Dia 2 concluído",
+    achiev2_n:"Forno Ligado",achiev2_d:"Dia 3 concluído",achiev3_n:"Intestino Feliz",achiev3_d:"Dia 4 concluído",
+    achiev4_n:"Escudo Ativo",achiev4_d:"Dia 5 concluído",achiev5_n:"Rainha do Sono",achiev5_d:"Dia 6 concluído",
+    achiev6_n:"A Virada",achiev6_d:"7 dias concluídos!",achiev7_n:"Consistência",achiev7_d:"70% das missões",
+    profile_album:"📸 Álbum Privado da Evolução",
+    profile_only_you:"🔒 Somente você vê estas fotos · Vista a calça de referência!",
+    profile_take_photo:"Tirar foto",profile_days:"Dias",
+    comm_share_journey:"✨ Compartilhe sua jornada",comm_day_placeholder:"Como foi o seu dia? 💜",
+    comm_loading:"Carregando posts...",comm_first_post:"Seja a primeira a compartilhar!",
+    comm_comment_ph:"Comentar...",comm_post_btn:"Postar 💜",comm_comment_s:"comentário",comm_comment_p:"comentários",
+    mission_header:"{emoji} Dia {day}",content_day_title:"Dia {day}: {title}",
+    changepw_title:"🔐 Mudar Senha",changepw_fill:"Preencha todos os campos.",
+    changepw_ok:"Senha alterada com sucesso! ✅",changepw_cur:"Senha Atual",
+    changepw_cur_ph:"Sua senha atual",changepw_new_ph:"Nova senha (mín. 6 caracteres)",
+    changepw_rep_ph:"Repita",changepw_cancel:"Cancelar",changepw_save:"Salvar",
+    changepw_err:"Erro ao alterar senha.",
+  },
+  en:{
+    login_title:"Your transformation starts here ✨",login_email:"EMAIL",login_password:"PASSWORD",
+    login_forgot:"Forgot my password",login_enter:"Sign In →",login_entering:"Signing in...",
+    login_no_account:"Don't have an account?",login_create:"Create free account",
+    login_fill_fields:"Please enter email and password.",login_invalid:"Incorrect email or password.",
+    login_no_server:"Could not connect to server.",
+    reg_title:"Create Account",reg_subtitle:"Start your 7-day transformation ✨",
+    reg_back:"← Back to login",reg_name:"YOUR NAME",reg_name_ph:"What should we call you?",
+    reg_email:"EMAIL",reg_pw:"PASSWORD",reg_pw_ph:"Minimum 6 characters",
+    reg_pw2:"CONFIRM PASSWORD",reg_pw2_ph:"Repeat password",
+    reg_btn:"Create account and start →",reg_creating:"Creating account...",
+    reg_err_name:"Please enter your name.",reg_err_email:"Invalid email.",
+    reg_err_email_exists:"Email already registered.",reg_err_pw:"Minimum 6 characters.",
+    reg_err_pw2:"Passwords do not match.",reg_err_server:"Could not connect to server.",
+    reg_err_create:"Error creating account.",
+    forgot_title:"Reset Password",forgot_sub:"Enter your account email to receive a recovery link.",
+    forgot_back:"← Back to login",forgot_email_label:"REGISTERED EMAIL",
+    forgot_btn:"Send recovery link →",forgot_sending:"Sending...",
+    forgot_sent_title:"Email sent!",forgot_sent_msg:"Recovery link sent to:",
+    forgot_sent_expire:"⏱️ Link expires in 30 minutes. Check your spam folder.",
+    forgot_back_login:"← Back to login",forgot_new_pw_title:"New Password",
+    forgot_new_pw_label:"NEW PASSWORD",forgot_new_pw_ph:"Minimum 6 characters",
+    forgot_confirm_label:"CONFIRM PASSWORD",forgot_confirm_ph:"Repeat password",
+    forgot_save:"Save new password →",forgot_success_title:"Password changed!",
+    forgot_success_msg:"Your password has been reset. Log in with the new password.",
+    forgot_enter_now:"Sign in now →",forgot_err_email:"Invalid email.",
+    forgot_err_pw_min:"Minimum 6 characters.",forgot_err_pw_match:"Passwords do not match.",
+    forgot_err_offline:"Backend offline (run npm start in backend/).",
+    forgot_err_resend:"Resend not configured (backend/.env).",
+    forgot_err_send:"Failed to send. Please try again.",forgot_err_expired:"Link expired. Request a new one.",
+    forgot_err_server:"Could not connect to server.",
+    pw_bar_weak:"Very weak",pw_bar_fair:"Fair",pw_bar_good:"Good",pw_bar_strong:"Strong 💪",pw_bar_prefix:"Password",
+    menu_main:"Main Menu",menu_next_level:"Next Level",menu_protocols:"PREMIUM PROTOCOLS",
+    menu_next_sub:"Discover how to fully transform yourself!",
+    menu_theme_dark:"Dark Mode",menu_theme_light:"Light Mode",menu_language:"🌍 Language",
+    menu_change_pw:"Change Password",menu_logout:"Sign Out",
+    day_label:"Day",simulate_day:"Simulate Day",
+    tab_home:"Home",tab_mission:"Mission",tab_content:"Content",tab_evolution:"Progress",tab_profile:"Profile",tab_community:"Community",
+    home_protocol:"✨ RESET 7D Protocol",home_hello:"Hello, {name}! 💜",
+    home_quote:'"You don\'t need to be perfect. You just need to keep going."',
+    home_progress:"Overall Progress",home_today:"TODAY",home_today_missions:"{emoji} Day {day}: Missions",
+    home_done:"completed",home_see_missions:"See All Missions →",
+    home_ai_tip:"🧠 AI Strategy for you",home_daily_reg:"📸 Daily Registration Mission",
+    home_daily_reg_body:"Put on the same reference pants and take the photo! Front, side, and back. Also photograph the most swollen area. Your evolution lives in the details. 💜",
+    home_modules:"📚 Protocol Modules",
+    tip0_t:"Cravings at 4pm?",tip0_b:"Your cortisol is at its peak. Before opening the fridge: breathe deeply 4 times, feet on the ground, drink water. Wait 10 minutes — the craving will pass.",
+    tip1_t:"Hard to sleep at night?",tip1_b:"Turn off screens 30 min before. Lemon balm tea + warm bath send the right signal. Blue light blocks melatonin — it's biochemistry.",
+    tip2_t:"No energy in the morning?",tip2_b:"Expose yourself to natural light within the first 30 min. This anchors your biological clock and raises the healthy morning cortisol.",
+    tip3_t:"Bloated belly?",tip3_b:"It might be gas, not fat! Chew slowly and drink the calming tea. Lymphatic system: do the morning activation!",
+    tip4_t:"Hunger out of schedule?",tip4_b:"Ask yourself: is it physical hunger or emotional? If emotional, grounding resolves it in 2 min. If physical, a protein fixes it in 5.",
+    mission_all_done:"🎉 All missions completed!",mission_day_title:"🎯 Day {day} Missions",
+    mission_reg_title:"📸 Registration Mission — Don't Skip!",
+    mission_reg_body:"Wear the same reference pants every day. Compare day by day — the evolution shows in the details! 💜",
+    mission_extras:"⭐ Extra Missions ({done}/{total})",
+    content_recipes:"🍽️ Day {day} Recipes",content_ingredients:"Ingredients:",
+    content_how:"How to make:",content_why:"🔬 Why it works:",
+    content_refs:"📚 Scientific References — Day {day}",
+    content_btn_done_day:"Day {day} Completed!",content_btn_congrats:"CONGRATULATIONS... Tap here",
+    content_btn_complete:"Day completed with SUCCESS!!",
+    gratitude_title:"The Woman Who Came Back to Herself",gratitude_subtitle:"A special letter just for you",
+    gratitude_close:"Close and continue my journey ✨",
+    evo_streak:"days in a row",evo_missions:"missions",evo_xp_prog:"XP to next level",
+    evo_weekly:"📈 Weekly XP Progress",evo_radar:"🕸️ Skills Radar",evo_achievements:"🏅 Achievements",
+    profile_member:"MEMBER SINCE",profile_day:"DAY",profile_completed:"MISSIONS",
+    profile_goals_title:"Goals:",profile_change_pw:"Change Password",
+    comm_title:"RESET 7D Community",comm_subtitle:"Share your evolution with the group!",
+    comm_share:"Share progress",comm_share_placeholder:"Share how it's going...",comm_share_btn:"Post",
+    quiz_q:"Question {step} of {total}",quiz_btn:"Start RESET 7D now",
+    quiz_profile:"Your identified profile",quiz_verdict:"✦ My verdict:",
+    quiz_dra_subtitle:"NUTRITIONIST • RESET 7D",
+    quiz_dra_p1:"We carefully analyzed the profile of more than {n} women across the country and we know that incredible women like you face silent challenges every day — bloating that appears without warning, fatigue that won't go away, the urge to eat even when not truly hungry.",
+    quiz_dra_p2:"Every case is unique, and that's exactly why we're here: to guide and support you with safe, personalized solutions that respect your body and your time.",
+    quiz_dra_verdict:'"Your body is not broken — it\'s asking for direction. And there is a 7-day protocol designed exactly for your case. You\'ve waited long enough. Start today."',
+    quiz_stat:"of women with your profile",quiz_stat_sub:"notice a real difference in the first 3 days.",
+    quiz_chart_title:"📊 Comparison with other women",quiz_chart_sub:"Tap bars to see details",
+    quiz_profile_r1:"Fluid retention",quiz_profile_r2:"Energy deficit",
+    quiz_profile_r3:"Food cravings",quiz_profile_r4:"Fat accumulation",quiz_profile_r5:"Hormonal imbalance",
+    quiz_lvl_r1:"High",quiz_lvl_r2:"Critical",quiz_lvl_r3:"Moderate",quiz_lvl_r4:"High",quiz_lvl_r5:"Present",
+    xp_lvl0:"Beginner",xp_lvl1:"Determined",xp_lvl2:"Focused",xp_lvl3:"Warrior",xp_lvl4:"Powerful",xp_lvl5:"Transformed",xp_lvl6:"Legendary",
+    menu_shop_sub:"You completed RESET 7D. What comes next is even more powerful.",
+    menu_see_details:"See details →",menu_back:"← Back",menu_coming:"Coming soon",
+    menu_coming_soon:"Checkout available soon",menu_full_access:"Full access + Exclusive community",
+    evo_level:"Level",evo_sequence:"Streak",evo_level_prog:"Level {a} → {b}",
+    evo_xp_needed:"{n} XP required",evo_chart_fallback:"📈 XP evolution chart",evo_radar_fallback:"🕸️ Wellness radar",
+    radar_hydration:"Hydration",radar_sleep:"Sleep",radar_move:"Movement",
+    radar_nutrition:"Nutrition",radar_mindset:"Mindset",radar_lymph:"Lymphatic",
+    achiev0_n:"First Step",achiev0_d:"Day 1 completed",achiev1_n:"Active Drainage",achiev1_d:"Day 2 completed",
+    achiev2_n:"Furnace On",achiev2_d:"Day 3 completed",achiev3_n:"Happy Gut",achiev3_d:"Day 4 completed",
+    achiev4_n:"Active Shield",achiev4_d:"Day 5 completed",achiev5_n:"Sleep Queen",achiev5_d:"Day 6 completed",
+    achiev6_n:"The Turn",achiev6_d:"7 days completed!",achiev7_n:"Consistency",achiev7_d:"70% of missions",
+    profile_album:"📸 Private Evolution Album",
+    profile_only_you:"🔒 Only you see these photos · Wear your reference pants!",
+    profile_take_photo:"Take photo",profile_days:"Days",
+    comm_share_journey:"✨ Share your journey",comm_day_placeholder:"How was your day? 💜",
+    comm_loading:"Loading posts...",comm_first_post:"Be the first to share!",
+    comm_comment_ph:"Comment...",comm_post_btn:"Post 💜",comm_comment_s:"comment",comm_comment_p:"comments",
+    mission_header:"{emoji} Day {day}",content_day_title:"Day {day}: {title}",
+    changepw_title:"🔐 Change Password",changepw_fill:"Please fill in all fields.",
+    changepw_ok:"Password changed successfully! ✅",changepw_cur:"Current Password",
+    changepw_cur_ph:"Your current password",changepw_new_ph:"New password (min. 6 chars)",
+    changepw_rep_ph:"Repeat",changepw_cancel:"Cancel",changepw_save:"Save",
+    changepw_err:"Error changing password.",
+  },
+  es:{
+    login_title:"Tu transformación comienza aquí ✨",login_email:"CORREO",login_password:"CONTRASEÑA",
+    login_forgot:"Olvidé mi contraseña",login_enter:"Entrar →",login_entering:"Entrando...",
+    login_no_account:"¿No tienes cuenta?",login_create:"Crear cuenta gratis",
+    login_fill_fields:"Ingresa correo y contraseña.",login_invalid:"Correo o contraseña incorrectos.",
+    login_no_server:"No se pudo conectar al servidor.",
+    reg_title:"Crear Cuenta",reg_subtitle:"Comienza tu transformación de 7 días ✨",
+    reg_back:"← Volver al inicio",reg_name:"TU NOMBRE",reg_name_ph:"¿Cómo podemos llamarte?",
+    reg_email:"CORREO",reg_pw:"CONTRASEÑA",reg_pw_ph:"Mínimo 6 caracteres",
+    reg_pw2:"CONFIRMAR CONTRASEÑA",reg_pw2_ph:"Repite la contraseña",
+    reg_btn:"Crear cuenta y comenzar →",reg_creating:"Creando cuenta...",
+    reg_err_name:"Ingresa tu nombre.",reg_err_email:"Correo inválido.",
+    reg_err_email_exists:"Correo ya registrado.",reg_err_pw:"Mínimo 6 caracteres.",
+    reg_err_pw2:"Las contraseñas no coinciden.",reg_err_server:"No se pudo conectar al servidor.",
+    reg_err_create:"Error al crear cuenta.",
+    forgot_title:"Recuperar Contraseña",forgot_sub:"Ingresa el correo de tu cuenta para recibir un enlace de recuperación.",
+    forgot_back:"← Volver al inicio",forgot_email_label:"CORREO REGISTRADO",
+    forgot_btn:"Enviar enlace de recuperación →",forgot_sending:"Enviando...",
+    forgot_sent_title:"¡Correo enviado!",forgot_sent_msg:"Enlace de recuperación enviado a:",
+    forgot_sent_expire:"⏱️ El enlace expira en 30 minutos. Revisa tu spam.",
+    forgot_back_login:"← Volver al inicio",forgot_new_pw_title:"Nueva Contraseña",
+    forgot_new_pw_label:"NUEVA CONTRASEÑA",forgot_new_pw_ph:"Mínimo 6 caracteres",
+    forgot_confirm_label:"CONFIRMAR CONTRASEÑA",forgot_confirm_ph:"Repite la contraseña",
+    forgot_save:"Guardar nueva contraseña →",forgot_success_title:"¡Contraseña cambiada!",
+    forgot_success_msg:"Tu contraseña fue restablecida. Inicia sesión con la nueva.",
+    forgot_enter_now:"Entrar ahora →",forgot_err_email:"Correo inválido.",
+    forgot_err_pw_min:"Mínimo 6 caracteres.",forgot_err_pw_match:"Las contraseñas no coinciden.",
+    forgot_err_offline:"Backend offline (ejecuta npm start en backend/).",
+    forgot_err_resend:"Resend no configurado (backend/.env).",
+    forgot_err_send:"Error al enviar. Intenta de nuevo.",forgot_err_expired:"Enlace expirado. Solicita uno nuevo.",
+    forgot_err_server:"No se pudo conectar al servidor.",
+    pw_bar_weak:"Muy débil",pw_bar_fair:"Regular",pw_bar_good:"Buena",pw_bar_strong:"Fuerte 💪",pw_bar_prefix:"Contraseña",
+    menu_main:"Menú Principal",menu_next_level:"Siguiente Nivel",menu_protocols:"PROTOCOLOS PREMIUM",
+    menu_next_sub:"¡Descubre cómo transformarte por completo!",
+    menu_theme_dark:"Modo Oscuro",menu_theme_light:"Modo Claro",menu_language:"🌍 Idioma",
+    menu_change_pw:"Cambiar Contraseña",menu_logout:"Cerrar Sesión",
+    day_label:"Día",simulate_day:"Simular Día",
+    tab_home:"Inicio",tab_mission:"Misión",tab_content:"Contenido",tab_evolution:"Evolución",tab_profile:"Perfil",tab_community:"Comunidad",
+    home_protocol:"✨ Protocolo RESET 7D",home_hello:"¡Hola, {name}! 💜",
+    home_quote:'"No necesitas ser perfecta. Solo necesitas seguir adelante."',
+    home_progress:"Progreso General",home_today:"HOY",home_today_missions:"{emoji} Día {day}: Misiones",
+    home_done:"completadas",home_see_missions:"Ver Todas las Misiones →",
+    home_ai_tip:"🧠 Estrategia IA para ti",home_daily_reg:"📸 Misión de Registro Diario",
+    home_daily_reg_body:"¡Ponte el mismo pantalón de referencia y toma la foto! Frente, lado y espalda. Fotografía también el área más inflamada. Tu evolución vive en los detalles. 💜",
+    home_modules:"📚 Módulos del Protocolo",
+    tip0_t:"¿Antojos a las 4pm?",tip0_b:"Tu cortisol está en su punto máximo. Antes de abrir el refrigerador: respira hondo 4 veces, pies en el suelo, bebe agua. Espera 10 minutos — el antojo pasará.",
+    tip1_t:"¿Difícil dormir por la noche?",tip1_b:"Apaga las pantallas 30 min antes. El té de melisa + baño tibio envían la señal correcta. La luz azul bloquea la melatonina — es bioquímica.",
+    tip2_t:"¿Sin energía por la mañana?",tip2_b:"Exponte a la luz natural en los primeros 30 min. Esto ancla tu reloj biológico y eleva el cortisol saludable del amanecer.",
+    tip3_t:"¿Vientre inflamado?",tip3_b:"¡Puede ser gas, no grasa! Mastica despacio y toma el té calmante. Sistema linfático: ¡haz la activación matinal!",
+    tip4_t:"¿Hambre fuera de horario?",tip4_b:"Pregúntate: ¿es hambre física o emocional? Si emocional, el grounding lo resuelve en 2 min. Si física, una proteína lo resuelve en 5.",
+    mission_all_done:"🎉 ¡Todas las misiones completadas!",mission_day_title:"🎯 Misiones del Día {day}",
+    mission_reg_title:"📸 Misión de Registro — ¡No Te La Saltes!",
+    mission_reg_body:"Ponte el mismo pantalón de referencia todos los días. Compara día a día — ¡la evolución aparece en los detalles! 💜",
+    mission_extras:"⭐ Misiones Extra ({done}/{total})",
+    content_recipes:"🍽️ Recetas del Día {day}",content_ingredients:"Ingredientes:",
+    content_how:"Cómo preparar:",content_why:"🔬 Por qué funciona:",
+    content_refs:"📚 Referencias Científicas — Día {day}",
+    content_btn_done_day:"¡Día {day} Completado!",content_btn_congrats:"FELICITACIONES... Toca aquí",
+    content_btn_complete:"¡Día completado con ÉXITO!!",
+    gratitude_title:"La Mujer Que Volvió a Sí Misma",gratitude_subtitle:"Una carta especial para ti",
+    gratitude_close:"Cerrar y continuar mi jornada ✨",
+    evo_streak:"días seguidos",evo_missions:"misiones",evo_xp_prog:"XP para el siguiente nivel",
+    evo_weekly:"📈 Progreso Semanal de XP",evo_radar:"🕸️ Radar de Habilidades",evo_achievements:"🏅 Logros",
+    profile_member:"MIEMBRO DESDE",profile_day:"DÍA",profile_completed:"MISIONES",
+    profile_goals_title:"Objetivos:",profile_change_pw:"Cambiar Contraseña",
+    comm_title:"Comunidad RESET 7D",comm_subtitle:"¡Comparte tu evolución con el grupo!",
+    comm_share:"Compartir progreso",comm_share_placeholder:"Comparte cómo va...",comm_share_btn:"Publicar",
+    quiz_q:"Pregunta {step} de {total}",quiz_btn:"Comenzar el RESET 7D ahora",
+    quiz_profile:"Tu perfil identificado",quiz_verdict:"✦ Mi veredicto:",
+    quiz_dra_subtitle:"NUTRICIONISTA • RESET 7D",
+    quiz_dra_p1:"Analizamos cuidadosamente el perfil de más de {n} mujeres de todo el país y sabemos que mujeres increíbles como tú enfrentan desafíos silenciosos todos los días — la inflamación que aparece sin aviso, el cansancio que no pasa, las ganas de comer incluso sin hambre real.",
+    quiz_dra_p2:"Cada caso es único, y es exactamente por eso que estamos aquí: para orientarte y apoyarte con soluciones seguras y personalizadas que respetan tu cuerpo y tu tiempo.",
+    quiz_dra_verdict:'"Tu cuerpo no está roto — está pidiendo dirección. Y existe un protocolo de 7 días diseñado exactamente para tu caso. Ya esperaste suficiente. Empieza hoy."',
+    quiz_stat:"de las mujeres con tu perfil",quiz_stat_sub:"notan una diferencia real en los primeros 3 días.",
+    quiz_chart_title:"📊 Comparación con otras mujeres",quiz_chart_sub:"Toca las barras para ver detalles",
+    quiz_profile_r1:"Retención de líquidos",quiz_profile_r2:"Déficit de energía",
+    quiz_profile_r3:"Compulsión alimentaria",quiz_profile_r4:"Acumulación de grasa",quiz_profile_r5:"Desequilibrio hormonal",
+    quiz_lvl_r1:"Alta",quiz_lvl_r2:"Crítico",quiz_lvl_r3:"Moderado",quiz_lvl_r4:"Alto",quiz_lvl_r5:"Presente",
+    xp_lvl0:"Principiante",xp_lvl1:"Determinada",xp_lvl2:"Enfocada",xp_lvl3:"Guerrera",xp_lvl4:"Poderosa",xp_lvl5:"Transformada",xp_lvl6:"Legendaria",
+    menu_shop_sub:"Completaste el RESET 7D. Lo que sigue es aún más poderoso.",
+    menu_see_details:"Ver detalles →",menu_back:"← Volver",menu_coming:"Próximamente",
+    menu_coming_soon:"Checkout disponible pronto",menu_full_access:"Acceso completo + Comunidad exclusiva",
+    evo_level:"Nivel",evo_sequence:"Racha",evo_level_prog:"Nivel {a} → {b}",
+    evo_xp_needed:"{n} XP requerido",evo_chart_fallback:"📈 Gráfico de evolución",evo_radar_fallback:"🕸️ Radar de bienestar",
+    radar_hydration:"Hidratación",radar_sleep:"Sueño",radar_move:"Movimiento",
+    radar_nutrition:"Nutrición",radar_mindset:"Mindset",radar_lymph:"Linfático",
+    achiev0_n:"Primer Paso",achiev0_d:"Día 1 completado",achiev1_n:"Drenaje Activo",achiev1_d:"Día 2 completado",
+    achiev2_n:"Horno Encendido",achiev2_d:"Día 3 completado",achiev3_n:"Intestino Feliz",achiev3_d:"Día 4 completado",
+    achiev4_n:"Escudo Activo",achiev4_d:"Día 5 completado",achiev5_n:"Reina del Sueño",achiev5_d:"Día 6 completado",
+    achiev6_n:"El Giro",achiev6_d:"¡7 días completados!",achiev7_n:"Consistencia",achiev7_d:"70% de las misiones",
+    profile_album:"📸 Álbum Privado de Evolución",
+    profile_only_you:"🔒 Solo tú ves estas fotos · ¡Ponte el pantalón de referencia!",
+    profile_take_photo:"Tomar foto",profile_days:"Días",
+    comm_share_journey:"✨ Comparte tu viaje",comm_day_placeholder:"¿Cómo fue tu día? 💜",
+    comm_loading:"Cargando posts...",comm_first_post:"¡Sé la primera en compartir!",
+    comm_comment_ph:"Comentar...",comm_post_btn:"Publicar 💜",comm_comment_s:"comentario",comm_comment_p:"comentarios",
+    mission_header:"{emoji} Día {day}",content_day_title:"Día {day}: {title}",
+    changepw_title:"🔐 Cambiar Contraseña",changepw_fill:"Por favor, rellena todos los campos.",
+    changepw_ok:"¡Contraseña cambiada con éxito! ✅",changepw_cur:"Contraseña Actual",
+    changepw_cur_ph:"Tu contraseña actual",changepw_new_ph:"Nueva contraseña (mín. 6 caracteres)",
+    changepw_rep_ph:"Repite",changepw_cancel:"Cancelar",changepw_save:"Guardar",
+    changepw_err:"Error al cambiar la contraseña.",
+  },
+};
+
+const S = (lang, key, vars={}) => {
+  const str = (LANG_STRINGS[lang]?.[key]) ?? (LANG_STRINGS.pt[key]) ?? key;
+  if (typeof str !== 'string') return str;
+  return str.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? `{${k}}`);
+};
+
+const QUIZ_TRANS = {
+  en:[
+    {q:"What bothers you most about your body today?",opts:["Bloating and fluid retention","Zero energy, constant fatigue","Cravings for sweets and carbs","Weight that hasn't budged in months"]},
+    {q:"How long have you been trying to change without consistent results?",opts:["Less than 6 months","6 months to 1 year","1 to 3 years","More than 3 years"]},
+    {q:"What is your biggest daily obstacle?",opts:["Lack of time — busy schedule","I don't know where to start","I've tried everything and nothing works","Lack of energy to stay focused"]},
+    {q:"What do you most want to achieve in the next 7 days?",opts:["Less bloating and a lighter body","More energy and vitality throughout the day","Stop eating impulsively in the afternoon","A real fresh start — for real"]},
+    {q:"How is your relationship with your body right now?",opts:["I fight every day but see no results","I'm almost giving up completely","I feel my body doesn't respond to me","I want to restart with a real strategy"]},
+  ],
+  es:[
+    {q:"¿Qué es lo que más te molesta de tu cuerpo hoy?",opts:["Inflamación y retención de líquidos","Energía en cero, cansancio constante","Compulsión por dulces y carbohidratos","Peso que no se mueve desde hace meses"]},
+    {q:"¿Cuánto tiempo llevas intentando cambiar sin resultados consistentes?",opts:["Menos de 6 meses","6 meses a 1 año","1 a 3 años","Más de 3 años"]},
+    {q:"¿Cuál es tu mayor obstáculo en el día a día?",opts:["Falta de tiempo — rutina agitada","No sé por dónde empezar","Ya lo intenté todo y nada funciona","Falta de energía para mantener el enfoque"]},
+    {q:"¿Qué quieres lograr más en los próximos 7 días?",opts:["Vientre menos inflamado y cuerpo más liviano","Más energía y vitalidad durante el día","Dejar de comer por impulso en la tarde","Un comienzo real — de verdad"]},
+    {q:"¿Cómo es tu relación con tu cuerpo ahora?",opts:["Lucho todos los días pero no veo resultados","Casi estoy desistiendo por completo","Siento que mi cuerpo no me obedece","Quiero recomenzar con una estrategia real"]},
+  ],
+};
+const getQuiz = (lang) => QUIZ_TRANS[lang] || QUIZ;
+
+const PC_TRANS = {
+  en:{
+    1:{title:"The Biological Clock and the Eating Window",
+      intro:`Have you ever wondered why, even when eating healthily, the scale doesn't move and those pants still feel tight? 🤔\n\nThe secret may lie in your body's internal clock. The female metabolism is regulated by a circadian rhythm, which determines when your body is ready to burn fat, absorb nutrients, and recover. Eating outside the ideal schedule — like having dinner late or snacking at night — sends confusing signals to the body: insulin stays elevated, fat burning slows down, and fluid retention increases.\n\nToday, we'll teach your body to work in your favor by respecting your biological clock and creating a 10-hour eating window that naturally activates metabolism. 🔥`,
+      sections:[
+        {title:"🌞 What is the Eating Window and why does it work?",content:`The practice of Time-Restricted Eating (TRE) consists of limiting food consumption to an 8 to 10-hour daily window. Studies by Dr. Satchin Panda from the Salk Institute (Stanford) show that this regulates insulin and glucagon, allowing the body to enter lipolytic mode — meaning it burns fat naturally.\n\nPROVEN BENEFITS:\n• Syncs metabolism with the natural circadian cycle\n• Reduces episodes of nighttime hunger\n• Supports regulation of hormones linked to fluid retention and belly fat\n• Reduction of abdominal bloating and fluid retention 💧\n• Control of out-of-schedule hunger and glucose spikes 🍌\n• Greater energy and vitality throughout the day ⚡\n\nPRACTICAL STRATEGIES:\n1. 10-hour eating window: breakfast 8:30am → dinner 6:30pm\n2. Strategic hydration: warm water upon waking + 1 lemon\n3. Balanced meals: protein + fiber + healthy fat\n4. Avoid calories outside the window: only water, tea or black coffee\n5. 4-4-8 breathing at night: activates vagus nerve and reduces cortisol 🌙`},
+        {title:"⏰ Suggested Day 1 Schedule",content:`07:00 — Warm or plain water, no calories, to start hydration and prepare liver and intestines, preferably with juice of ½ lemon.\n\n08:00–08:30 — Protein + fiber + fruit breakfast: scrambled eggs + oats + banana or natural yogurt + chia + papaya.\n\n12:30 — Balanced lunch: half the plate vegetables/greens, 1 palm of protein (chicken, sardines, beans + egg), 1 fist of carbohydrate (rice, potato, cassava).\n\n16:00 — Optional snack: fruit + yogurt or fruit + plain peanuts.\n\n18:30–19:00 — Light dinner: vegetables + protein, maintaining the 10-hour window.\n\nAfter 19:00 — Only calorie-free liquids: warm water or plain tea.\n\n21:00–21:30 — Sleep preparation: turn off screens, low-intensity auxiliary lights, 4-4-8 breathing.`},
+      ],
+      recipes:[
+        {e:"🥚",name:"Metabolic Breakfast — Eggs with Avocado + Fruit",ing:["2 eggs","½ small avocado","½ cup berries"],how:["Beat eggs and cook in a non-stick pan.","Slice avocado and place on the side.","Serve with fresh fruit."],sci:"High-quality protein + healthy fat + fiber = prolonged satiety and stable blood sugar all morning."},
+        {e:"🥗",name:"Anti-Inflammatory Lunch — Chicken + Vegetables + Brown Rice",ing:["150g grilled chicken","½ cup brown rice","Broccoli, carrot and zucchini, steamed"],how:["Grill the chicken with lemon and herbs.","Steam the vegetables.","Serve with brown rice."],sci:"Lean protein + fiber + complex carbohydrates = sustained energy, regulated insulin and active metabolism."},
+        {e:"☕",name:"Metabolic Awakening Tea",ing:["250ml hot water","½ tsp turmeric","½ tsp cinnamon","Pinch of black pepper","½ cm fresh ginger, grated"],how:["Mix all ingredients in hot water.","Drink warm 30 minutes after lunch."],sci:"Turmeric, cinnamon and ginger have documented anti-inflammatory and thermogenic effects — metabolism activated."},
+      ],
+    },
+    2:{title:"The Drain — Activating the Lymphatic System",
+      intro:`Have you ever woken up with heavy legs, swollen hands, or the feeling that your body is retaining fluid? 😖\n\nWhat most people don't know is that this isn't just about diet or excess salt. A large part of this problem comes from an inactive lymphatic system. Unlike the heart, which continuously pumps blood, the lymphatic system has no pump of its own — it depends on movement, breathing and gentle stimulation to function properly.\n\nToday, we'll learn how to activate this natural drainage network of the body. The goal is to reduce swelling, improve circulation and prepare the organism to optimize metabolism. 🌿💧`,
+      sections:[
+        {title:"🌿 How the lymphatic system works",content:`The lymphatic system transports fluids, proteins and defense cells of the body, filtering toxins through the lymph nodes. When it doesn't work well:\n\n• Fluid accumulates in tissues → feeling of swelling\n• Inflammatory substances become stagnant → retention of superficial fat\n• Metabolism and circulation slow down → heavy body\n\nTrue lymphatic activation depends on three pillars:\n1. MUSCLE MOVEMENT: each contraction helps push lymph through the body.\n2. DEEP DIAPHRAGMATIC BREATHING: the diaphragm works as an internal pump.\n3. GENTLE MANUAL STIMULATION: slow movements toward lymph nodes.`},
+        {title:"⚡ Day 2 Strategies",content:`1️⃣ MORNING LYMPHATIC ACTIVATION (less than 10 minutes)\n\n1 minute each movement:\n• Bouncing and shaking hands\n• Lateral bouncing\n• Arm raises\n• Knee raises with palm on knee\n• Lateral swing\n\n2️⃣ LIGHT WALK AFTER LUNCH (10–15 min)\n\n3️⃣ LEGS ON THE WALL (10 min)\nLie on your back, legs at 90° at the hip.\n\n4️⃣ SUPERFICIAL LYMPHATIC SELF-MASSAGE (10 min)\nUse oil or cream. Very light pressure, close to skin.`},
+      ],
+      recipes:[{e:"🥤",name:"Drainage Green Juice",ing:["½ cucumber with skin","1 kale or spinach leaf","Juice of 1 lemon","200ml coconut water","Mint to taste"],how:["Blend all ingredients.","Drink immediately."],sci:"Hydration and electrolytes support lymph volume and fluidity; antioxidants aid drainage and reduce retention."}],
+    },
+    3:{title:"The Internal Furnace — Activating Brown Fat",
+      intro:`Have you ever felt like your metabolism seems 'switched off'? Burning fat seems slow, even when you're eating better? 😓\n\nThis happens because many internal mechanisms haven't been activated yet — especially that 'metabolic furnace' that lives inside the body: brown fat.\n\nBrown fat doesn't work like white fat (which stores energy); it burns energy to generate heat, helping the body spend calories even at rest.\n\nToday we'll turn on that internal furnace in a practical, science-based way. 🔥`,
+      sections:[
+        {title:"🔥 What is brown fat and why does it matter?",content:`Brown adipose tissue (BAT) exists in the human body and is especially active in the neck, shoulders and trunk. When activated, it uses fatty acids as fuel to produce heat — non-shivering thermogenesis.\n\nStudies show that:\n➡️ Cold exposure can activate brown fat and increase energy expenditure.\n➡️ Certain dietary stimuli increase thermogenesis.\n\n⚠️ IMPORTANT: BAT activation does not replace healthy eating and movement.`},
+        {title:"🚿 Day 3 Strategies",content:`1) MODERATE COLD EXPOSURE\nAt the end of your shower:\n• 30s warm water → 30s cold water → Repeat 3x\n⚠️ Do NOT do this with uncontrolled high blood pressure or heart problems.\n\n2) NATURAL THERMOGENESIS VIA FOOD\n• Pepper (TRPV1 activates thermogenesis)\n• Cinnamon (insulin sensitivity)\n• Ginger (effect on thermogenesis and digestion)\n\n3) HIGH-FREQUENCY MINI-ACTIVITY\n3 sets of 1 min, 3x a day:\n• 20–30s light jumping jacks\n• 20–30s slow squats\n• 20–30s fast marching in place`},
+      ],
+      recipes:[{e:"🫖",name:"Golden Thermogenic Tea",ing:["250ml hot water","½ tsp turmeric","½ tsp cinnamon","Pinch of black pepper","1cm grated ginger"],how:["Heat water to boiling.","Add ingredients. Steep 5 min.","Strain and drink warm."],sci:"Compounds that mildly increase energy expenditure, promote internal heat and support digestion."}],
+    },
+    4:{title:"The Root — Gut, Microbiome and the Gut-Brain Axis",
+      intro:`The gut is known as the 'second brain'. It produces neurotransmitters like serotonin, which regulate mood, sleep and satiety. Gut health is closely linked to the microbiome.\n\nWhen there is imbalance in this microbiome — called dysbiosis — greater inflammation occurs, fluid retention, slow digestion and even greater accumulation of belly fat.\n\nToday's goal is to nourish and balance the microbiome in a practical and accessible way.`,
+      sections:[
+        {title:"🌱 What is the microbiome and why does it matter?",content:`The gut microbiome is composed of trillions of microorganisms that play a fundamental role in:\n\n• DIGESTION AND ABSORPTION: fibers become short-chain fatty acids (SCFAs), which contribute to satiety and regulate inflammation.\n• NEUROTRANSMITTER PRODUCTION: serotonin and GABA influence mood, stress and eating behavior.\n• COMMUNICATION WITH THE BRAIN via the vagus nerve — the gut-brain axis.`},
+        {title:"🍽️ Strategies to feed the microbiome",content:`1. FIBER IN EVERY MEAL\nOats, beans, lentils, broccoli, carrot, sweet potato, banana and apple.\n\n2. NATURAL PREBIOTICS\nGreen banana, garlic, onion, oats, chicory root.\n\n3. ACCESSIBLE PROBIOTICS\nNatural yogurt, homemade kefir or buttermilk.\n\n4. DIAPHRAGMATIC BREATHING\nStimulates the vagus nerve — main connection between gut and brain.`},
+      ],
+      recipes:[
+        {e:"🥣",name:"Prebiotic Breakfast — Oats with Banana and Chia",ing:["½ cup oats","1 banana (green-ripe)","1 tbsp chia","Water or plain milk"],how:["Mix everything in a bowl.","Stir and eat."],sci:"Prebiotics from oats and banana feed Bifidobacterium and Lactobacillus; chia adds fiber and omega-3."},
+        {e:"🍵",name:"Gut-Calming Tea — Chamomile with Fennel",ing:["1 tsp chamomile","1 tsp fennel","200ml hot water"],how:["Steep 5 min. Drink in the afternoon."],sci:"Chamomile + fennel reduce gas, relax the gut and support the gut-brain axis via the vagus nerve."},
+      ],
+    },
+    5:{title:"The Shield — Breaking the Cortisol-Craving Cycle",
+      intro:`Have you ever had one of those days when you were doing so well — and then 4pm hit and you had an insane craving for chocolate?\n\nThe answer is not in your willpower. It's in your cortisol.\n\nCortisol is the stress hormone — when it rises, the brain asks for quick energy. Not because you're weak. Because you're human, and your nervous system is in survival mode.\n\nToday, we'll interrupt this cycle. In a practical, safe and gentle way. 🛡️`,
+      sections:[
+        {title:"🧠 What Cortisol does to your Metabolism",content:`When cortisol remains chronically elevated:\n\n• INSULIN RESISTANCE INCREASES → promotes belly fat accumulation\n• LEPTIN (satiety) DROPS → you don't sense when you're full\n• GHRELIN (hunger) RISES → intensifies appetite for sugar and fat\n• VISCERAL FAT ACCUMULATES → abdomen concentrates cortisol receptors\n• EMOTIONAL EATING → reward system activated`},
+        {title:"🛡️ The Mega Strategy: Stress-Hunger Axis",content:`FRONT 1 — BREATHING AND NERVOUS SYSTEM\n\n4-7-8 Technique (3x a day):\n• Inhale through the nose counting to 4\n• Hold counting to 7\n• Exhale slowly through the mouth counting to 8\n• Repeat 4 cycles\n\nGrounding in moments of craving:\nBefore opening the fridge — 5 things you see, 3 you can touch, 1 you can smell.\n\nFRONT 2 — ANTI-CORTISOL EATING\n• Magnesium: spinach, kale, black beans, oats, banana, peanuts\n• Vitamin C: acerola, kiwi, orange, cashew, bell pepper\n• Protein at breakfast: stabilizes blood sugar and reduces cortisol spikes\n• Maximum 2 coffees/day\n\nFRONT 3 — ANTI-STRESS MOVEMENT\n• 15–20 min walk outdoors\n• 10 min gentle stretching before bed`},
+      ],
+      recipes:[
+        {e:"🥚",name:"Spinach Omelette + Cheese + Banana",ing:["2 eggs","1 handful fresh spinach","1 tbsp white cheese or ricotta","½ banana","Olive oil, salt"],how:["Beat eggs with salt.","Sauté spinach 1 min.","Pour eggs and cheese, cover 2 min.","Serve with banana."],sci:"Eggs = complete protein. Spinach = magnesium that modulates stress axis. Banana = vitamin B6, serotonin precursor."},
+        {e:"🫖",name:"Afternoon Anti-Stress Tea",ing:["1 tsp chamomile","½ tsp cinnamon","200ml hot water","Optional honey"],how:["Mix in hot water. Steep 5 min covered.","Drink without screens."],sci:"Chamomile: mild anxiolytic effect documented. Cinnamon: stabilizes blood sugar, reduces emotional hunger spikes."},
+      ],
+    },
+    6:{title:"The Reboot — The Sleep That Makes You Slim",
+      intro:`Did you know that one bad night of sleep can make you eat, on average, 300 extra calories the next day — without realizing it? 😳\n\nIt's not a lack of willpower. It's pure biochemistry.\n\nWhen sleep is fragmented, leptin (satiety) drops and ghrelin (hunger) rises. The body arrives the next day with disproportionate hunger, fatigue that craves sugar, and reduced metabolism.\n\nIt's during deep sleep that GH (growth hormone) is released in the greatest quantity — the main driver of fat burning.\n\nToday, you'll transform your sleep into one of the most powerful tools in the protocol. 🌙✨`,
+      sections:[
+        {title:"💤 What happens while you sleep?",content:`Sleep is an active and deeply metabolic process:\n\n• DEEP SLEEP (NREM 3): GH peak, cellular repair, insulin regulation, fat burning\n• REM SLEEP: emotional processing, reduction of residual cortisol\n\nChicago study: participants on a diet who slept 5.5h/night lost 55% LESS fat and 60% MORE muscle mass than those who slept 8.5h — eating the same calories.`},
+        {title:"🌙 Metabolic Sleep Protocol",content:`1️⃣ THE LIGHT WINDOW\n• 8pm–8:30pm: dim the lights\n• After 9pm: no screens with white/blue light\n• Morning: in the first 30 min after waking, expose yourself to natural light\n\n2️⃣ WIND-DOWN RITUAL (from 9pm)\n• Calming warm tea\n• Warm shower (temperature drop signals the brain)\n• Physical reading or writing 3 gratitudes\n• 5 min stretching or 4-7-8 breathing\n\n3️⃣ SLEEP-PROMOTING NUTRITION\nEat: moderate complex carbohydrates + tryptophan (chicken, egg, yogurt, banana, peanuts) + magnesium.\nAvoid: caffeine after 2pm, alcohol, heavy meal in the 2h before, sugar at night.`},
+      ],
+      recipes:[
+        {e:"🍌",name:"Sleep-Promoting Snack — Yogurt with Banana and Peanuts",ing:["1 whole natural yogurt","½ ripe banana","1 tbsp unsalted roasted peanuts","Cinnamon"],how:["Mix everything in a bowl.","Eat between 3pm and 4pm."],sci:"Tryptophan from yogurt and banana = serotonin precursor → melatonin. Peanuts = magnesium for relaxation."},
+        {e:"🍵",name:"Ritual Tea — Lemon Balm, Passion Fruit and Fennel",ing:["1 tsp lemon balm","1 tsp fennel","1 passion fruit tea bag","200ml hot water"],how:["Steep 5–8 min covered. Strain and drink warm, without screens."],sci:"Lemon balm: proven mild sedative effect. Passion fruit: flavonoids with calming action."},
+      ],
+    },
+    7:{title:"The Turning Point — Protein, NEAT and the Metabolism That Never Stops",
+      intro:`We've reached the final day. And it was saved with care — because today's strategy is the one that sustains everything you've built.\n\nIt's not the most complex. But it's the most powerful in the long run.\n\nThe answer lies in two simple concepts that, together, can permanently transform your metabolism: protein and NEAT.\n\nThis is your turning point. 🔑`,
+      sections:[
+        {title:"🥩 Why Protein is the Queen of Fat Loss",content:`• THERMOGENIC EFFECT: 25–30% of protein calories are spent in digestion itself.\n\n• SUPERIOR SATIETY: stimulates PYY and GLP-1 and reduces ghrelin.\n\n• MUSCLE PRESERVATION: muscle mass is metabolically active — burns calories at rest.\n\nPRACTICAL GOALS:\n• Breakfast: 20–25g (3 eggs + yogurt)\n• Lunch: 25–35g (chicken, sardines, beans + egg)\n• Dinner: 20–25g (omelette, fish, legumes)\n\nACCESSIBLE SOURCES: Eggs (6–7g each), chicken (25g/100g), sardines (21g/100g), yogurt (5–6g/100g), beans (7–8g/100g), peanuts (25g/100g).`},
+        {title:"🚶 NEAT — may be worth more than your gym",content:`NEAT (Non-Exercise Activity Thermogenesis) = all caloric expenditure outside structured exercise: walking, climbing stairs, cooking, gesturing, standing.\n\nINTENTIONAL NEAT — choose 6 micro-actions:\n• ☀️ Walk to a farther stop\n• 🪜 Take stairs instead of elevator\n• 🧹 Clean a room with energy\n• 🍳 Stand while cooking\n• 💃 Dance for 5 minutes — for real\n• 🏃 Walk after dinner 10–15 min\n\n7-DAY REFLECTION (10 min):\n• What changed in my body over these 7 days?\n• What did I learn about myself?\n• Which habit do I want to keep?`},
+      ],
+      recipes:[
+        {e:"🥚",name:"Banana Egg Pancake — Protein Breakfast",ing:["2 eggs","1 ripe mashed banana","2 tbsp oats","1 tbsp peanut butter","Cinnamon","Olive oil"],how:["Mix eggs, banana and oats.","Cook in a greased pan.","Flip when golden. Serve with peanut butter."],sci:"Complete protein + slow carbohydrate + healthy fat = prolonged satiety and activated thermogenesis."},
+        {e:"🐟",name:"Sardine Bowl — Anti-Inflammatory Lunch",ing:["1 can sardines in olive oil","½ cup brown rice","1 chopped tomato","Arugula","Olive oil, lemon, oregano"],how:["Layer: rice, arugula, tomato.","Sardines on top. Finish with olive oil and lemon."],sci:"Sardines = complete protein + anti-inflammatory omega-3 + insulin sensitivity."},
+      ],
+    },
+  },
+  es:{
+    1:{title:"El Reloj Biológico y la Ventana Alimentaria",
+      intro:`¿Alguna vez te preguntaste por qué, incluso comiendo saludable, la balanza no se mueve y ese pantalón sigue apretado? 🤔\n\nEl secreto puede estar en el reloj interno de tu cuerpo. El metabolismo femenino está regulado por un ritmo circadiano, que determina cuándo tu cuerpo está listo para quemar grasa, absorber nutrientes y recuperarse. Comer fuera del horario ideal — como cenar tarde o picar de noche — envía señales confusas al cuerpo: la insulina permanece alta, la quema de grasa desacelera y la retención de líquidos aumenta.\n\nHoy, enseñaremos a tu cuerpo a trabajar a tu favor, respetando tu reloj biológico y creando una ventana alimentaria de 10 horas que activa naturalmente el metabolismo. 🔥`,
+      sections:[
+        {title:"🌞 ¿Qué es la Ventana Alimentaria y por qué funciona?",content:`La práctica del Ayuno Restringido en el Tiempo (TRE) consiste en limitar el consumo de alimentos a una ventana diaria de 8 a 10 horas. Estudios del Dr. Satchin Panda, del Salk Institute (Stanford), muestran que esto regula la insulina y el glucagón, permitiendo que el cuerpo entre en modo lipolítico — es decir, queme grasa de forma natural.\n\nBENEFICIOS COMPROBADOS:\n• Sincroniza el metabolismo con el ciclo circadiano natural\n• Reduce episodios de hambre nocturna\n• Apoya la regulación de hormonas ligadas a la retención y grasa abdominal\n• Reducción de inflamación abdominal y retención de líquidos 💧\n• Control del hambre fuera de horario y picos de glucosa 🍌\n• Mayor energía durante el día ⚡\n\nESTRATEGIAS PRÁCTICAS:\n1. Ventana alimentaria de 10h: desayuno 8:30 → cena 18:30\n2. Hidratación estratégica: agua tibia al despertar + 1 limón\n3. Comidas equilibradas: proteína + fibra + grasa buena\n4. Evitar calorías fuera de la ventana: solo agua, té o café puro\n5. Respiración 4-4-8 por la noche: activa el nervio vago y reduce el cortisol 🌙`},
+        {title:"⏰ Horario Sugerido del Día 1",content:`07:00 — Agua tibia o pura, sin calorías, para iniciar la hidratación y preparar el hígado e intestinos, preferiblemente con jugo de ½ limón.\n\n08:00–08:30 — Desayuno con proteína + fibra + fruta: huevos revueltos + avena + banana o yogur natural + chía + papaya.\n\n12:30 — Almuerzo equilibrado: la mitad del plato vegetales/verduras, 1 palma de proteína (pollo, sardina, frijoles + huevo), 1 puño de carbohidrato (arroz, papa, yuca).\n\n16:00 — Merienda opcional: fruta + yogur o fruta + maní simple.\n\n18:30–19:00 — Cena liviana: vegetales + proteína, manteniendo la ventana de 10h.\n\nDespués de 19:00 — Solo líquidos sin calorías: agua tibia o té puro.\n\n21:00–21:30 — Preparación para dormir: apagar pantallas, luces auxiliares de baja intensidad, respiración 4-4-8.`},
+      ],
+      recipes:[
+        {e:"🥚",name:"Desayuno Metabólico — Huevos con Aguacate + Fruta",ing:["2 huevos","½ aguacate pequeño","½ taza de frutos rojos"],how:["Bate los huevos y cocínalos en sartén antiadherente.","Corta el aguacate y colócalo al lado.","Sirve con frutas frescas."],sci:"Proteína de alta calidad + grasa buena + fibras = saciedad prolongada y glucosa estable toda la mañana."},
+        {e:"🥗",name:"Almuerzo Antiinflamatorio — Pollo + Vegetales + Arroz Integral",ing:["150g de pollo a la plancha","½ taza de arroz integral","Brócoli, zanahoria y calabacín al vapor"],how:["Asa el pollo con limón y hierbas.","Cocina los vegetales al vapor.","Sirve con arroz integral."],sci:"Proteínas magras + fibras + carbohidratos complejos = energía sostenida, insulina regulada y metabolismo activo."},
+        {e:"☕",name:"Té Despertador Metabólico",ing:["250ml de agua caliente","½ cdta de cúrcuma","½ cdta de canela","Pizca de pimienta negra","½ cm de jengibre fresco rallado"],how:["Mezcla todos los ingredientes en agua caliente.","Toma tibio 30 minutos después del almuerzo."],sci:"Cúrcuma, canela y jengibre tienen efecto antiinflamatorio y termogénico documentado — metabolismo activado."},
+      ],
+    },
+    2:{title:"El Drenaje — Activando el Sistema Linfático",
+      intro:`¿Alguna vez amaneciste con piernas pesadas, manos inflamadas o la sensación de que tu cuerpo está reteniendo líquido? 😖\n\nLo que mucha gente no sabe es que esto no tiene que ver solo con la alimentación o el exceso de sal. Gran parte de este problema viene de un sistema linfático inactivo. A diferencia del corazón, que bombea sangre continuamente, el sistema linfático no tiene una bomba propia — depende del movimiento, la respiración y estímulos suaves para funcionar correctamente.\n\nHoy, aprenderemos cómo activar esta red de drenaje natural del cuerpo. El objetivo es reducir la inflamación, mejorar la circulación y preparar el organismo para optimizar el metabolismo. 🌿💧`,
+      sections:[
+        {title:"🌿 Cómo funciona el sistema linfático",content:`El sistema linfático transporta fluidos, proteínas y células de defensa del cuerpo, filtrando toxinas por los ganglios linfáticos. Cuando no funciona bien:\n\n• El líquido se acumula en los tejidos → sensación de inflamación\n• Las sustancias inflamatorias quedan estancadas → retención de grasa superficial\n• El metabolismo y la circulación se vuelven más lentos → cuerpo pesado\n\nLa activación linfática verdadera depende de tres pilares:\n1. MOVIMIENTO MUSCULAR: cada contracción ayuda a impulsar la linfa por el cuerpo.\n2. RESPIRACIÓN DIAFRAGMÁTICA PROFUNDA: el diafragma funciona como una bomba interna.\n3. ESTIMULACIÓN MANUAL SUAVE: movimientos lentos hacia los ganglios linfáticos.`},
+        {title:"⚡ Estrategias del Día 2",content:`1️⃣ ACTIVACIÓN MATINAL DEL SISTEMA LINFÁTICO (menos de 10 minutos)\n\n1 minuto cada movimiento:\n• Saltar y sacudir las manos\n• Saltar lateralmente\n• Levantamiento de brazos\n• Elevación de rodilla con palma en la rodilla\n• Balanceo lateral\n\n2️⃣ CAMINATA SUAVE DESPUÉS DEL ALMUERZO (10–15 min)\n\n3️⃣ PIERNAS EN LA PARED (10 min)\nAcuéstate boca arriba, apoya las piernas formando 90° en la cadera.\n\n4️⃣ AUTOMASAJE LINFÁTICO SUPERFICIAL (10 min)\nUsa aceite o crema. Presión muy suave, cerca de la piel.`},
+      ],
+      recipes:[{e:"🥤",name:"Jugo Verde del Drenaje",ing:["½ pepino con cáscara","1 hoja de kale o espinaca","Jugo de 1 limón","200ml de agua de coco","Menta al gusto"],how:["Licúa todos los ingredientes.","Bebe inmediatamente."],sci:"La hidratación y los electrolitos apoyan el volumen y la fluidez de la linfa; los antioxidantes ayudan al drenaje y reducen la retención."}],
+    },
+    3:{title:"El Horno Interno — Activando la Grasa Parda",
+      intro:`¿Alguna vez sentiste que tu metabolismo parece 'apagado'? ¿Quemar grasa parece lento, incluso cuando estás comiendo mejor? 😓\n\nEsto ocurre porque muchos mecanismos internos aún no han sido activados — especialmente ese 'horno metabólico' que vive dentro del cuerpo: la grasa parda.\n\nLa grasa parda no funciona como la grasa blanca (que almacena energía); ella quema energía para generar calor, ayudando al cuerpo a gastar calorías incluso en reposo.\n\nHoy encenderemos ese horno interno de forma práctica, basada en ciencia real. 🔥`,
+      sections:[
+        {title:"🔥 ¿Qué es la grasa parda y por qué importa?",content:`La grasa parda (BAT) existe en el cuerpo humano y es especialmente activa en el cuello, hombros y tronco. Al ser activada, usa ácidos grasos como combustible para producir calor — termogénesis sin temblor.\n\nEstudios muestran que:\n➡️ La exposición al frío puede activar la grasa parda y aumentar el gasto energético.\n➡️ Ciertos estímulos alimentarios aumentan la termogénesis.\n\n⚠️ IMPORTANTE: la activación de BAT no sustituye la alimentación saludable y el movimiento.`},
+        {title:"🚿 Estrategias del Día 3",content:`1) EXPOSICIÓN MODERADA AL FRÍO\nAl final de la ducha:\n• 30s agua tibia → 30s agua fría → Repite 3x\n⚠️ NO hagas esto con presión arterial alta descompensada o problemas cardíacos.\n\n2) TERMOGÉNESIS NATURAL VÍA ALIMENTACIÓN\n• Pimienta (TRPV1 activa la termogénesis)\n• Canela (sensibilidad a la insulina)\n• Jengibre (efecto sobre termogénesis y digestión)\n\n3) MINI-ACTIVIDAD DE ALTA FRECUENCIA\n3 series de 1 min, 3x al día:\n• 20–30s saltos suaves\n• 20–30s sentadillas lentas\n• 20–30s marcha rápida en el lugar`},
+      ],
+      recipes:[{e:"🫖",name:"Té Termogénico Dorado",ing:["250ml de agua caliente","½ cdta de cúrcuma","½ cdta de canela","Pizca de pimienta negra","1cm de jengibre rallado"],how:["Calienta el agua hasta hervir.","Añade los ingredientes. Infusiona 5 min.","Cuela y bebe tibio."],sci:"Compuestos que aumentan levemente el gasto energético, promueven calor interno y apoyan la digestión."}],
+    },
+    4:{title:"La Raíz — Intestino, Microbioma y Eje Intestino-Cerebro",
+      intro:`El intestino es conocido como el 'segundo cerebro'. Produce neurotransmisores como la serotonina, que regulan el humor, el sueño y la saciedad. La salud del intestino está íntimamente ligada al microbioma.\n\nCuando hay desequilibrio en ese microbioma — llamado disbiosis — ocurre mayor inflamación, retención de líquidos, digestión lenta e incluso mayor acumulación de grasa abdominal.\n\nEl objetivo de hoy es nutrir y equilibrar el microbioma de forma práctica y accesible.`,
+      sections:[
+        {title:"🌱 ¿Qué es el microbioma y por qué importa?",content:`El microbioma intestinal está compuesto por billones de microorganismos que desempeñan un papel fundamental en:\n\n• DIGESTIÓN Y ABSORCIÓN: las fibras se convierten en ácidos grasos de cadena corta (AGCC), que contribuyen a la saciedad y regulan la inflamación.\n• PRODUCCIÓN DE NEUROTRANSMISORES: la serotonina y el GABA influyen en el humor, el estrés y el comportamiento alimentario.\n• COMUNICACIÓN CON EL CEREBRO a través del nervio vago — el eje intestino-cerebro.`},
+        {title:"🍽️ Estrategias para alimentar el microbioma",content:`1. FIBRA EN TODAS LAS COMIDAS\nAvena, frijoles, lentejas, brócoli, zanahoria, batata, banana y manzana.\n\n2. PREBIÓTICOS NATURALES\nBanana verde, ajo, cebolla, avena, raíz de achicoria.\n\n3. PROBIÓTICOS ACCESIBLES\nYogur natural, kéfir casero o suero de leche.\n\n4. RESPIRACIÓN DIAFRAGMÁTICA\nEstimula el nervio vago — principal conexión entre intestino y cerebro.`},
+      ],
+      recipes:[
+        {e:"🥣",name:"Desayuno Prebiótico — Avena con Banana y Chía",ing:["½ taza de avena","1 banana (verde-madura)","1 cda de chía","Agua o leche simple"],how:["Mezcla todo en un recipiente.","Revuelve y come."],sci:"Los prebióticos de la avena y la banana alimentan Bifidobacterium y Lactobacillus; la chía añade fibra y omega-3."},
+        {e:"🍵",name:"Té Calmante Intestinal — Manzanilla con Hinojo",ing:["1 cdta de manzanilla","1 cdta de hinojo","200ml de agua caliente"],how:["Infusiona 5 min. Bebe por la tarde."],sci:"Manzanilla + hinojo reducen gases, relajan el intestino y apoyan el eje intestino-cerebro vía nervio vago."},
+      ],
+    },
+    5:{title:"El Escudo — Rompiendo el Ciclo Cortisol-Compulsión",
+      intro:`¿Alguna vez tuviste uno de esos días en que ibas muy bien — y entonces llegaron las 4pm y te vino una necesidad absurda de comer chocolate?\n\nLa respuesta no está en tu fuerza de voluntad. Está en tu cortisol.\n\nEl cortisol es la hormona del estrés — cuando sube, el cerebro pide energía rápida. No porque seas débil. Porque eres humana, y tu sistema nervioso está en modo supervivencia.\n\nHoy, interrumpiremos ese ciclo. De forma práctica, segura y gentil contigo misma. 🛡️`,
+      sections:[
+        {title:"🧠 Lo que el Cortisol le hace a tu Metabolismo",content:`Cuando el cortisol permanece crónicamente elevado:\n\n• LA RESISTENCIA A LA INSULINA AUMENTA → favorece la acumulación de grasa abdominal\n• LA LEPTINA (saciedad) CAE → no percibes cuándo estás satisfecha\n• LA GRELINA (hambre) SUBE → intensifica el apetito por azúcar y grasa\n• LA GRASA VISCERAL SE ACUMULA → el abdomen concentra receptores de cortisol\n• COMPULSIÓN EMOCIONAL → sistema de recompensa activado`},
+        {title:"🛡️ La Mega Estrategia: Eje Estrés-Hambre",content:`FRENTE 1 — RESPIRACIÓN Y SISTEMA NERVIOSO\n\nTécnica 4-7-8 (3x al día):\n• Inhala por la nariz contando hasta 4\n• Retén contando hasta 7\n• Exhala lentamente por la boca contando hasta 8\n• Repite 4 ciclos\n\nGrounding en momentos de compulsión:\nAntes de abrir el refrigerador — 5 cosas que ves, 3 que puedes tocar, 1 que puedes oler.\n\nFRENTE 2 — ALIMENTACIÓN ANTI-CORTISOL\n• Magnesio: espinaca, kale, frijoles negros, avena, banana, maní\n• Vitamina C: acerola, kiwi, naranja, marañón, pimentón\n• Proteína en el desayuno: estabiliza la glucemia y reduce los picos de cortisol\n• Máximo 2 cafés/día\n\nFRENTE 3 — MOVIMIENTO ANTI-ESTRÉS\n• Caminata de 15–20 min al aire libre\n• Estiramiento suave de 10 min antes de dormir`},
+      ],
+      recipes:[
+        {e:"🥚",name:"Tortilla de Espinaca + Queso + Banana",ing:["2 huevos","1 puñado de espinaca fresca","1 cda de queso blanco o ricota","½ banana","Aceite de oliva, sal"],how:["Bate los huevos con sal.","Saltea la espinaca 1 min.","Vierte los huevos y el queso, tapa 2 min.","Sirve con la banana."],sci:"Huevos = proteína completa. Espinaca = magnesio que modula el eje del estrés. Banana = vitamina B6, precursora de la serotonina."},
+        {e:"🫖",name:"Té Anti-Estrés de la Tarde",ing:["1 cdta de manzanilla","½ cdta de canela","200ml de agua caliente","Miel opcional"],how:["Mezcla en agua caliente. Infusiona 5 min tapado.","Bebe sin pantallas."],sci:"Manzanilla: acción ansiolítica suave documentada. Canela: estabiliza la glucemia, reduce los picos del hambre emocional."},
+      ],
+    },
+    6:{title:"El Reinicio — El Sueño que Adelgaza",
+      intro:`¿Sabías que una noche de mal sueño puede hacer que comas, en promedio, 300 calorías más al día siguiente — sin darte cuenta? 😳\n\nNo es falta de fuerza de voluntad. Es bioquímica pura.\n\nCuando el sueño es fragmentado, la leptina (saciedad) cae y la grelina (hambre) sube. El cuerpo llega al día siguiente con hambre desproporcionada, cansancio que pide azúcar y metabolismo reducido.\n\nEs durante el sueño profundo que la GH (hormona del crecimiento) se libera en mayor cantidad — principal responsable de la quema de grasa.\n\nHoy, transformarás tu sueño en una de las herramientas más poderosas del protocolo. 🌙✨`,
+      sections:[
+        {title:"💤 ¿Qué sucede mientras duermes?",content:`El sueño es un proceso activo y profundamente metabólico:\n\n• SUEÑO PROFUNDO (NREM 3): pico de GH, reparación celular, regulación de la insulina, quema de grasa\n• SUEÑO REM: procesamiento emocional, reducción del cortisol residual\n\nEstudio de Chicago: los participantes en dieta que dormían 5,5h/noche perdieron 55% MENOS grasa y 60% MÁS masa muscular que quienes dormían 8,5h — comiendo las mismas calorías.`},
+        {title:"🌙 Protocolo del Sueño Metabólico",content:`1️⃣ LA VENTANA DE LUZ\n• 20h–20:30h: atenúa las luces\n• Desde las 21h: sin pantallas con luz blanca/azul\n• Mañana: en los primeros 30 min tras despertar, exponerse a la luz natural\n\n2️⃣ RITUAL DE DESACELERACIÓN (desde las 21h)\n• Té calmante tibio\n• Ducha tibia (la caída de temperatura señala al cerebro)\n• Lectura física o escribir 3 gratitudes\n• 5 min de estiramiento o respiración 4-7-8\n\n3️⃣ NUTRICIÓN PRO-SUEÑO\nConsume: carbohidratos complejos moderados + triptófano (pollo, huevo, yogur, banana, maní) + magnesio.\nEvita: cafeína después de las 14h, alcohol, comida pesada en las 2h antes, azúcar por la noche.`},
+      ],
+      recipes:[
+        {e:"🍌",name:"Merienda Pro-Sueño — Yogur con Banana y Maní",ing:["1 yogur natural entero","½ banana madura","1 cda de maní tostado sin sal","Canela"],how:["Mezcla todo en un bowl.","Come entre las 15h y 16h."],sci:"El triptófano del yogur y la banana = precursor de serotonina → melatonina. Maní = magnesio para la relajación."},
+        {e:"🍵",name:"Té del Ritual — Melisa, Maracuyá e Hinojo",ing:["1 cdta de melisa","1 cdta de hinojo","1 sobrecito de maracuyá","200ml de agua caliente"],how:["Infusiona 5–8 min tapado. Cuela y bebe tibio, sin pantallas."],sci:"Melisa: acción sedante leve comprobada. Maracuyá: flavonoides con acción calmante."},
+      ],
+    },
+    7:{title:"El Giro — Proteína, NEAT y el Metabolismo que No Para",
+      intro:`Llegamos al último día. Y fue guardado con cuidado — porque la estrategia de hoy es la que sostiene todo lo que construiste.\n\nNo es la más compleja. Pero es la más poderosa a largo plazo.\n\nLa respuesta está en dos conceptos simples que, juntos, pueden transformar tu metabolismo de forma permanente: proteína y NEAT.\n\nEste es tu punto de inflexión. 🔑`,
+      sections:[
+        {title:"🥩 Por qué la Proteína es la Reina del Adelgazamiento",content:`• EFECTO TERMOGÉNICO: el 25–30% de las calorías de la proteína se gastan en la propia digestión.\n\n• SACIEDAD SUPERIOR: estimula PYY y GLP-1 y reduce la grelina.\n\n• PRESERVACIÓN MUSCULAR: la masa muscular es metabólicamente activa — quema calorías en reposo.\n\nMETA PRÁCTICA:\n• Desayuno: 20–25g (3 huevos + yogur)\n• Almuerzo: 25–35g (pollo, sardina, frijoles + huevo)\n• Cena: 20–25g (tortilla, pescado, leguminosas)\n\nFUENTES ACCESIBLES: Huevos (6–7g c/u), pollo (25g/100g), sardina (21g/100g), yogur (5–6g/100g), frijoles (7–8g/100g), maní (25g/100g).`},
+        {title:"🚶 NEAT — puede valer más que el gimnasio",content:`NEAT (Non-Exercise Activity Thermogenesis) = todo gasto calórico fuera del ejercicio estructurado: caminar, subir escaleras, cocinar, gesticular, estar de pie.\n\nNEAT INTENCIONAL — elige 6 micro-acciones:\n• ☀️ Caminar hasta una parada más lejana\n• 🪜 Subir escaleras en vez de ascensor\n• 🧹 Limpiar una habitación con energía\n• 🍳 Estar de pie mientras cocinas\n• 💃 Bailar 5 minutos — de verdad\n• 🏃 Caminata post-cena de 10–15 min\n\nREFLEXIÓN DE LOS 7 DÍAS (10 min):\n• ¿Qué cambió en mi cuerpo en estos 7 días?\n• ¿Qué aprendí sobre mí misma?\n• ¿Qué hábito quiero mantener?`},
+      ],
+      recipes:[
+        {e:"🥚",name:"Panqueque de Banana con Huevo — Desayuno Proteico",ing:["2 huevos","1 banana madura aplastada","2 cdas de avena","1 cda de maní","Canela","Aceite de oliva"],how:["Mezcla huevos, banana y avena.","Cocina en sartén engrasada.","Da vuelta cuando dore. Sirve con maní."],sci:"Proteína completa + carbohidrato lento + grasa buena = saciedad prolongada y termogénesis activada."},
+        {e:"🐟",name:"Bowl de Sardina — Almuerzo Antiinflamatorio",ing:["1 lata de sardina en aceite de oliva","½ taza de arroz integral","1 tomate picado","Rúcula","Aceite de oliva, limón, orégano"],how:["Monta: arroz, rúcula, tomate.","Sardina encima. Finaliza con aceite de oliva y limón."],sci:"Sardina = proteína completa + omega-3 antiinflamatorio + sensibilidad a la insulina."},
+      ],
+    },
+  },
+};
+
+const getPC = (lang) => {
+  if (!PC_TRANS[lang]) return PC;
+  const result = {};
+  Object.keys(PC).forEach(k => { result[k] = { ...PC[k], ...(PC_TRANS[lang][k] || {}) }; });
+  return result;
+};
+
+const MISSIONS_TRANS = {
+  en:{
+    "1a":"💧 Warm lemon water upon waking","1b":"⏰ 10-hour eating window",
+    "1c":"🥚 Breakfast with protein + fiber + healthy fat","1d":"🥗 Balanced lunch (half veggies)",
+    "1e":"🌙 4-4-8 breathing before bed","1f":"📸 Photo of meals + reference pants",
+    "2a":"💧 Morning lymphatic activation (10 min)","2b":"🚶 Light walk after lunch",
+    "2c":"🥤 Drainage green juice","2d":"🦵 Legs on the wall before bed",
+    "2e":"💆 Gentle lymphatic self-massage","2f":"📸 Photo of swollen area",
+    "3a":"🚿 Shower with cold/warm cycles (3x)","3b":"☕ Golden Thermogenic Tea",
+    "3c":"💪 3 sets of micro-movement","3d":"🌶️ Thermogenic spices",
+    "3e":"⏰ Keep 10-hour eating window","3f":"📸 Photo with reference pants",
+    "4a":"🥣 Oats with banana and chia","4b":"🫙 Fermented food at lunch or dinner",
+    "4c":"🧘 5 min diaphragmatic breathing","4d":"🍵 Gut calming tea",
+    "4e":"🥦 3 meals with fiber","4f":"📸 Photo of meals and belly",
+    "5a":"🌬️ 4-7-8 breathing at 3 moments","5b":"🧘 2-min pause before each meal",
+    "5c":"🧠 Grounding during cravings","5d":"🚶 Walk 15–20 min outdoors",
+    "5e":"🌙 Stretching before bed","5f":"📸 Photo with pants — compare with Day 1!",
+    "6a":"☀️ Natural light in first 30 min","6b":"☕✗ No caffeine after 2pm",
+    "6c":"🍽️ Light dinner with tryptophan","6d":"🌙 Complete night ritual",
+    "6e":"📵 Phone out of the bedroom","6f":"📸 Photo in the morning upon waking!",
+    "7a":"💪 20–25g protein in EVERY meal","7b":"🚶 6+ NEAT micro-actions",
+    "7c":"💧 Morning lymphatic activation","7d":"✍️ Write 7-day reflection",
+    "7e":"🌙 Sleep ritual","7f":"🎉📸 FINAL photo + post in community!",
+    "e1":"💧 Drink 2L of water","e2":"💬 Share in community",
+    "e3":"🥘 Advance meal prep","e4":"🌙 Sleep before 10:30pm",
+    "e5":"✍️ 10 min journaling","e6":"👭 Invite a friend",
+  },
+  es:{
+    "1a":"💧 Agua tibia con limón al despertar","1b":"⏰ Ventana alimentaria de 10h",
+    "1c":"🥚 Desayuno con proteína + fibra + grasa buena","1d":"🥗 Almuerzo equilibrado (mitad vegetal)",
+    "1e":"🌙 Respiración 4-4-8 antes de dormir","1f":"📸 Foto de los platos + pantalón de referencia",
+    "2a":"💧 Activación linfática matinal (10 min)","2b":"🚶 Caminata suave después del almuerzo",
+    "2c":"🥤 Jugo verde del drenaje","2d":"🦵 Piernas en la pared antes de dormir",
+    "2e":"💆 Automasaje linfático suave","2f":"📸 Foto del área inflamada",
+    "3a":"🚿 Ducha con ciclos frío/tibio (3x)","3b":"☕ Té Termogénico Dorado",
+    "3c":"💪 3 series de micro-movimiento","3d":"🌶️ Especias termogénicas",
+    "3e":"⏰ Mantener ventana de 10h","3f":"📸 Foto con el pantalón de referencia",
+    "4a":"🥣 Avena con banana y chía","4b":"🫙 Fermentado en el almuerzo o cena",
+    "4c":"🧘 5 min respiración diafragmática","4d":"🍵 Té calmante intestinal",
+    "4e":"🥦 3 comidas con fibra","4f":"📸 Foto de los platos y el vientre",
+    "5a":"🌬️ Respiración 4-7-8 en 3 momentos","5b":"🧘 Pausa de 2 min antes de cada comida",
+    "5c":"🧠 Grounding en momentos de compulsión","5d":"🚶 Caminata 15–20 min al aire libre",
+    "5e":"🌙 Estiramiento antes de dormir","5f":"📸 Foto con el pantalón — ¡compara con el Día 1!",
+    "6a":"☀️ Luz natural en los primeros 30 min","6b":"☕✗ Sin cafeína después de las 14h",
+    "6c":"🍽️ Cena liviana con triptófano","6d":"🌙 Ritual nocturno completo",
+    "6e":"📵 Celular fuera del cuarto","6f":"📸 ¡Foto por la mañana al despertar!",
+    "7a":"💪 20–25g de proteína en CADA comida","7b":"🚶 6+ micro-acciones de NEAT",
+    "7c":"💧 Activación linfática matinal","7d":"✍️ Escribir reflexión de los 7 días",
+    "7e":"🌙 Ritual del sueño","7f":"🎉📸 ¡Foto FINAL + publicar en comunidad!",
+    "e1":"💧 Beber 2L de agua","e2":"💬 Compartir en comunidad",
+    "e3":"🥘 Meal prep anticipado","e4":"🌙 Dormir antes de las 22:30",
+    "e5":"✍️ 10 min de journaling","e6":"👭 Invitar a una amiga",
+  },
+};
+
+const getMissions = (lang) => {
+  if (!MISSIONS_TRANS[lang]) return MISSIONS;
+  const result = {};
+  Object.entries(MISSIONS).forEach(([day, missions]) => {
+    result[day] = missions.map(m => ({ ...m, t: MISSIONS_TRANS[lang][m.id] || m.t }));
+  });
+  return result;
+};
+
+const GRATITUDE_TRANS = {
+  en:[
+    {type:"para",text:"Seven days ago, you may have opened this protocol in silence."},
+    {type:"para",text:"Maybe no one knew exactly what was happening inside you. Maybe on the outside you were carrying on, smiling, working, taking care of everything and everyone. But on the inside… there was a tired woman. Tired of trying and stopping. Tired of promising that Monday would be different. Tired of looking in the mirror and feeling that, somewhere along the way, she had lost herself."},
+    {type:"highlight",text:"But even tired, you began. 🌷"},
+    {type:"para",text:"And that says a lot about you."},
+    {type:"para",text:"Because there is a quiet strength in a woman who decides to start again. Not that loud, perfect, flawless strength. But the real strength. The strength of someone who wakes up, takes a deep breath, and chooses to do the best she can with what she has that day."},
+    {type:"divider"},
+    {type:"para",text:"During these 7 days, you didn't just follow guidelines. You crossed a bridge. 🌉"},
+    {type:"list",items:["You taught your body to find its rhythm again.","You gave water, movement, breathing and presence to a body that had perhaps been asking for care for a long time.","You looked at hunger, fatigue, cravings, sleep, bloating and anxiety with different eyes."]},
+    {type:"bold",text:"You weren't broken.\nYou just needed direction. ✨"},
+    {type:"para",text:"The RESET 7D didn't come to demand perfection from you. It came to remind you that there is still a woman inside capable of taking charge of her own path. A woman who can stumble on a meal and still continue. Who can't do everything 100% and still be proud. Who can stumble, breathe, adjust and keep going."},
+    {type:"highlight",text:"Because real transformation is not born from guilt.\nIt's born from decision. 🔥\nAnd you decided."},
+    {type:"divider"},
+    {type:"list",items:["You decided when you respected your eating window.","You decided when you drank water even without wanting to. 💧","You decided when you prepared a meal with more awareness.","You decided when you breathed before acting on impulse.","You decided when you moved your body.","You decided when you tried to sleep better. 🌙","You decided when, even imperfectly, you didn't completely abandon the woman you are becoming."]},
+    {type:"bold",text:"That is achievement. 🏆"},
+    {type:"para",text:"Don't underestimate what happened here. Maybe the world didn't see it. Maybe no one applauded. Maybe no one noticed the size of this internal battle. But you know. Your body knows. Your mind knows. And a new version of you began to be born in these 7 days — more conscious, more awake, more in charge of herself."},
+    {type:"highlight",text:"This letter is to remind you: you made it here. 💛"},
+    {type:"bold",text:"RESET 7D Team, we are proud that you made it all the way here."},
+    {type:"divider"},
+    {type:"para",text:"But now comes the most important part: don't turn this ending into a full stop."},
+    {type:"para",text:"If you feel you failed on some days, repeat the protocol. No guilt. No drama. Don't diminish yourself. Starting over is not failing. Starting over is having the maturity to take care of yourself again. 🌱"},
+    {type:"para",text:"If you completed all 7 days, go further. Do two more cycles. Turn RESET 7D into 21 days of building — 3 cycles to consolidate what started as effort and can become an unshakeable habit."},
+    {type:"para",text:'And if inside you there is that voice saying: "I want to keep going, I want more, I am ready for the next level", then go to the Next Level tab. 🚀'},
+    {type:"divider"},
+    {type:"para",text:"You don't need to decide out of fear."},
+    {type:"list",items:["Decide out of self-love.","Decide for the woman you are beginning to recognize again. 💎"]},
+    {type:"highlight",text:"Because she came back.\nPerhaps still shy. Perhaps still learning. Perhaps still with difficult days ahead.\nBut she came back. ✨"},
+    {type:"divider"},
+    {type:"para",text:"And now that you have found yourself again, don't abandon yourself once more."},
+    {type:"closing",text:"We, the RESET 7D Team 💛, are proud and hope this is the beginning of a wonderful life from here on! Congratulations, you deserve it!!"},
+  ],
+  es:[
+    {type:"para",text:"Hace siete días, quizás abriste este protocolo en silencio."},
+    {type:"para",text:"Quizás nadie sabía exactamente lo que estaba pasando ahí adentro. Quizás por fuera seguías, sonriendo, trabajando, cuidando de todo y de todos. Pero por dentro… había una mujer cansada. Cansada de intentar y parar. Cansada de prometer que el lunes sería diferente. Cansada de mirarse al espejo y sentir que, en algún punto del camino, se había perdido a sí misma."},
+    {type:"highlight",text:"Pero aunque cansada, comenzaste. 🌷"},
+    {type:"para",text:"Y eso dice mucho sobre ti."},
+    {type:"para",text:"Porque existe una fuerza silenciosa en una mujer que decide recomenzar. No esa fuerza ruidosa, perfecta, impecable. Sino la fuerza real. La fuerza de quien despierta, respira profundo y elige hacer lo mejor que puede con lo que tiene ese día."},
+    {type:"divider"},
+    {type:"para",text:"Durante estos 7 días, no solo seguiste orientaciones. Cruzaste un puente. 🌉"},
+    {type:"list",items:["Enseñaste a tu cuerpo a volver a tener ritmo.","Le diste agua, movimiento, respiración y presencia a un organismo que quizás llevaba mucho tiempo pidiendo cuidado.","Miraste el hambre, el cansancio, la compulsión, el sueño, la inflamación y la ansiedad con otros ojos."]},
+    {type:"bold",text:"No estabas rota.\nSolo necesitabas dirección. ✨"},
+    {type:"para",text:"El RESET 7D no vino a exigirte perfección. Vino a recordarte que todavía existe una mujer capaz de tomar las riendas de su propio camino. Una mujer que puede fallar en una comida y aún así continuar. Que no puede hacer todo al 100% y aún así estar orgullosa. Que puede tropezar, respirar, ajustar y seguir."},
+    {type:"highlight",text:"Porque la transformación real no nace de la culpa.\nNace de la decisión. 🔥\nY tú decidiste."},
+    {type:"divider"},
+    {type:"list",items:["Decidiste cuando respetaste tu ventana alimentaria.","Decidiste cuando bebiste agua aunque no tuvieras ganas. 💧","Decidiste cuando preparaste una comida con más consciencia.","Decidiste cuando respiraste antes de actuar por impulso.","Decidiste cuando moviste el cuerpo.","Decidiste cuando intentaste dormir mejor. 🌙","Decidiste cuando, aunque imperfecta, no abandonaste completamente a la mujer en que te estás convirtiendo."]},
+    {type:"bold",text:"Eso es un logro. 🏆"},
+    {type:"para",text:"No subestimes lo que pasó aquí. Quizás el mundo no lo vio. Quizás nadie aplaudió. Quizás nadie percibió el tamaño de esa batalla interna. Pero tú lo sabes. Tu cuerpo lo sabe. Tu mente lo sabe. Y una nueva versión tuya comenzó a nacer en estos 7 días — más consciente, más despierta, más dueña de sí misma."},
+    {type:"highlight",text:"Esta carta es para recordarte: llegaste hasta aquí. 💛"},
+    {type:"bold",text:"Equipo RESET 7D, estamos orgullosos de que hayas llegado hasta aquí."},
+    {type:"divider"},
+    {type:"para",text:"Pero ahora viene la parte más importante: no conviertas este final en punto final."},
+    {type:"para",text:"Si sientes que fallaste en algunos días, repite el protocolo. Sin culpa. Sin drama. Sin disminuirte. Recomenzar no es fracasar. Recomenzar es tener la madurez de cuidarte de nuevo. 🌱"},
+    {type:"para",text:"Si lograste completar los 7 días, ve más lejos. Haz dos ciclos más. Transforma el RESET 7D en 21 días de construcción — 3 ciclos para consolidar lo que empezó como esfuerzo y puede convertirse en un hábito inquebrantable."},
+    {type:"para",text:'Y si dentro de ti existe esa voz que dice: "quiero continuar, quiero más, estoy lista para el siguiente nivel", entonces accede a la pestaña Siguiente Nivel. 🚀'},
+    {type:"divider"},
+    {type:"para",text:"No necesitas decidir por miedo."},
+    {type:"list",items:["Decide por amor propio.","Decide por la mujer que estás comenzando a reconocer de nuevo. 💎"]},
+    {type:"highlight",text:"Porque ella volvió.\nQuizás todavía tímida. Quizás todavía aprendiendo. Quizás con días difíciles por delante.\nPero volvió. ✨"},
+    {type:"divider"},
+    {type:"para",text:"Y ahora que te has reencontrado, no te abandones otra vez."},
+    {type:"closing",text:"Nosotros, el Equipo RESET 7D 💛, estamos orgullosos y esperamos que este sea el inicio de una vida maravillosa de aquí en adelante. ¡Felicitaciones, lo mereces!!"},
+  ],
+};
+
 // ── API RESEND ─────────────────────────────────────────────────
 async function sendRecoveryEmail(toEmail) {
   let res;
@@ -377,11 +1001,11 @@ function ErrMsg({msg,th}) {
   return <p style={{fontSize:"12px",color:c.primary,marginTop:"6px",display:"flex",alignItems:"center",gap:"5px"}}>⚠️ {msg}</p>;
 }
 
-function PassBar({pw}) {
+function PassBar({pw, lang="pt"}) {
   if(!pw) return null;
   const score=[pw.length>=8,/[A-Z]/.test(pw),/[0-9]/.test(pw),/[^A-Za-z0-9]/.test(pw)].filter(Boolean).length;
-  const s=score<=1?{p:25,l:"Muito fraca",c:"#ef4444"}:score===2?{p:50,l:"Razoável",c:T.accent}:score===3?{p:75,l:"Boa",c:"#22c55e"}:{p:100,l:"Forte 💪",c:T.green};
-  return <div style={{marginTop:"8px"}}><div className="pass-bar-track"><div className="pass-bar" style={{width:`${s.p}%`,background:s.c}}/></div><p style={{fontSize:"11px",color:s.c,fontWeight:"700",marginTop:"4px"}}>Senha {s.l}</p></div>;
+  const s=score<=1?{p:25,l:S(lang,"pw_bar_weak"),c:"#ef4444"}:score===2?{p:50,l:S(lang,"pw_bar_fair"),c:T.accent}:score===3?{p:75,l:S(lang,"pw_bar_good"),c:"#22c55e"}:{p:100,l:S(lang,"pw_bar_strong"),c:T.green};
+  return <div style={{marginTop:"8px"}}><div className="pass-bar-track"><div className="pass-bar" style={{width:`${s.p}%`,background:s.c}}/></div><p style={{fontSize:"11px",color:s.c,fontWeight:"700",marginTop:"4px"}}>{S(lang,"pw_bar_prefix")} {s.l}</p></div>;
 }
 
 function Label({children,th}) {
@@ -395,9 +1019,9 @@ function Av({name, size=38, color="#d6628e"}) {
   return <div style={{width:size,height:size,borderRadius:"50%",background:`linear-gradient(135deg,${color},#f0a8c4)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:size*0.35,fontWeight:800,color:"white",flexShrink:0}}>{ini}</div>;
 }
 
-function XPBadge({xp, th}) {
+function XPBadge({xp, th, lang="pt"}) {
   const lvl = Math.floor(xp/200)+1;
-  const names=["Iniciante","Determinada","Focada","Guerreira","Poderosa","Transformada","Lendária"];
+  const names=[S(lang,"xp_lvl0"),S(lang,"xp_lvl1"),S(lang,"xp_lvl2"),S(lang,"xp_lvl3"),S(lang,"xp_lvl4"),S(lang,"xp_lvl5"),S(lang,"xp_lvl6")];
   return <div style={{display:"flex",alignItems:"center",gap:7,background:th.accentL,border:"1px solid rgba(244,200,150,.3)",borderRadius:20,padding:"5px 13px"}}>
     <span style={{fontSize:14}}>⚡</span>
     <div><div style={{fontSize:11,color:th.accent,fontWeight:700}}>{xp} XP</div><div style={{fontSize:9,color:th.text3}}>Nv.{lvl} · {names[Math.min(lvl-1,6)]}</div></div>
@@ -618,13 +1242,15 @@ function Chart3D({data}) {
 }
 
 // ── QUIZ ──────────────────────────────────────────────────────
-function QuizScreen({onDone, th}) {
+function QuizScreen({onDone, th, lang="pt"}) {
   const [step, setStep]           = useState(0);
   const [answers, setAnswers]     = useState([]);
   const [showResult, setShowResult] = useState(false);
   const [animPhase, setAnimPhase] = useState('idle'); // idle | selecting | exiting | entering
   const [selectedOpt, setSelectedOpt] = useState(null);
   const [transKey, setTransKey]   = useState(0);
+
+  const QUIZ_L = getQuiz(lang);
 
   const choose = useCallback((opt, idx) => {
     if (animPhase !== 'idle') return;
@@ -636,7 +1262,7 @@ function QuizScreen({onDone, th}) {
       setTimeout(() => {
         const next = step + 1;
         setAnswers(a => [...a, opt]);
-        if (step < QUIZ.length - 1) {
+        if (step < QUIZ_L.length - 1) {
           setStep(next);
           setSelectedOpt(null);
           setTransKey(k => k + 1);
@@ -647,9 +1273,13 @@ function QuizScreen({onDone, th}) {
         }
       }, 400);
     }, 320);
-  }, [animPhase, step]);
+  }, [animPhase, step, QUIZ_L]);
 
-  const chartData = [{name:"Inchaço",pct:67},{name:"Energia",pct:78},{name:"Compulsão",pct:54},{name:"Peso",pct:71},{name:"Hormônios",pct:61}];
+  const chartData = [
+    {name:S(lang,"quiz_profile_r1"),pct:67},{name:S(lang,"quiz_profile_r2"),pct:78},
+    {name:S(lang,"quiz_profile_r3"),pct:54},{name:S(lang,"quiz_profile_r4"),pct:71},
+    {name:S(lang,"quiz_profile_r5"),pct:61},
+  ];
 
   if (showResult) return (
     <div style={{
@@ -688,47 +1318,29 @@ function QuizScreen({onDone, th}) {
       }}>
         {/* Nome e título */}
         <div style={{textAlign:'center', marginBottom:18}}>
-          <div style={{fontSize:22, fontWeight:800, color:'#9dd9b8', marginBottom:2}}>
-            Dra. Ana Paula
-          </div>
-          <div style={{fontSize:11, color:'rgba(255,255,255,0.42)', letterSpacing:'0.08em'}}>
-            NUTRICIONISTA • RESET 7D
-          </div>
+          <div style={{fontSize:22, fontWeight:800, color:'#9dd9b8', marginBottom:2}}>Dra. Ana Paula</div>
+          <div style={{fontSize:11, color:'rgba(255,255,255,0.42)', letterSpacing:'0.08em'}}>{S(lang,"quiz_dra_subtitle")}</div>
         </div>
 
-        {/* Veredicto — copy com empatia e storytelling */}
-        <div style={{
-          fontSize:13, color:'rgba(245,230,237,0.88)', lineHeight:1.85,
-          marginBottom:18, textAlign:'center',
-        }}>
-          Analisamos cuidadosamente o perfil de mais de{' '}
-          <strong style={{color:'#e8a4c0'}}>2.800 mulheres de todo o Brasil</strong>{' '}
-          e sabemos que mulheres incríveis como você enfrentam desafios silenciosos todos os dias — o inchaço que aparece sem aviso, o cansaço que não passa, a vontade de comer mesmo sem fome real.
+        <div style={{fontSize:13, color:'rgba(245,230,237,0.88)', lineHeight:1.85, marginBottom:18, textAlign:'center'}}>
+          {S(lang,"quiz_dra_p1",{n:"2.800"})}
         </div>
 
-        <div style={{
-          fontSize:13, color:'rgba(245,230,237,0.88)', lineHeight:1.85,
-          marginBottom:22, textAlign:'center',
-        }}>
-          Cada caso é único, e é exatamente por isso que estamos aqui: para orientar e apoiar você com{' '}
-          <strong style={{color:'#9dd9b8'}}>soluções seguras e personalizadas</strong>{' '}
-          que respeitam o seu corpo e o seu tempo.
+        <div style={{fontSize:13, color:'rgba(245,230,237,0.88)', lineHeight:1.85, marginBottom:22, textAlign:'center'}}>
+          {S(lang,"quiz_dra_p2")}
         </div>
 
         {/* Perfil identificado */}
-        <div style={{
-          background:'rgba(0,0,0,0.30)', borderRadius:16,
-          padding:'14px 16px', marginBottom:18,
-        }}>
+        <div style={{background:'rgba(0,0,0,0.30)', borderRadius:16, padding:'14px 16px', marginBottom:18}}>
           <div style={{fontSize:10, color:'rgba(255,255,255,0.40)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:12, textAlign:'center'}}>
-            Seu perfil identificado
+            {S(lang,"quiz_profile")}
           </div>
           {[
-            ['Retenção de líquidos','67%','#e8a4c0','Alta'],
-            ['Déficit de energia','78%','#9dd9b8','Crítico'],
-            ['Compulsão alimentar','54%','#f4c896','Moderado'],
-            ['Acúmulo de gordura','71%','#e8a4c0','Alto'],
-            ['Desequilíbrio hormonal','61%','#9dd9b8','Presente'],
+            [S(lang,"quiz_profile_r1"),'67%','#e8a4c0',S(lang,"quiz_lvl_r1")],
+            [S(lang,"quiz_profile_r2"),'78%','#9dd9b8',S(lang,"quiz_lvl_r2")],
+            [S(lang,"quiz_profile_r3"),'54%','#f4c896',S(lang,"quiz_lvl_r3")],
+            [S(lang,"quiz_profile_r4"),'71%','#e8a4c0',S(lang,"quiz_lvl_r4")],
+            [S(lang,"quiz_profile_r5"),'61%','#9dd9b8',S(lang,"quiz_lvl_r5")],
           ].map(([label,pct,cor,nivel])=>(
             <div key={label} style={{display:'flex', alignItems:'center', gap:10, marginBottom:9}}>
               <div style={{flex:1, fontSize:11, color:'rgba(232,180,204,0.85)'}}>{label}</div>
@@ -741,19 +1353,13 @@ function QuizScreen({onDone, th}) {
         </div>
 
         {/* Citação final */}
-        <div style={{
-          borderLeft:'3px solid #9dd9b8',
-          paddingLeft:16,
-          marginBottom:6,
-        }}>
-          <div style={{fontSize:14, color:'#9dd9b8', fontWeight:700, marginBottom:6}}>✦ Meu veredicto:</div>
+        <div style={{borderLeft:'3px solid #9dd9b8', paddingLeft:16, marginBottom:6}}>
+          <div style={{fontSize:14, color:'#9dd9b8', fontWeight:700, marginBottom:6}}>{S(lang,"quiz_verdict")}</div>
           <div style={{fontSize:13, color:'rgba(245,230,237,0.9)', lineHeight:1.8, fontStyle:'italic'}}>
-            "Seu corpo não está quebrado — ele está pedindo direção. E existe um protocolo de{' '}
-            <strong style={{fontStyle:'normal', color:'#e8a4c0'}}>7 dias</strong>{' '}
-            desenhado exatamente para o seu caso. Você já esperou tempo suficiente. Comece hoje."
+            {S(lang,"quiz_dra_verdict")}
           </div>
           <div style={{marginTop:10, fontSize:11, color:'rgba(255,255,255,0.35)', fontStyle:'normal'}}>
-            — Dra. Ana Paula, Nutricionista
+            — Dra. Ana Paula, {lang==="en"?"Nutritionist":"Nutricionista"}
           </div>
         </div>
       </div>
@@ -762,38 +1368,34 @@ function QuizScreen({onDone, th}) {
       <div style={{padding:'14px 18px 50px', display:'flex', flexDirection:'column', gap:14}}>
 
         {/* Estatística 73% */}
-        <div className="quiz-result-card" style={{
-          borderRadius:18, padding:'20px 20px',
-          background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,
-          border:`2px solid ${th.border2}`, textAlign:'center',
-        }}>
+        <div className="quiz-result-card" style={{borderRadius:18,padding:'20px 20px',background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,border:`2px solid ${th.border2}`,textAlign:'center'}}>
           <div className="serif" style={{fontSize:56,fontWeight:900,color:th.primary,lineHeight:1}}>73%</div>
-          <div style={{fontSize:11,color:th.text3,marginTop:6,marginBottom:3,letterSpacing:'0.06em',textTransform:'uppercase',fontWeight:700}}>das mulheres com seu perfil</div>
-          <div style={{fontSize:13,color:th.text,lineHeight:1.6}}>percebem diferença real nos <strong>primeiros 3 dias</strong>.</div>
+          <div style={{fontSize:11,color:th.text3,marginTop:6,marginBottom:3,letterSpacing:'0.06em',textTransform:'uppercase',fontWeight:700}}>{S(lang,"quiz_stat")}</div>
+          <div style={{fontSize:13,color:th.text,lineHeight:1.6}}>{S(lang,"quiz_stat_sub")}</div>
         </div>
 
         {/* Gráfico 3D */}
         <div className="quiz-result-card" style={{borderRadius:18,padding:18,background:th.primaryL,border:`1px solid ${th.border2}`}}>
-          <div style={{fontSize:13,fontWeight:700,color:th.primary,marginBottom:4}}>📊 Comparação com outras mulheres</div>
-          <div style={{fontSize:11,color:th.text3,marginBottom:12}}>Toque nas barras para ver detalhes</div>
+          <div style={{fontSize:13,fontWeight:700,color:th.primary,marginBottom:4}}>{S(lang,"quiz_chart_title")}</div>
+          <div style={{fontSize:11,color:th.text3,marginBottom:12}}>{S(lang,"quiz_chart_sub")}</div>
           <Chart3D data={chartData}/>
         </div>
 
         <button className="btn-p" onClick={(e)=>{addRipple(e);onDone();}} style={{fontSize:'15px',padding:'16px 24px',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',whiteSpace:'nowrap',letterSpacing:'0.01em'}}>
-          <span>Começar o RESET 7D agora</span><span style={{fontSize:'18px',lineHeight:1}}>→</span>
+          <span>{S(lang,"quiz_btn")}</span><span style={{fontSize:'18px',lineHeight:1}}>→</span>
         </button>
       </div>
     </div>
   );
 
-  const q = QUIZ[step];
+  const q = QUIZ_L[step];
   return (
     <div style={{flex:1,display:"flex",flexDirection:"column",padding:"12px 20px 16px",background:"transparent",overflow:"hidden"}}>
 
       {/* Progress bar — animada */}
       <div style={{marginBottom:12}}>
         <div style={{display:"flex",gap:5,marginBottom:10}}>
-          {QUIZ.map((_,i) => (
+          {QUIZ_L.map((_,i) => (
             <div key={i} style={{flex:1,height:5,borderRadius:3,background:th.border,overflow:'hidden'}}>
               <div style={{
                 height:'100%',borderRadius:3,
@@ -806,8 +1408,8 @@ function QuizScreen({onDone, th}) {
           ))}
         </div>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-          <span style={{fontSize:11,color:th.text3,fontWeight:600}}>Pergunta {step+1} de {QUIZ.length}</span>
-          <span style={{fontSize:11,color:th.primary,fontWeight:700}}>{Math.round(((step)/QUIZ.length)*100)}%</span>
+          <span style={{fontSize:11,color:th.text3,fontWeight:600}}>{S(lang,"quiz_q",{step:step+1,total:QUIZ_L.length})}</span>
+          <span style={{fontSize:11,color:th.primary,fontWeight:700}}>{Math.round(((step)/QUIZ_L.length)*100)}%</span>
         </div>
       </div>
 
@@ -1241,7 +1843,7 @@ function FloatingParticles() {
 }
 
 // ── TELA: REGISTER ────────────────────────────────────────────
-function RegisterScreen({onBack, onSuccess}) {
+function RegisterScreen({onBack, onSuccess, lang="pt"}) {
   const [f,setF] = useState({name:"",email:"",pw:"",pw2:""});
   const [err,setErr] = useState({});
   const [loading,setLoading] = useState(false);
@@ -1251,10 +1853,10 @@ function RegisterScreen({onBack, onSuccess}) {
 
   const submit = async () => {
     const e={};
-    if(!f.name.trim()) e.name="Digite seu nome.";
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email="E-mail inválido.";
-    if(f.pw.length<6) e.pw="Mínimo 6 caracteres.";
-    if(f.pw!==f.pw2) e.pw2="Senhas não conferem.";
+    if(!f.name.trim()) e.name=S(lang,"reg_err_name");
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email=S(lang,"reg_err_email");
+    if(f.pw.length<6) e.pw=S(lang,"reg_err_pw");
+    if(f.pw!==f.pw2) e.pw2=S(lang,"reg_err_pw2");
     setErr(e);
     if(Object.keys(e).length) return;
 
@@ -1265,12 +1867,12 @@ function RegisterScreen({onBack, onSuccess}) {
         body: JSON.stringify({name:f.name.trim(), email:f.email.toLowerCase(), password:f.pw}),
       });
       const data = await res.json();
-      if(!res.ok) { setErr({email: data.error==="EMAIL_EXISTS"?"E-mail já cadastrado.": data.message||"Erro ao criar conta."}); return; }
+      if(!res.ok) { setErr({email: data.error==="EMAIL_EXISTS"?S(lang,"reg_err_email_exists"): data.message||S(lang,"reg_err_create")}); return; }
       if(data.token) sessionStorage.setItem("r7d_token", data.token);
       const newUser = {name:data.name||f.name.trim(), email:data.email||f.email.trim().toLowerCase()};
       DB.setSession(newUser);
       onSuccess(newUser);
-    } catch { setErr({email:"Não foi possível conectar ao servidor."}); }
+    } catch { setErr({email:S(lang,"reg_err_server")}); }
     finally { setLoading(false); }
   };
 
@@ -1281,46 +1883,45 @@ function RegisterScreen({onBack, onSuccess}) {
       <FloatingParticles/>
 
       <div className="slide-up" style={{width:"100%",maxWidth:"400px",position:"relative",zIndex:1,display:"flex",flexDirection:"column",alignItems:"center"}}>
-        {/* Logo */}
         <div className="float-anim" style={{marginBottom:"12px",filter:"drop-shadow(0 8px 24px rgba(232,164,192,0.45))"}}>
           <LogoR7D size={106}/>
         </div>
-        <h2 className="serif grad-text" style={{fontSize:"30px",marginBottom:"4px",letterSpacing:"-0.3px"}}>Criar Conta</h2>
-        <p style={{fontSize:"13px",color:T.text3,marginBottom:"22px"}}>Comece sua transformação de 7 dias ✨</p>
+        <h2 className="serif grad-text" style={{fontSize:"30px",marginBottom:"4px",letterSpacing:"-0.3px"}}>{S(lang,"reg_title")}</h2>
+        <p style={{fontSize:"13px",color:T.text3,marginBottom:"22px"}}>{S(lang,"reg_subtitle")}</p>
 
         <div className="auth-form-panel" style={{width:"100%",padding:"24px 28px"}}>
-          <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",color:T.text3,marginBottom:"16px",fontSize:"13px",fontFamily:"'Manrope',sans-serif",padding:0}}>← Voltar ao login</button>
+          <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",color:T.text3,marginBottom:"16px",fontSize:"13px",fontFamily:"'Manrope',sans-serif",padding:0}}>{S(lang,"reg_back")}</button>
 
           <div style={{marginBottom:"12px"}}>
-            <Label>SEU NOME</Label>
-            <input className={`inp${err.name?" err":""}`} placeholder="Como podemos te chamar?" value={f.name} onChange={e=>upd("name",e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/>
+            <Label>{S(lang,"reg_name")}</Label>
+            <input className={`inp${err.name?" err":""}`} placeholder={S(lang,"reg_name_ph")} value={f.name} onChange={e=>upd("name",e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/>
             <ErrMsg msg={err.name}/>
           </div>
 
           <div style={{marginBottom:"12px"}}>
-            <Label>E-MAIL</Label>
+            <Label>{S(lang,"reg_email")}</Label>
             <input className={`inp${err.email?" err":""}`} type="email" placeholder="seu@email.com" value={f.email} onChange={e=>upd("email",e.target.value)} autoComplete="email"/>
             <ErrMsg msg={err.email}/>
           </div>
 
           <div style={{marginBottom:"12px"}}>
-            <Label>SENHA</Label>
+            <Label>{S(lang,"reg_pw")}</Label>
             <div className="inp-wrap">
-              <input className={`inp${err.pw?" err":""}`} type={showPw?"text":"password"} placeholder="Mínimo 6 caracteres" value={f.pw} onChange={e=>upd("pw",e.target.value)} style={{paddingRight:"44px"}} autoComplete="new-password"/>
+              <input className={`inp${err.pw?" err":""}`} type={showPw?"text":"password"} placeholder={S(lang,"reg_pw_ph")} value={f.pw} onChange={e=>upd("pw",e.target.value)} style={{paddingRight:"44px"}} autoComplete="new-password"/>
               <button className="eye-btn" type="button" onClick={()=>setShowPw(v=>!v)}>{showPw?"🙈":"👁️"}</button>
             </div>
-            <PassBar pw={f.pw}/>
+            <PassBar pw={f.pw} lang={lang}/>
             <ErrMsg msg={err.pw}/>
           </div>
 
           <div style={{marginBottom:"20px"}}>
-            <Label>CONFIRMAR SENHA</Label>
-            <input className={`inp${err.pw2?" err":""}`} type="password" placeholder="Repita a senha" value={f.pw2} onChange={e=>upd("pw2",e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} autoComplete="new-password"/>
+            <Label>{S(lang,"reg_pw2")}</Label>
+            <input className={`inp${err.pw2?" err":""}`} type="password" placeholder={S(lang,"reg_pw2_ph")} value={f.pw2} onChange={e=>upd("pw2",e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} autoComplete="new-password"/>
             <ErrMsg msg={err.pw2}/>
           </div>
 
           <button className="btn-p" onClick={(e)=>{addRipple(e);submit();}} disabled={loading} style={{fontSize:"15px",padding:"14px"}}>
-            {loading ? <><Spinner/> <span style={{marginLeft:"8px"}}>Criando conta...</span></> : "Criar conta e começar →"}
+            {loading ? <><Spinner/> <span style={{marginLeft:"8px"}}>{S(lang,"reg_creating")}</span></> : S(lang,"reg_btn")}
           </button>
         </div>
       </div>
@@ -1329,7 +1930,7 @@ function RegisterScreen({onBack, onSuccess}) {
 }
 
 // ── TELA: LOGIN ───────────────────────────────────────────────
-function LoginScreen({onLogin, onRegister, onForgot, savedEmail=""}) {
+function LoginScreen({onLogin, onRegister, onForgot, savedEmail="", lang="pt"}) {
   const [email,setEmail] = useState(savedEmail);
   const [pw,setPw]       = useState("");
   const [showPw,setShowPw] = useState(false);
@@ -1340,7 +1941,7 @@ function LoginScreen({onLogin, onRegister, onForgot, savedEmail=""}) {
   const triggerShake = () => { setShake(true); setTimeout(()=>setShake(false),400); };
 
   const submit = async () => {
-    if(!email.trim()||!pw) { setErr("Preencha e-mail e senha."); triggerShake(); return; }
+    if(!email.trim()||!pw) { setErr(S(lang,"login_fill_fields")); triggerShake(); return; }
     setLoading(true); setErr("");
     try {
       const res = await fetch(`${window.BACKEND_URL}/api/login`,{
@@ -1348,12 +1949,12 @@ function LoginScreen({onLogin, onRegister, onForgot, savedEmail=""}) {
         body: JSON.stringify({email:email.trim().toLowerCase(), password:pw}),
       });
       const data = await res.json();
-      if(!res.ok) { setErr(data.message||"E-mail ou senha incorretos."); triggerShake(); return; }
+      if(!res.ok) { setErr(data.message||S(lang,"login_invalid")); triggerShake(); return; }
       if(data.token) sessionStorage.setItem("r7d_token", data.token);
       const user = {name:data.name, email:data.email};
       DB.setSession(user);
       onLogin(user);
-    } catch { setErr("Não foi possível conectar ao servidor."); triggerShake(); }
+    } catch { setErr(S(lang,"login_no_server")); triggerShake(); }
     finally { setLoading(false); }
   };
 
@@ -1361,47 +1962,43 @@ function LoginScreen({onLogin, onRegister, onForgot, savedEmail=""}) {
     <div className="fade" style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px 24px 60px",position:"relative",overflow:"hidden"}}>
       <WomanSilhouetteBackground/>
 
-      {/* Logo + título flutuando, sem card */}
       <div className={`slide-up${shake?" shake":""}`} style={{width:"100%",maxWidth:"400px",position:"relative",zIndex:1,display:"flex",flexDirection:"column",alignItems:"center"}}>
-
-        {/* Logo personalizada */}
         <div className="float-anim" style={{marginBottom:"14px",filter:"drop-shadow(0 8px 24px rgba(232,164,192,0.45))"}}>
           <LogoR7D size={148}/>
         </div>
         <h1 className="serif grad-text" style={{fontSize:"36px",marginBottom:"6px",letterSpacing:"-0.5px",textAlign:"center"}}>Reset 7D</h1>
-        <p style={{fontSize:"14px",color:T.text3,marginBottom:"32px",textAlign:"center",letterSpacing:"0.3px"}}>Sua transformação começa aqui ✨</p>
+        <p style={{fontSize:"14px",color:T.text3,marginBottom:"32px",textAlign:"center",letterSpacing:"0.3px"}}>{S(lang,"login_title")}</p>
 
-        {/* Painel do formulário — frosted glass sem bloquear o 3D */}
         <div className="auth-form-panel" style={{width:"100%",padding:"28px 28px 24px"}}>
           <div style={{marginBottom:"14px"}}>
-            <Label>E-MAIL</Label>
+            <Label>{S(lang,"login_email")}</Label>
             <input className="inp" type="email" placeholder="seu@email.com" value={email} onChange={e=>{setEmail(e.target.value);setErr("");}} autoComplete="email" style={{fontSize:"15px"}}/>
           </div>
 
           <div style={{marginBottom:"6px"}}>
-            <Label>SENHA</Label>
+            <Label>{S(lang,"login_password")}</Label>
             <div className="inp-wrap">
-              <input className="inp" type={showPw?"text":"password"} placeholder="Sua senha" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&submit()} style={{paddingRight:"44px",fontSize:"15px"}} autoComplete="current-password"/>
+              <input className="inp" type={showPw?"text":"password"} placeholder={S(lang,"login_password")} value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&submit()} style={{paddingRight:"44px",fontSize:"15px"}} autoComplete="current-password"/>
               <button className="eye-btn" type="button" onClick={()=>setShowPw(v=>!v)}>{showPw?"🙈":"👁️"}</button>
             </div>
           </div>
 
           <div style={{textAlign:"right",marginBottom:"18px"}}>
             <button onClick={(e)=>{addRipple(e);onForgot();}} style={{background:"none",border:"none",cursor:"pointer",color:T.primary,fontSize:"13px",fontWeight:"600",fontFamily:"'Manrope',sans-serif",padding:0,textDecoration:"underline",position:"relative",overflow:"hidden"}}>
-              Esqueci minha senha
+              {S(lang,"login_forgot")}
             </button>
           </div>
 
           {err && <p style={{fontSize:"13px",color:T.primary,marginBottom:"14px",textAlign:"center",background:"rgba(232,164,192,0.1)",borderRadius:"10px",padding:"10px"}}>⚠️ {err}</p>}
 
           <button className="btn-p" onClick={(e)=>{addRipple(e);submit();}} disabled={loading} style={{fontSize:"15px",padding:"15px",marginBottom:"16px"}}>
-            {loading ? <><Spinner/><span style={{marginLeft:"8px"}}>Entrando...</span></> : "Entrar →"}
+            {loading ? <><Spinner/><span style={{marginLeft:"8px"}}>{S(lang,"login_entering")}</span></> : S(lang,"login_enter")}
           </button>
 
           <p style={{textAlign:"center",fontSize:"13px",color:T.text3}}>
-            Não tem conta?{" "}
+            {S(lang,"login_no_account")}{" "}
             <button onClick={onRegister} style={{background:"none",border:"none",cursor:"pointer",color:T.primary,fontWeight:"700",fontFamily:"'Manrope',sans-serif",fontSize:"13px",padding:0}}>
-              Criar conta grátis
+              {S(lang,"login_create")}
             </button>
           </p>
         </div>
@@ -1411,7 +2008,7 @@ function LoginScreen({onLogin, onRegister, onForgot, savedEmail=""}) {
 }
 
 // ── RECUPERAÇÃO DE SENHA ──────────────────────────────────────
-function ForgotScreen({onBack}) {
+function ForgotScreen({onBack, lang="pt"}) {
   const [step,setStep] = useState("email"); // email | sent | reset | success
   const [email,setEmail] = useState("");
   const [loading,setLoading] = useState(false);
@@ -1420,21 +2017,21 @@ function ForgotScreen({onBack}) {
   const [resetToken,setResetToken] = useState("");
 
   const sendEmail = async () => {
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr("E-mail inválido."); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr(S(lang,"forgot_err_email")); return; }
     setLoading(true); setErr("");
     try {
       await sendRecoveryEmail(email.trim().toLowerCase());
       setStep("sent");
     } catch(e) {
-      setErr(e.message==="BACKEND_OFFLINE"?"Backend offline (rode npm start em backend/).":
-             e.message==="RESEND_NOT_CONFIGURED"?"Resend não configurado (backend/.env).":
-             "Falha ao enviar. Tente novamente.");
+      setErr(e.message==="BACKEND_OFFLINE"?S(lang,"forgot_err_offline"):
+             e.message==="RESEND_NOT_CONFIGURED"?S(lang,"forgot_err_resend"):
+             S(lang,"forgot_err_send"));
     } finally { setLoading(false); }
   };
 
   const resetPw = async () => {
-    if(pw.length<6) { setErr("Mínimo 6 caracteres."); return; }
-    if(pw!==pw2) { setErr("Senhas não conferem."); return; }
+    if(pw.length<6) { setErr(S(lang,"forgot_err_pw_min")); return; }
+    if(pw!==pw2) { setErr(S(lang,"forgot_err_pw_match")); return; }
     setLoading(true); setErr("");
     try {
       const res = await fetch(`${window.BACKEND_URL}/api/reset-password`,{
@@ -1443,14 +2040,14 @@ function ForgotScreen({onBack}) {
       });
       const data = await res.json();
       if(!res.ok){
-        const msg = data.error==="TOKEN_EXPIRED"?"Link expirado. Solicite um novo.": data.message||"Erro ao redefinir senha.";
+        const msg = data.error==="TOKEN_EXPIRED"?S(lang,"forgot_err_expired"): data.message||S(lang,"forgot_err_server");
         setErr(msg);
         if(data.error==="TOKEN_EXPIRED"||data.error==="INVALID_TOKEN") setStep("email");
         return;
       }
       window.history.replaceState({},"",window.location.pathname);
       setStep("success");
-    } catch { setErr("Não foi possível conectar ao servidor."); }
+    } catch { setErr(S(lang,"forgot_err_server")); }
     finally { setLoading(false); }
   };
 
@@ -1476,14 +2073,14 @@ function ForgotScreen({onBack}) {
     <div className="fade" style={authWrap}>
       <div className="auth-bg"/><ThreeBackground/><FloatingParticles/>
       <div className="slide-up" style={{width:"100%",maxWidth:"400px",position:"relative",zIndex:1,display:"flex",flexDirection:"column",alignItems:"center"}}>
-        <LogoHeader icon="📬" title="E-mail enviado!" sub={null}/>
+        <LogoHeader icon="📬" title={S(lang,"forgot_sent_title")} sub={null}/>
         <div className="auth-form-panel" style={{width:"100%",padding:"24px 28px",textAlign:"center"}}>
-          <p style={{fontSize:"14px",color:T.text3,lineHeight:"1.65",marginBottom:"16px"}}>Link de recuperação enviado para:</p>
+          <p style={{fontSize:"14px",color:T.text3,lineHeight:"1.65",marginBottom:"16px"}}>{S(lang,"forgot_sent_msg")}</p>
           <div style={{background:T.primaryL,border:`1.5px solid ${T.border2}`,borderRadius:"12px",padding:"10px 18px",display:"inline-block",marginBottom:"20px"}}>
             <span style={{fontSize:"14px",color:T.primary,fontWeight:"700"}}>{email}</span>
           </div>
-          <p style={{fontSize:"12px",color:T.text3,marginBottom:"20px"}}>⏱️ O link expira em <strong>30 minutos</strong>. Verifique o spam.</p>
-          <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",color:T.text3,fontSize:"13px",textDecoration:"underline",fontFamily:"'Manrope',sans-serif"}}>← Voltar ao login</button>
+          <p style={{fontSize:"12px",color:T.text3,marginBottom:"20px"}}>{S(lang,"forgot_sent_expire")}</p>
+          <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",color:T.text3,fontSize:"13px",textDecoration:"underline",fontFamily:"'Manrope',sans-serif"}}>{S(lang,"forgot_back_login")}</button>
         </div>
       </div>
     </div>
@@ -1493,19 +2090,19 @@ function ForgotScreen({onBack}) {
     <div className="fade" style={authWrap}>
       <div className="auth-bg"/><ThreeBackground/><FloatingParticles/>
       <div className="slide-up" style={{width:"100%",maxWidth:"400px",position:"relative",zIndex:1,display:"flex",flexDirection:"column",alignItems:"center"}}>
-        <LogoHeader icon="🔐" title="Nova Senha" sub={`Para: ${email}`}/>
+        <LogoHeader icon="🔐" title={S(lang,"forgot_new_pw_title")} sub={`Para: ${email}`}/>
         <div className="auth-form-panel" style={{width:"100%",padding:"24px 28px"}}>
           <div style={{marginBottom:"14px"}}>
-            <Label>NOVA SENHA</Label>
-            <input className="inp" type="password" placeholder="Mínimo 6 caracteres" value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} autoComplete="new-password"/>
-            <PassBar pw={pw}/>
+            <Label>{S(lang,"forgot_new_pw_label")}</Label>
+            <input className="inp" type="password" placeholder={S(lang,"forgot_new_pw_ph")} value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} autoComplete="new-password"/>
+            <PassBar pw={pw} lang={lang}/>
           </div>
           <div style={{marginBottom:"20px"}}>
-            <Label>CONFIRMAR SENHA</Label>
-            <input className="inp" type="password" placeholder="Repita a senha" value={pw2} onChange={e=>{setPw2(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&resetPw()} autoComplete="new-password"/>
+            <Label>{S(lang,"forgot_confirm_label")}</Label>
+            <input className="inp" type="password" placeholder={S(lang,"forgot_confirm_ph")} value={pw2} onChange={e=>{setPw2(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&resetPw()} autoComplete="new-password"/>
           </div>
           {err && <ErrMsg msg={err}/>}
-          <button className="btn-p" onClick={(e)=>{addRipple(e);resetPw();}} style={{fontSize:"15px",padding:"14px",marginTop:"8px"}}>Salvar nova senha →</button>
+          <button className="btn-p" onClick={(e)=>{addRipple(e);resetPw();}} style={{fontSize:"15px",padding:"14px",marginTop:"8px"}}>{S(lang,"forgot_save")}</button>
         </div>
       </div>
     </div>
@@ -1516,9 +2113,9 @@ function ForgotScreen({onBack}) {
       <div className="auth-bg"/><ThreeBackground/><FloatingParticles/>
       <div className="slide-up auth-form-panel" style={{width:"100%",maxWidth:"400px",position:"relative",zIndex:1,textAlign:"center",padding:"40px 28px"}}>
         <div className="check-circle">✓</div>
-        <h2 className="serif grad-text" style={{fontSize:"28px",marginBottom:"12px"}}>Senha alterada!</h2>
-        <p style={{fontSize:"14px",color:T.text3,lineHeight:"1.65",marginBottom:"28px"}}>Sua senha foi redefinida. Faça login com a nova senha.</p>
-        <button className="btn-p" onClick={(e)=>{addRipple(e);onBack();}} style={{fontSize:"15px",padding:"14px"}}>Entrar agora →</button>
+        <h2 className="serif grad-text" style={{fontSize:"28px",marginBottom:"12px"}}>{S(lang,"forgot_success_title")}</h2>
+        <p style={{fontSize:"14px",color:T.text3,lineHeight:"1.65",marginBottom:"28px"}}>{S(lang,"forgot_success_msg")}</p>
+        <button className="btn-p" onClick={(e)=>{addRipple(e);onBack();}} style={{fontSize:"15px",padding:"14px"}}>{S(lang,"forgot_enter_now")}</button>
       </div>
     </div>
   );
@@ -1528,16 +2125,16 @@ function ForgotScreen({onBack}) {
     <div className="fade" style={authWrap}>
       <div className="auth-bg"/><ThreeBackground/><FloatingParticles/>
       <div className="slide-up" style={{width:"100%",maxWidth:"400px",position:"relative",zIndex:1,display:"flex",flexDirection:"column",alignItems:"center"}}>
-        <LogoHeader icon="🔑" title="Recuperar Senha" sub="Digite o e-mail da sua conta para receber um link de recuperação."/>
+        <LogoHeader icon="🔑" title={S(lang,"forgot_title")} sub={S(lang,"forgot_sub")}/>
         <div className="auth-form-panel" style={{width:"100%",padding:"24px 28px"}}>
-          <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",color:T.text3,marginBottom:"16px",fontSize:"13px",fontFamily:"'Manrope',sans-serif",padding:0}}>← Voltar ao login</button>
+          <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",color:T.text3,marginBottom:"16px",fontSize:"13px",fontFamily:"'Manrope',sans-serif",padding:0}}>{S(lang,"forgot_back")}</button>
           <div style={{marginBottom:"18px"}}>
-            <Label>E-MAIL CADASTRADO</Label>
+            <Label>{S(lang,"forgot_email_label")}</Label>
             <input className="inp" type="email" placeholder="seu@email.com" value={email} onChange={e=>{setEmail(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&sendEmail()} autoComplete="email" style={{fontSize:"15px"}}/>
             <ErrMsg msg={err}/>
           </div>
           <button className="btn-p" onClick={(e)=>{addRipple(e);sendEmail();}} disabled={loading} style={{fontSize:"15px",padding:"14px"}}>
-            {loading ? <><Spinner/><span style={{marginLeft:"8px"}}>Enviando...</span></> : "Enviar link de recuperação →"}
+            {loading ? <><Spinner/><span style={{marginLeft:"8px"}}>{S(lang,"forgot_sending")}</span></> : S(lang,"forgot_btn")}
           </button>
         </div>
       </div>
@@ -1557,7 +2154,7 @@ function HamburgerMenu({open, onClose, th, darkMode, setDarkMode, lang, setLang,
 
   const panelStyle = {position:"absolute",top:0,left:0,width:"78%",maxWidth:300,height:"100%",background:th.bg2,display:"flex",flexDirection:"column",boxShadow:"4px 0 30px rgba(0,0,0,.3)"};
   const btnBack   = (onClick) => (
-    <button onClick={onClick} style={{background:"rgba(255,255,255,.18)",border:"none",borderRadius:20,color:"white",padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Manrope',sans-serif",marginBottom:8}}>← Voltar</button>
+    <button onClick={onClick} style={{background:"rgba(255,255,255,.18)",border:"none",borderRadius:20,color:"white",padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Manrope',sans-serif",marginBottom:8}}>{S(lang,"menu_back")}</button>
   );
 
   /* ── VIEW: detalhe do produto ── */
@@ -1578,15 +2175,15 @@ function HamburgerMenu({open, onClose, th, darkMode, setDarkMode, lang, setLang,
           <div style={{fontSize:12,color:th.text,lineHeight:1.8,whiteSpace:"pre-wrap",marginBottom:20}}>{product.full_copy}</div>
           <div style={{borderRadius:16,padding:18,background:`${product.colorAccent}18`,border:`2px solid ${product.colorAccent}40`,textAlign:"center"}}>
             <div className="serif" style={{fontSize:28,fontWeight:700,color:product.colorAccent,marginBottom:2}}>{product.price}</div>
-            <div style={{fontSize:11,color:th.text3,marginBottom:14}}>Acesso completo + Comunidade exclusiva</div>
+            <div style={{fontSize:11,color:th.text3,marginBottom:14}}>{S(lang,"menu_full_access")}</div>
             <button
               className="btn-p"
               style={{background:`linear-gradient(135deg,${product.colorAccent},${product.color})`,color:"white",width:"100%",opacity:.65,cursor:"not-allowed"}}
               disabled
             >
-              Em breve — {product.cta} 🔒
+              {S(lang,"menu_coming")} — {product.cta} 🔒
             </button>
-            <div style={{fontSize:10,color:th.text3,marginTop:8}}>Checkout disponível em breve</div>
+            <div style={{fontSize:10,color:th.text3,marginTop:8}}>{S(lang,"menu_coming_soon")}</div>
           </div>
         </div>
       </div>
@@ -1599,8 +2196,8 @@ function HamburgerMenu({open, onClose, th, darkMode, setDarkMode, lang, setLang,
       <div onClick={e=>e.stopPropagation()} style={panelStyle}>
         <div style={{padding:"52px 16px 16px",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,borderBottom:`1px solid ${th.border}`,flexShrink:0}}>
           {btnBack(()=>setView("menu"))}
-          <div className="serif" style={{fontSize:22,fontWeight:700,color:th.primary}}>🚀 Next Level</div>
-          <div style={{fontSize:11,color:th.text3,marginTop:2}}>Você concluiu o RESET 7D. O que vem depois é ainda mais poderoso.</div>
+          <div className="serif" style={{fontSize:22,fontWeight:700,color:th.primary}}>🚀 {S(lang,"menu_next_level")}</div>
+          <div style={{fontSize:11,color:th.text3,marginTop:2}}>{S(lang,"menu_shop_sub")}</div>
         </div>
         <div style={{flex:1,overflowY:"auto",padding:"16px 12px 32px",display:"flex",flexDirection:"column",gap:14}}>
           {PROTOCOLS_SHOP.map(p=>(
@@ -1616,7 +2213,7 @@ function HamburgerMenu({open, onClose, th, darkMode, setDarkMode, lang, setLang,
                 <div style={{fontSize:11,color:th.text3,marginBottom:10,lineHeight:1.5}}>{p.cover_copy}</div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <div className="serif" style={{fontSize:18,fontWeight:700,color:p.colorAccent}}>{p.price}</div>
-                  <div style={{fontSize:11,fontWeight:700,color:p.colorAccent,background:`${p.colorAccent}20`,border:`1px solid ${p.colorAccent}50`,borderRadius:20,padding:"4px 12px"}}>Ver detalhes →</div>
+                  <div style={{fontSize:11,fontWeight:700,color:p.colorAccent,background:`${p.colorAccent}20`,border:`1px solid ${p.colorAccent}50`,borderRadius:20,padding:"4px 12px"}}>{S(lang,"menu_see_details")}</div>
                 </div>
               </div>
             </div>
@@ -1632,39 +2229,39 @@ function HamburgerMenu({open, onClose, th, darkMode, setDarkMode, lang, setLang,
       <div onClick={e=>e.stopPropagation()} style={panelStyle}>
         <div style={{padding:"52px 20px 20px",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,borderBottom:`1px solid ${th.border}`}}>
           <div className="serif" style={{fontSize:26,fontWeight:600,color:th.primary}}>RESET 7D</div>
-          <div style={{fontSize:11,color:th.text3,marginTop:2}}>Menu Principal</div>
+          <div style={{fontSize:11,color:th.text3,marginTop:2}}>{S(lang,"menu_main")}</div>
         </div>
         <div style={{flex:1,overflowY:"auto"}}>
           <div onClick={()=>setView("shop")} className="hover-scale" style={{display:"flex",flexDirection:"column",gap:4,padding:"18px 20px",cursor:"pointer",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,borderBottom:`1px solid ${th.border2}`,borderLeft:`4px solid ${th.primary}`}}>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               <span style={{fontSize:24}}>🚀</span>
-              <div><div style={{fontSize:15,fontWeight:800,color:th.primary}}>Next Level</div><div style={{fontSize:10,fontWeight:700,color:th.green}}>PROTOCOLOS PREMIUM</div></div>
+              <div><div style={{fontSize:15,fontWeight:800,color:th.primary}}>{S(lang,"menu_next_level")}</div><div style={{fontSize:10,fontWeight:700,color:th.green}}>{S(lang,"menu_protocols")}</div></div>
             </div>
-            <div style={{fontSize:11,color:th.text3,paddingLeft:34}}>Descubra como se transformar por completo!</div>
+            <div style={{fontSize:11,color:th.text3,paddingLeft:34}}>{S(lang,"menu_next_sub")}</div>
           </div>
           <div onClick={()=>setDarkMode(!darkMode)} style={{display:"flex",alignItems:"center",gap:14,padding:"15px 20px",cursor:"pointer",borderBottom:`1px solid ${th.border}`}}>
             <span style={{fontSize:22,width:30,textAlign:"center"}}>{darkMode?"☀️":"🌙"}</span>
-            <div style={{flex:1}}><div style={{fontSize:14,fontWeight:700,color:th.text}}>Tema {darkMode?"Claro":"Escuro"}</div></div>
+            <div style={{flex:1}}><div style={{fontSize:14,fontWeight:700,color:th.text}}>{darkMode?S(lang,"menu_theme_light"):S(lang,"menu_theme_dark")}</div></div>
             <div style={{width:40,height:22,borderRadius:11,background:darkMode?th.primary:th.border,position:"relative",transition:".3s"}}>
               <div style={{position:"absolute",top:3,left:darkMode?20:3,width:16,height:16,borderRadius:"50%",background:"white",transition:".3s"}}/>
             </div>
           </div>
           <div style={{padding:"15px 20px",borderBottom:`1px solid ${th.border}`}}>
-            <div style={{fontSize:13,fontWeight:700,color:th.text,marginBottom:8}}>🌍 Idioma</div>
+            <div style={{fontSize:13,fontWeight:700,color:th.text,marginBottom:8}}>{S(lang,"menu_language")}</div>
             <div style={{display:"flex",gap:8}}>
               {[["pt","🇧🇷 PT"],["en","🇺🇸 EN"],["es","🇪🇸 ES"]].map(([l,label])=>(
-                <button key={l} onClick={()=>setLang(l)} style={{flex:1,padding:"7px",borderRadius:10,background:lang===l?th.primaryL:"transparent",border:`1.5px solid ${lang===l?th.primary:th.border}`,color:lang===l?th.primary:th.text3,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Manrope',sans-serif"}}>{label}</button>
+                <button key={l} onClick={()=>{setLang(l);onClose();}} style={{flex:1,padding:"7px",borderRadius:10,background:lang===l?th.primaryL:"transparent",border:`1.5px solid ${lang===l?th.primary:th.border}`,color:lang===l?th.primary:th.text3,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Manrope',sans-serif"}}>{label}</button>
               ))}
             </div>
           </div>
           <div onClick={()=>{onChangePw();onClose();}} className="hover-scale" style={{display:"flex",alignItems:"center",gap:14,padding:"15px 20px",cursor:"pointer",borderBottom:`1px solid ${th.border}`}}>
             <span style={{fontSize:22,width:30,textAlign:"center"}}>🔐</span>
-            <div style={{flex:1}}><div style={{fontSize:14,fontWeight:700,color:th.text}}>Mudar Senha</div></div>
+            <div style={{flex:1}}><div style={{fontSize:14,fontWeight:700,color:th.text}}>{S(lang,"menu_change_pw")}</div></div>
             <span style={{fontSize:12,color:th.text3}}>›</span>
           </div>
           <div onClick={()=>{onLogout();onClose();}} className="hover-scale" style={{display:"flex",alignItems:"center",gap:14,padding:"15px 20px",cursor:"pointer",marginTop:8}}>
             <span style={{fontSize:22,width:30,textAlign:"center"}}>🚪</span>
-            <div style={{fontSize:14,fontWeight:700,color:"#e57373"}}>Sair da Conta</div>
+            <div style={{fontSize:14,fontWeight:700,color:"#e57373"}}>{S(lang,"menu_logout")}</div>
           </div>
         </div>
       </div>
@@ -1673,7 +2270,7 @@ function HamburgerMenu({open, onClose, th, darkMode, setDarkMode, lang, setLang,
 }
 
 // ── CHANGE PW MODAL ───────────────────────────────────────────
-function ChangePwModal({onClose, user, th}) {
+function ChangePwModal({onClose, user, th, lang="pt"}) {
   const [cur,setCur]=useState("");
   const [nw,setNw]=useState("");
   const [nw2,setNw2]=useState("");
@@ -1684,9 +2281,9 @@ function ChangePwModal({onClose, user, th}) {
 
   const save=async()=>{
     setErr(""); setOk("");
-    if(!cur||!nw||!nw2){setErr("Preencha todos os campos.");return;}
-    if(nw.length<6){setErr("Mínimo 6 caracteres.");return;}
-    if(nw!==nw2){setErr("Senhas não conferem.");return;}
+    if(!cur||!nw||!nw2){setErr(S(lang,"changepw_fill"));return;}
+    if(nw.length<6){setErr(S(lang,"forgot_err_pw_min"));return;}
+    if(nw!==nw2){setErr(S(lang,"forgot_err_pw_match"));return;}
     setLoading(true);
     try {
       const res = await fetch(`${window.BACKEND_URL}/api/change-password`,{
@@ -1694,28 +2291,28 @@ function ChangePwModal({onClose, user, th}) {
         body: JSON.stringify({currentPassword:cur, newPassword:nw}),
       });
       const data = await res.json();
-      if(!res.ok){setErr(data.message||"Erro ao alterar senha.");return;}
-      setOk("Senha alterada com sucesso! ✅");
+      if(!res.ok){setErr(data.message||S(lang,"changepw_err"));return;}
+      setOk(S(lang,"changepw_ok"));
       setTimeout(onClose,1500);
-    } catch { setErr("Não foi possível conectar ao servidor."); }
+    } catch { setErr(S(lang,"forgot_err_server")); }
     finally { setLoading(false); }
   };
 
   return (
     <div className="modal-wrap fade">
       <div style={{background:th.bg2,borderRadius:22,padding:24,width:"100%",maxWidth:360}}>
-        <div className="serif" style={{fontSize:22,fontWeight:600,color:th.text,marginBottom:16}}>🔐 Mudar Senha</div>
+        <div className="serif" style={{fontSize:22,fontWeight:600,color:th.text,marginBottom:16}}>{S(lang,"changepw_title")}</div>
         {err && <div style={{background:"rgba(214,98,142,.13)",borderRadius:10,padding:"9px 12px",fontSize:12,color:th.primary,marginBottom:12}}>{err}</div>}
         {ok && <div style={{background:th.greenL,borderRadius:10,padding:"9px 12px",fontSize:12,color:th.green,marginBottom:12}}>{ok}</div>}
-        <Label th={th}>Senha Atual</Label>
-        <input className="inp" type="password" placeholder="Sua senha atual" value={cur} onChange={e=>setCur(e.target.value)} style={{marginBottom:12}}/>
-        <Label th={th}>Nova Senha</Label>
-        <input className="inp" type="password" placeholder="Nova senha (mín. 6 caracteres)" value={nw} onChange={e=>setNw(e.target.value)} style={{marginBottom:12}}/>
-        <Label th={th}>Confirmar Nova Senha</Label>
-        <input className="inp" type="password" placeholder="Repita" value={nw2} onChange={e=>setNw2(e.target.value)} style={{marginBottom:16}}/>
+        <Label th={th}>{S(lang,"changepw_cur")}</Label>
+        <input className="inp" type="password" placeholder={S(lang,"changepw_cur_ph")} value={cur} onChange={e=>setCur(e.target.value)} style={{marginBottom:12}}/>
+        <Label th={th}>{S(lang,"forgot_new_pw_label")}</Label>
+        <input className="inp" type="password" placeholder={S(lang,"changepw_new_ph")} value={nw} onChange={e=>setNw(e.target.value)} style={{marginBottom:12}}/>
+        <Label th={th}>{S(lang,"forgot_confirm_label")}</Label>
+        <input className="inp" type="password" placeholder={S(lang,"changepw_rep_ph")} value={nw2} onChange={e=>setNw2(e.target.value)} style={{marginBottom:16}}/>
         <div style={{display:"flex",gap:10}}>
-          <button onClick={onClose} className="btn-s" style={{flex:1}}>Cancelar</button>
-          <button onClick={save} disabled={loading} className="btn-p" style={{flex:1}}>{loading?<Spinner/>:"Salvar"}</button>
+          <button onClick={onClose} className="btn-s" style={{flex:1}}>{S(lang,"changepw_cancel")}</button>
+          <button onClick={save} disabled={loading} className="btn-p" style={{flex:1}}>{loading?<Spinner/>:S(lang,"changepw_save")}</button>
         </div>
       </div>
     </div>
@@ -1723,16 +2320,17 @@ function ChangePwModal({onClose, user, th}) {
 }
 
 // ── HOME TAB ──────────────────────────────────────────────────
-function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th}) {
+function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th, lang="pt"}) {
   const [tipIdx,setTipIdx]=useState(0);
   const TIPS=[
-    {i:"🧠",t:"Compulsão às 16h?",b:"Seu cortisol está no pico. Antes de abrir a geladeira: respire fundo 4 vezes, pés no chão e beba água. Espere 10 minutos — a vontade passa."},
-    {i:"🌙",t:"Noite difícil de dormir?",b:"Desligue as telas 30 min antes. O chá de melissa + banho morno enviam o sinal certo. Luz azul bloqueia melatonina — é bioquímica."},
-    {i:"☀️",t:"Sem energia pela manhã?",b:"Exponha-se à luz natural nos primeiros 30 min. Isso ancora seu relógio biológico e eleva o cortisol saudável do amanhecer."},
-    {i:"💧",t:"Barriga inchada?",b:"Pode ser gás, não gordura! Mastigue devagar e tome o chá calmante. Sistema linfático: faça a ativação matinal!"},
-    {i:"🎯",t:"Fome fora de hora?",b:"Pergunte: é fome física ou emocional? Se emocional, o grounding resolve em 2 min. Se física, uma proteína resolve em 5."},
+    {i:"🧠",t:S(lang,"tip0_t"),b:S(lang,"tip0_b")},
+    {i:"🌙",t:S(lang,"tip1_t"),b:S(lang,"tip1_b")},
+    {i:"☀️",t:S(lang,"tip2_t"),b:S(lang,"tip2_b")},
+    {i:"💧",t:S(lang,"tip3_t"),b:S(lang,"tip3_b")},
+    {i:"🎯",t:S(lang,"tip4_t"),b:S(lang,"tip4_b")},
   ];
-  const dayMissions=MISSIONS[currentDay]||[];
+  const activeMissions=getMissions(lang);
+  const dayMissions=activeMissions[currentDay]||[];
   const dayDone=(completedMissions[currentDay]||[]).length;
   const totalDone=Object.values(completedMissions).flat().length;
   const totalAll=Object.values(MISSIONS).flat().length;
@@ -1741,16 +2339,16 @@ function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th}) {
   return (
     <div style={{padding:"16px 16px 100px",display:"flex",flexDirection:"column",gap:14}}>
       <div className="slide-up glass card-interactive" style={{borderRadius:22,padding:"22px 20px",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,border:`1px solid ${th.border2}`}}>
-        <div style={{fontSize:12,color:th.text2,marginBottom:4,fontWeight:600}}>✨ Protocolo RESET 7D</div>
+        <div style={{fontSize:12,color:th.text2,marginBottom:4,fontWeight:600}}>{S(lang,"home_protocol")}</div>
         <div className="serif" style={{fontSize:30,fontWeight:600,color:th.text,lineHeight:1.15,marginBottom:6}}>
-          Olá, <span style={{color:th.primary}}>{user?.name?.split(" ")[0] || "Guerreira"}</span>! 💜
+          {S(lang,"home_hello",{name:user?.name?.split(" ")[0]||"Guerreira"})}
         </div>
         <div className="serif" style={{fontSize:14,fontStyle:"italic",color:th.text3,lineHeight:1.5,marginBottom:14}}>
-          "Você não precisa ser perfeita. Você só precisa continuar."
+          {S(lang,"home_quote")}
         </div>
         <div>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-            <span style={{fontSize:11,color:th.text2}}>Progresso Geral</span>
+            <span style={{fontSize:11,color:th.text2}}>{S(lang,"home_progress")}</span>
             <span style={{fontSize:11,color:th.text2,fontWeight:700}}>{pct}%</span>
           </div>
           <div style={{height:8,background:th.border,borderRadius:4}}>
@@ -1762,12 +2360,12 @@ function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th}) {
       <div className="glass slide-up card-interactive" style={{borderRadius:20,padding:18,animationDelay:".05s"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
           <div>
-            <div style={{fontSize:11,color:th.text3,marginBottom:2}}>HOJE</div>
-            <div className="serif" style={{fontSize:18,fontWeight:600,color:th.text}}>{PC[currentDay]?.emoji} Dia {currentDay}: Missões</div>
+            <div style={{fontSize:11,color:th.text3,marginBottom:2}}>{S(lang,"home_today")}</div>
+            <div className="serif" style={{fontSize:18,fontWeight:600,color:th.text}}>{S(lang,"home_today_missions",{emoji:PC[currentDay]?.emoji,day:currentDay})}</div>
           </div>
           <div style={{textAlign:"right"}}>
             <div className="serif" style={{fontSize:26,fontWeight:700,color:th.primary}}>{dayDone}/{dayMissions.length}</div>
-            <div style={{fontSize:10,color:th.text3}}>concluídas</div>
+            <div style={{fontSize:10,color:th.text3}}>{S(lang,"home_done")}</div>
           </div>
         </div>
         {dayMissions.slice(0,3).map(m=>(
@@ -1776,12 +2374,12 @@ function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th}) {
             <span style={{fontSize:12,color:(completedMissions[currentDay]||[]).includes(m.id)?th.text3:th.text,textDecoration:(completedMissions[currentDay]||[]).includes(m.id)?"line-through":"none"}}>{m.t}</span>
           </div>
         ))}
-        <button onClick={()=>setActiveTab("mission")} className="btn-p" style={{marginTop:10,padding:"10px"}}>Ver Todas as Missões →</button>
+        <button onClick={()=>setActiveTab("mission")} className="btn-p" style={{marginTop:10,padding:"10px"}}>{S(lang,"home_see_missions")}</button>
       </div>
 
       <div className="glass slide-up" style={{borderRadius:20,padding:18,animationDelay:".1s",border:`1px solid ${th.accent}30`}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-          <div style={{fontSize:12,fontWeight:800,color:th.accent}}>🧠 Estratégia IA para você</div>
+          <div style={{fontSize:12,fontWeight:800,color:th.accent}}>{S(lang,"home_ai_tip")}</div>
           <div style={{display:"flex",gap:6}}>
             <button onClick={()=>setTipIdx(i=>(i-1+TIPS.length)%TIPS.length)} style={{background:th.card2,border:`1px solid ${th.border}`,borderRadius:8,color:th.text3,cursor:"pointer",padding:"3px 8px",fontSize:12,fontFamily:"'Manrope',sans-serif"}}>‹</button>
             <button onClick={()=>setTipIdx(i=>(i+1)%TIPS.length)} style={{background:th.card2,border:`1px solid ${th.border}`,borderRadius:8,color:th.text3,cursor:"pointer",padding:"3px 8px",fontSize:12,fontFamily:"'Manrope',sans-serif"}}>›</button>
@@ -1793,24 +2391,22 @@ function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th}) {
       </div>
 
       <div className="slide-up" style={{borderRadius:20,padding:16,background:`linear-gradient(135deg,${th.primaryL},${th.primaryL})`,border:`1px solid ${th.border2}`,animationDelay:".15s"}}>
-        <div style={{fontSize:13,fontWeight:800,color:th.primary,marginBottom:6}}>📸 Missão de Registro Diário</div>
-        <div style={{fontSize:12,color:th.text,lineHeight:1.6}}>
-          Vista a mesma <strong>calça de referência</strong> e tire a foto! Frente, lado e costas. Fotografe também a área mais inchada. Sua evolução mora nos detalhes. 💜
-        </div>
+        <div style={{fontSize:13,fontWeight:800,color:th.primary,marginBottom:6}}>{S(lang,"home_daily_reg")}</div>
+        <div style={{fontSize:12,color:th.text,lineHeight:1.6}}>{S(lang,"home_daily_reg_body")}</div>
       </div>
 
       <div className="slide-up" style={{animationDelay:".2s"}}>
-        <div style={{fontSize:13,fontWeight:800,color:th.text,marginBottom:10}}>📚 Módulos do Protocolo</div>
+        <div style={{fontSize:13,fontWeight:800,color:th.text,marginBottom:10}}>{S(lang,"home_modules")}</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
           {Object.keys(PC).map(k=>{
-            const d=PC[k]; const day=parseInt(k); const unlocked=day<=currentDay;
+            const d=getPC(lang)[k]; const day=parseInt(k); const unlocked=day<=currentDay;
             const done=(completedMissions[k]||[]).length>=(MISSIONS[k]?.length||1)*.8;
             return (
               <div key={k} onClick={()=>unlocked && setActiveTab("content")} className="hover-scale" style={{borderRadius:16,padding:"14px 12px",background:unlocked?`${d.color}20`:th.card2,border:unlocked?`1px solid ${d.color}40`:`1px solid ${th.border}`,opacity:unlocked?1:.5,cursor:unlocked?"pointer":"not-allowed",position:"relative"}}>
                 {!unlocked && <span style={{position:"absolute",top:8,right:8,fontSize:11}}>🔒</span>}
                 {done && <span style={{position:"absolute",top:8,right:8,fontSize:11}}>✅</span>}
                 <div style={{fontSize:22,marginBottom:4}}>{d.emoji}</div>
-                <div style={{fontSize:10,fontWeight:700,color:unlocked?th.text:th.text3}}>Dia {k}</div>
+                <div style={{fontSize:10,fontWeight:700,color:unlocked?th.text:th.text3}}>{S(lang,"day_label")} {k}</div>
                 <div style={{fontSize:10,color:unlocked?d.color:th.text3,lineHeight:1.3}}>{d.title.split("—")[0]}</div>
               </div>
             );
@@ -1822,9 +2418,10 @@ function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th}) {
 }
 
 // ── MISSION TAB ───────────────────────────────────────────────
-function MissionTab({user, currentDay, completedMissions, setCompletedMissions, xp, setXp, th}) {
+function MissionTab({user, currentDay, completedMissions, setCompletedMissions, xp, setXp, th, lang="pt"}) {
   const [showXP,setShowXP]=useState(null);
-  const dayMissions=MISSIONS[currentDay]||[];
+  const activeMissions=getMissions(lang);
+  const dayMissions=activeMissions[currentDay]||[];
   const dayDone=(completedMissions[currentDay]||[]).length;
   const extraDone=(completedMissions["extra"]||[]).length;
 
@@ -1851,15 +2448,15 @@ function MissionTab({user, currentDay, completedMissions, setCompletedMissions, 
       {showXP && <div className="xp-fly">+{showXP} XP ⚡</div>}
       <div className="glass" style={{borderRadius:20,padding:18}}>
         <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}>
-          <div className="serif" style={{fontSize:18,fontWeight:600,color:th.text}}>{PC[currentDay]?.emoji} Dia {currentDay}</div>
+          <div className="serif" style={{fontSize:18,fontWeight:600,color:th.text}}>{S(lang,"mission_header",{emoji:PC[currentDay]?.emoji,day:currentDay})}</div>
           <div className="serif" style={{fontSize:22,fontWeight:700,color:th.primary}}>{dayDone}/{dayMissions.length}</div>
         </div>
         <div style={{height:10,background:th.border,borderRadius:5,marginBottom:6}}>
           <div className="pbar pb-rose" style={{width:`${(dayDone/dayMissions.length)*100}%`}}/>
         </div>
-        {dayDone===dayMissions.length && <div style={{textAlign:"center",fontSize:12,color:th.green,fontWeight:700}}>🎉 Todas as missões concluídas!</div>}
+        {dayDone===dayMissions.length && <div style={{textAlign:"center",fontSize:12,color:th.green,fontWeight:700}}>{S(lang,"mission_all_done")}</div>}
       </div>
-      <div style={{fontSize:12,fontWeight:800,color:th.text2,textTransform:"uppercase",letterSpacing:1}}>🎯 Missões do Dia {currentDay}</div>
+      <div style={{fontSize:12,fontWeight:800,color:th.text2,textTransform:"uppercase",letterSpacing:1}}>{S(lang,"mission_day_title",{day:currentDay})}</div>
       {dayMissions.map(m=>{
         const done=(completedMissions[currentDay]||[]).includes(m.id);
         return (
@@ -1871,13 +2468,11 @@ function MissionTab({user, currentDay, completedMissions, setCompletedMissions, 
         );
       })}
       <div style={{borderRadius:18,padding:16,background:`linear-gradient(135deg,${th.primaryL},${th.primaryL})`,border:`2px solid ${th.border2}`}}>
-        <div style={{fontSize:13,fontWeight:800,color:th.primary,marginBottom:6}}>📸 Missão de Registro — Não Pule!</div>
-        <div style={{fontSize:12,color:th.text,lineHeight:1.7}}>
-          <strong>Vista a mesma calça de referência todos os dias.</strong> Compare dia a dia — a evolução aparece nos detalhes! 💜
-        </div>
+        <div style={{fontSize:13,fontWeight:800,color:th.primary,marginBottom:6}}>{S(lang,"mission_reg_title")}</div>
+        <div style={{fontSize:12,color:th.text,lineHeight:1.7}}>{S(lang,"mission_reg_body")}</div>
       </div>
-      <div style={{fontSize:12,fontWeight:800,color:th.accent,textTransform:"uppercase",letterSpacing:1,marginTop:4}}>⭐ Missões Extras ({extraDone}/{MISSIONS.extra.length})</div>
-      {MISSIONS.extra.map(m=>{
+      <div style={{fontSize:12,fontWeight:800,color:th.accent,textTransform:"uppercase",letterSpacing:1,marginTop:4}}>{S(lang,"mission_extras",{done:extraDone,total:activeMissions.extra?.length||0})}</div>
+      {(activeMissions.extra||[]).map(m=>{
         const done=(completedMissions["extra"]||[]).includes(m.id);
         return (
           <div key={m.id} onClick={()=>toggle("extra",m.id,m.xp,true)} className="hover-scale" style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderRadius:14,cursor:"pointer",background:done?th.accentL:th.card2,border:done?`1px solid ${th.accent}40`:`1px solid ${th.border}`}}>
@@ -1892,7 +2487,7 @@ function MissionTab({user, currentDay, completedMissions, setCompletedMissions, 
 }
 
 // ── CARTA DE AGRADECIMENTO — DIA 7 ────────────────────────────
-function GratitudeModal({onClose, th}) {
+function GratitudeModal({onClose, th, lang="pt"}) {
   const PARAGRAPHS = [
     {type:"para", text:"Sete dias atrás, talvez você tenha aberto esse protocolo em silêncio."},
     {type:"para", text:"Talvez ninguém soubesse exatamente o que estava acontecendo aí dentro. Talvez por fora você estivesse seguindo, sorrindo, trabalhando, cuidando de tudo e de todos. Mas por dentro… havia uma mulher cansada. Cansada de tentar e parar. Cansada de prometer que segunda-feira seria diferente. Cansada de olhar para o espelho e sentir que, em algum ponto do caminho, tinha se perdido de si mesma."},
@@ -1952,14 +2547,14 @@ function GratitudeModal({onClose, th}) {
         {/* Header */}
         <div style={{padding:"22px 22px 18px", background:"linear-gradient(135deg,#5e3614,#a86a2c,#d4922f)", flexShrink:0, textAlign:"center", position:"relative"}}>
           <div style={{fontSize:36, marginBottom:8}}>💪✨</div>
-          <div className="serif" style={{fontSize:22, fontWeight:700, color:"#fff", lineHeight:1.3, marginBottom:4}}>A Mulher Que Voltou Para Si</div>
-          <div style={{fontSize:12, color:"rgba(255,255,255,.75)", fontWeight:600, letterSpacing:"0.04em", textTransform:"uppercase"}}>Uma carta especial para você</div>
+          <div className="serif" style={{fontSize:22, fontWeight:700, color:"#fff", lineHeight:1.3, marginBottom:4}}>{S(lang,"gratitude_title")}</div>
+          <div style={{fontSize:12, color:"rgba(255,255,255,.75)", fontWeight:600, letterSpacing:"0.04em", textTransform:"uppercase"}}>{S(lang,"gratitude_subtitle")}</div>
           <button onClick={onClose} style={{position:"absolute",top:14,right:16,background:"rgba(255,255,255,.15)",border:"none",borderRadius:8,color:"white",fontSize:16,cursor:"pointer",width:30,height:30,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Manrope',sans-serif"}}>×</button>
         </div>
 
         {/* Body */}
         <div style={{flex:1, overflowY:"auto", padding:"20px 22px 10px"}}>
-          {PARAGRAPHS.map((p,i)=>{
+          {(GRATITUDE_TRANS[lang]||PARAGRAPHS).map((p,i)=>{
             if(p.type==="divider") return <div key={i} style={{height:1,background:th.border,margin:"18px 0"}}/>;
             if(p.type==="highlight") return (
               <div key={i} style={{background:th.primaryL,border:`1px solid ${th.border2}`,borderRadius:14,padding:"14px 16px",margin:"14px 0",fontSize:14,color:th.primary,fontWeight:700,lineHeight:1.65,whiteSpace:"pre-wrap",textAlign:"center"}}>{p.text}</div>
@@ -1981,7 +2576,7 @@ function GratitudeModal({onClose, th}) {
 
         {/* Footer */}
         <div style={{padding:"14px 22px 20px", flexShrink:0, borderTop:`1px solid ${th.border}`}}>
-          <button className="btn-p" onClick={onClose} style={{fontSize:15,padding:"14px"}}>Fechar e continuar minha jornada ✨</button>
+          <button className="btn-p" onClick={onClose} style={{fontSize:15,padding:"14px"}}>{S(lang,"gratitude_close")}</button>
         </div>
       </div>
     </div>
@@ -1989,10 +2584,11 @@ function GratitudeModal({onClose, th}) {
 }
 
 // ── CONTENT TAB ───────────────────────────────────────────────
-function ContentTab({currentDay, user, onCompleteDay, th}) {
+function ContentTab({currentDay, user, onCompleteDay, th, lang="pt"}) {
   const [selDay,setSelDay]=useState(currentDay);
   const [showGratitude,setShowGratitude]=useState(false);
-  const d=PC[selDay];
+  const pcL=getPC(lang);
+  const d=pcL[selDay];
 
   const handleComplete = () => {
     if(selDay===7){ setShowGratitude(true); return; }
@@ -2011,7 +2607,7 @@ function ContentTab({currentDay, user, onCompleteDay, th}) {
             const locked=parseInt(k)>currentDay; const active=parseInt(k)===selDay;
             return (
               <button key={k} onClick={()=>!locked && setSelDay(parseInt(k))} style={{flexShrink:0,width:50,height:50,borderRadius:14,border:active?`2px solid ${th.primary}`:`1px solid ${th.border}`,background:active?th.primaryL:locked?"transparent":th.card2,cursor:locked?"not-allowed":"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",opacity:locked?.45:1,fontFamily:"'Manrope',sans-serif"}}>
-                <span style={{fontSize:16}}>{locked?"🔒":PC[k].emoji}</span>
+                <span style={{fontSize:16}}>{locked?"🔒":pcL[k].emoji}</span>
                 <span style={{fontSize:9,color:active?th.primary:th.text3,fontWeight:700}}>D{k}</span>
               </button>
             );
@@ -2021,25 +2617,25 @@ function ContentTab({currentDay, user, onCompleteDay, th}) {
       <div style={{flex:1,overflowY:"auto",padding:"0 16px 100px"}}>
         <div style={{borderRadius:20,padding:"22px 18px",marginBottom:14,background:d.bg}}>
           <div style={{fontSize:36,marginBottom:6}}>{d.emoji}</div>
-          <div className="serif" style={{fontSize:22,fontWeight:600,color:"white",marginBottom:8}}>Dia {selDay}: {d.title}</div>
+          <div className="serif" style={{fontSize:22,fontWeight:600,color:"white",marginBottom:8}}>{S(lang,"content_day_title",{day:selDay,title:d.title})}</div>
           <div style={{fontSize:12,color:"rgba(255,255,255,.85)",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{d.intro}</div>
         </div>
         {d.sections.map((s,i)=>(
           <SectionCard key={i} title={s.title} th={th} accent={d.color}>{s.content}</SectionCard>
         ))}
-        <div style={{fontSize:12,fontWeight:800,color:th.accent,textTransform:"uppercase",letterSpacing:1,marginBottom:10,marginTop:4}}>🍽️ Receitas do Dia {selDay}</div>
+        <div style={{fontSize:12,fontWeight:800,color:th.accent,textTransform:"uppercase",letterSpacing:1,marginBottom:10,marginTop:4}}>{S(lang,"content_recipes",{day:selDay})}</div>
         {d.recipes.map((r,i)=>(
           <div key={i} style={{borderRadius:16,overflow:"hidden",marginBottom:12,border:`1px solid ${th.accent}40`}}>
             <div style={{padding:"10px 14px",background:th.accentL}}>
               <div style={{fontSize:13,fontWeight:800,color:th.accent}}>{r.e} {r.name}</div>
             </div>
             <div style={{padding:"12px 14px",background:th.card}}>
-              <div style={{fontSize:12,fontWeight:700,color:th.text,marginBottom:6}}>Ingredientes:</div>
+              <div style={{fontSize:12,fontWeight:700,color:th.text,marginBottom:6}}>{S(lang,"content_ingredients")}</div>
               {r.ing.map((item,j)=><div key={j} style={{fontSize:12,color:th.text3,marginBottom:3}}>• {item}</div>)}
-              <div style={{fontSize:12,fontWeight:700,color:th.text,marginTop:10,marginBottom:6}}>Como fazer:</div>
+              <div style={{fontSize:12,fontWeight:700,color:th.text,marginTop:10,marginBottom:6}}>{S(lang,"content_how")}</div>
               {r.how.map((step,j)=><div key={j} style={{fontSize:12,color:th.text3,marginBottom:3}}>{j+1}. {step}</div>)}
               <div style={{marginTop:10,padding:"8px 10px",background:th.greenL,borderRadius:8,border:`1px solid ${th.green}30`}}>
-                <div style={{fontSize:11,color:th.green,fontWeight:700,marginBottom:2}}>🔬 Por que funciona:</div>
+                <div style={{fontSize:11,color:th.green,fontWeight:700,marginBottom:2}}>{S(lang,"content_why")}</div>
                 <div style={{fontSize:11,color:th.text3,lineHeight:1.6,fontStyle:"italic"}}>{r.sci}</div>
               </div>
             </div>
@@ -2047,7 +2643,7 @@ function ContentTab({currentDay, user, onCompleteDay, th}) {
         ))}
         <div style={{borderRadius:16,overflow:"hidden",border:"1px solid rgba(86,182,133,.3)",marginBottom:20}}>
           <div style={{padding:"10px 14px",background:th.greenL}}>
-            <div style={{fontSize:12,fontWeight:800,color:th.green}}>📚 Referências Científicas — Dia {selDay}</div>
+            <div style={{fontSize:12,fontWeight:800,color:th.green}}>{S(lang,"content_refs",{day:selDay})}</div>
           </div>
           <div style={{padding:"10px 14px",background:th.card,display:"flex",flexDirection:"column",gap:8}}>
             {d.refs.map((r,i)=>(
@@ -2068,7 +2664,7 @@ function ContentTab({currentDay, user, onCompleteDay, th}) {
           >
             <span style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
               <span style={{fontSize:24}}>🎉</span>
-              <span>PARABÉNS... Aperte aqui</span>
+              <span>{S(lang,"content_btn_congrats")}</span>
               <span style={{fontSize:24}}>🏆</span>
             </span>
           </button>
@@ -2076,7 +2672,7 @@ function ContentTab({currentDay, user, onCompleteDay, th}) {
           <button className="btn3d btn3d-done" style={{marginBottom:8}} disabled>
             <span style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
               <span style={{fontSize:20}}>✅</span>
-              <span>Dia {selDay} Concluído!</span>
+              <span>{S(lang,"content_btn_done_day",{day:selDay})}</span>
             </span>
           </button>
         ) : (
@@ -2087,41 +2683,41 @@ function ContentTab({currentDay, user, onCompleteDay, th}) {
           >
             <span style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
               <span style={{fontSize:20}}>🚀</span>
-              <span>Dia concluído com SUCESSO!!</span>
+              <span>{S(lang,"content_btn_complete")}</span>
               <span style={{fontSize:20}}>→</span>
             </span>
           </button>
         )}
       </div>
     </div>
-    {showGratitude && <GratitudeModal onClose={()=>setShowGratitude(false)} th={th}/>}
+    {showGratitude && <GratitudeModal onClose={()=>setShowGratitude(false)} th={th} lang={lang}/>}
     </>
   );
 }
 
 // ── EVOLUTION TAB ─────────────────────────────────────────────
-function EvolutionTab({xp, completedMissions, currentDay, th}) {
+function EvolutionTab({xp, completedMissions, currentDay, th, lang="pt"}) {
   const lvl=Math.floor(xp/200)+1;
   const lvlProg=(xp%200)/200*100;
   const totalDone=Object.values(completedMissions).flat().length;
   const streak=Math.min(currentDay,7);
   const xpData=Object.keys(PC).slice(0,currentDay).map((k,i)=>({name:`D${k}`,xp:Math.min(xp,(i+1)*230+Math.floor(Math.random()*60))}));
   const radarData=[
-    {m:"Hidratação",v:Math.min(100,xp/14)},{m:"Sono",v:currentDay>=6?88:50},
-    {m:"Movimento",v:Math.min(100,totalDone*7)},{m:"Nutrição",v:Math.min(100,xp/12)},
-    {m:"Mindset",v:Math.min(100,xp/11)},{m:"Linfático",v:currentDay>=2?82:28},
+    {m:S(lang,"radar_hydration"),v:Math.min(100,xp/14)},{m:S(lang,"radar_sleep"),v:currentDay>=6?88:50},
+    {m:S(lang,"radar_move"),v:Math.min(100,totalDone*7)},{m:S(lang,"radar_nutrition"),v:Math.min(100,xp/12)},
+    {m:S(lang,"radar_mindset"),v:Math.min(100,xp/11)},{m:S(lang,"radar_lymph"),v:currentDay>=2?82:28},
   ];
   const ACHIEVS=[
-    {n:"Primeiro Passo",i:"🌸",d:"Dia 1 concluído",need:200},{n:"Drenagem Ativa",i:"💧",d:"Dia 2 concluído",need:400},
-    {n:"Forno Ligado",i:"🔥",d:"Dia 3 concluído",need:600},{n:"Intestino Feliz",i:"🌱",d:"Dia 4 concluído",need:800},
-    {n:"Escudo Ativo",i:"🛡️",d:"Dia 5 concluído",need:1000},{n:"Rainha do Sono",i:"🌙",d:"Dia 6 concluído",need:1200},
-    {n:"A Virada",i:"💪",d:"7 dias concluídos!",need:1500},{n:"Consistência",i:"🏅",d:"70% das missões",need:700},
+    {n:S(lang,"achiev0_n"),i:"🌸",d:S(lang,"achiev0_d"),need:200},{n:S(lang,"achiev1_n"),i:"💧",d:S(lang,"achiev1_d"),need:400},
+    {n:S(lang,"achiev2_n"),i:"🔥",d:S(lang,"achiev2_d"),need:600},{n:S(lang,"achiev3_n"),i:"🌱",d:S(lang,"achiev3_d"),need:800},
+    {n:S(lang,"achiev4_n"),i:"🛡️",d:S(lang,"achiev4_d"),need:1000},{n:S(lang,"achiev5_n"),i:"🌙",d:S(lang,"achiev5_d"),need:1200},
+    {n:S(lang,"achiev6_n"),i:"💪",d:S(lang,"achiev6_d"),need:1500},{n:S(lang,"achiev7_n"),i:"🏅",d:S(lang,"achiev7_d"),need:700},
   ];
   return (
     <div style={{padding:"16px 16px 100px",display:"flex",flexDirection:"column",gap:14}}>
       <div className="glass" style={{borderRadius:20,padding:20,background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`}}>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16,textAlign:"center"}}>
-          {[{l:"XP Total",v:`${xp}`,s:"⚡",c:th.accent},{l:"Nível",v:`${lvl}`,s:"🌟",c:th.primary},{l:"Sequência",v:`${streak}`,s:"🔥",c:"#e8a872"}].map(s=>(
+          {[{l:"XP Total",v:`${xp}`,s:"⚡",c:th.accent},{l:S(lang,"evo_level"),v:`${lvl}`,s:"🌟",c:th.primary},{l:S(lang,"evo_sequence"),v:`${streak}`,s:"🔥",c:"#e8a872"}].map(s=>(
             <div key={s.l} style={{background:th.card2,borderRadius:14,padding:"12px 8px"}}>
               <div className="serif" style={{fontSize:22,fontWeight:700,color:s.c}}>{s.s} {s.v}</div>
               <div style={{fontSize:10,color:th.text3}}>{s.l}</div>
@@ -2130,7 +2726,7 @@ function EvolutionTab({xp, completedMissions, currentDay, th}) {
         </div>
         <div>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-            <span style={{fontSize:11,color:th.text2}}>Nível {lvl} → {lvl+1}</span>
+            <span style={{fontSize:11,color:th.text2}}>{S(lang,"evo_level_prog",{a:lvl,b:lvl+1})}</span>
             <span style={{fontSize:11,color:th.text2}}>{xp%200}/200 XP</span>
           </div>
           <div style={{height:10,background:th.border,borderRadius:5}}>
@@ -2139,7 +2735,7 @@ function EvolutionTab({xp, completedMissions, currentDay, th}) {
         </div>
       </div>
       <div className="glass" style={{borderRadius:20,padding:20}}>
-        <div style={{fontSize:13,fontWeight:800,color:th.text,marginBottom:14}}>📈 Evolução de XP por Dia</div>
+        <div style={{fontSize:13,fontWeight:800,color:th.text,marginBottom:14}}>{S(lang,"evo_weekly")}</div>
         {ResponsiveContainer ? (
           <ResponsiveContainer width="100%" height={150}>
             <AreaChart data={xpData}>
@@ -2156,10 +2752,10 @@ function EvolutionTab({xp, completedMissions, currentDay, th}) {
               <Area type="monotone" dataKey="xp" stroke={th.primary} fill="url(#xpG)" strokeWidth={2}/>
             </AreaChart>
           </ResponsiveContainer>
-        ) : <div style={{height:150,display:"flex",alignItems:"center",justifyContent:"center",color:th.text3,fontSize:12}}>📈 Gráfico de evolução</div>}
+        ) : <div style={{height:150,display:"flex",alignItems:"center",justifyContent:"center",color:th.text3,fontSize:12}}>{S(lang,"evo_chart_fallback")}</div>}
       </div>
       <div className="glass" style={{borderRadius:20,padding:20}}>
-        <div style={{fontSize:13,fontWeight:800,color:th.text,marginBottom:8}}>🕸️ Radar de Bem-Estar</div>
+        <div style={{fontSize:13,fontWeight:800,color:th.text,marginBottom:8}}>{S(lang,"evo_radar")}</div>
         {ResponsiveContainer ? (
           <ResponsiveContainer width="100%" height={190}>
             <RadarChart data={radarData}>
@@ -2168,10 +2764,10 @@ function EvolutionTab({xp, completedMissions, currentDay, th}) {
               <Radar dataKey="v" stroke={th.primary} fill={th.primary} fillOpacity={0.25} strokeWidth={2}/>
             </RadarChart>
           </ResponsiveContainer>
-        ) : <div style={{height:190,display:"flex",alignItems:"center",justifyContent:"center",color:th.text3,fontSize:12}}>🕸️ Radar de bem-estar</div>}
+        ) : <div style={{height:190,display:"flex",alignItems:"center",justifyContent:"center",color:th.text3,fontSize:12}}>{S(lang,"evo_radar_fallback")}</div>}
       </div>
       <div>
-        <div style={{fontSize:13,fontWeight:800,color:th.text,marginBottom:12}}>🏆 Conquistas</div>
+        <div style={{fontSize:13,fontWeight:800,color:th.text,marginBottom:12}}>{S(lang,"evo_achievements")}</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
           {ACHIEVS.map(a=>{
             const earned=xp>=a.need;
@@ -2180,7 +2776,7 @@ function EvolutionTab({xp, completedMissions, currentDay, th}) {
                 <div style={{fontSize:24,marginBottom:4,filter:earned?"none":"grayscale(1)"}}>{a.i}</div>
                 <div style={{fontSize:11,fontWeight:700,color:earned?th.text:th.text3}}>{a.n}</div>
                 <div style={{fontSize:10,color:earned?th.text2:th.text3}}>{a.d}</div>
-                {!earned && <div style={{fontSize:9,color:th.text3,marginTop:2}}>{a.need} XP necessário</div>}
+                {!earned && <div style={{fontSize:9,color:th.text3,marginTop:2}}>{S(lang,"evo_xp_needed",{n:a.need})}</div>}
               </div>
             );
           })}
@@ -2211,7 +2807,7 @@ function compressImage(file, maxW=800, quality=0.75) {
 }
 
 // ── PROFILE TAB ───────────────────────────────────────────────
-function ProfileTab({user, xp, currentDay, completedMissions, onChangePw, th}) {
+function ProfileTab({user, xp, currentDay, completedMissions, onChangePw, th, lang="pt"}) {
   const totalDone = Object.values(completedMissions).flat().length;
   const lvl = Math.floor(xp/200)+1;
 
@@ -2241,11 +2837,11 @@ function ProfileTab({user, xp, currentDay, completedMissions, onChangePw, th}) {
         </div>
         <div className="serif" style={{fontSize:24,fontWeight:600,color:th.text,marginBottom:4}}>{user?.name||"Guerreira Reset"}</div>
         <div style={{fontSize:12,color:th.text3,marginBottom:12}}>{user?.email} · Dia {currentDay}/7</div>
-        <XPBadge xp={xp} th={th}/>
+        <XPBadge xp={xp} th={th} lang={lang}/>
       </div>
 
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-        {[{l:"Missões",v:totalDone,i:"✅"},{l:"Nível",v:lvl,i:"⚡"},{l:"Dias",v:currentDay,i:"📅"}].map(s=>(
+        {[{l:S(lang,"evo_missions"),v:totalDone,i:"✅"},{l:S(lang,"evo_level"),v:lvl,i:"⚡"},{l:S(lang,"profile_days"),v:currentDay,i:"📅"}].map(s=>(
           <div key={s.l} className="glass" style={{borderRadius:14,padding:"12px 8px",textAlign:"center"}}>
             <div style={{fontSize:16}}>{s.i}</div>
             <div className="serif" style={{fontSize:20,fontWeight:700,color:th.text}}>{s.v}</div>
@@ -2255,8 +2851,8 @@ function ProfileTab({user, xp, currentDay, completedMissions, onChangePw, th}) {
       </div>
 
       <div className="glass" style={{borderRadius:20,padding:18}}>
-        <div className="serif" style={{fontSize:18,fontWeight:600,color:th.text,marginBottom:2}}>📸 Álbum Privado da Evolução</div>
-        <div style={{fontSize:11,color:th.text3,marginBottom:12}}>🔒 Somente você vê estas fotos · Vista a calça de referência!</div>
+        <div className="serif" style={{fontSize:18,fontWeight:600,color:th.text,marginBottom:2}}>{S(lang,"profile_album")}</div>
+        <div style={{fontSize:11,color:th.text3,marginBottom:12}}>{S(lang,"profile_only_you")}</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
           {[1,2,3,4,5,6,7].map(d => {
             const photo = photos[d];
@@ -2279,7 +2875,7 @@ function ProfileTab({user, xp, currentDay, completedMissions, onChangePw, th}) {
             if (unlocked) return (
               <label key={d} style={{height:88,borderRadius:12,background:`linear-gradient(135deg,${PC[d]?.color||th.primary}35,${PC[d]?.color||th.primary}15)`,border:`2px dashed ${isToday?th.primary:th.border}`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"pointer",gap:3}}>
                 <span style={{fontSize:isToday?22:16}}>{isToday?"📷":PC[d]?.emoji||"🌸"}</span>
-                <span style={{fontSize:9,color:isToday?th.primary:th.text3,fontWeight:700}}>{isToday?"Tirar foto":"Dia "+d}</span>
+                <span style={{fontSize:9,color:isToday?th.primary:th.text3,fontWeight:700}}>{isToday?S(lang,"profile_take_photo"):S(lang,"day_label")+" "+d}</span>
                 <input type="file" accept="image/*" capture="user" style={{display:"none"}} onChange={e=>handlePhoto(d,e)}/>
               </label>
             );
@@ -2293,13 +2889,13 @@ function ProfileTab({user, xp, currentDay, completedMissions, onChangePw, th}) {
         </div>
       </div>
 
-      <button onClick={onChangePw} className="btn-s" style={{borderRadius:14,padding:"13px"}}>🔐 Mudar Senha</button>
+      <button onClick={onChangePw} className="btn-s" style={{borderRadius:14,padding:"13px"}}>🔐 {S(lang,"menu_change_pw")}</button>
     </div>
   );
 }
 
 // ── COMMUNITY TAB ─────────────────────────────────────────────
-function CommunityTab({user, currentDay, th}) {
+function CommunityTab({user, currentDay, th, lang="pt"}) {
   const [posts,setPosts]     = useState([]);
   const [loading,setLoading] = useState(true);
   const [txt,setTxt]         = useState("");
@@ -2365,8 +2961,8 @@ function CommunityTab({user, currentDay, th}) {
     <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
       {/* Criação de post */}
       <div className="glass" style={{margin:"12px 16px 0",borderRadius:20,padding:16,flexShrink:0}}>
-        <div style={{fontSize:12,fontWeight:800,color:th.primary,marginBottom:8}}>✨ Compartilhe sua jornada</div>
-        <textarea value={txt} onChange={e=>setTxt(e.target.value)} placeholder="Como foi o seu dia? 💜" style={{width:"100%",minHeight:64,background:th.inputBg,border:`1px solid ${th.border}`,borderRadius:12,padding:12,color:th.text,fontSize:12,resize:"none",lineHeight:1.6,outline:"none",fontFamily:"'Manrope',sans-serif"}}/>
+        <div style={{fontSize:12,fontWeight:800,color:th.primary,marginBottom:8}}>{S(lang,"comm_share_journey")}</div>
+        <textarea value={txt} onChange={e=>setTxt(e.target.value)} placeholder={S(lang,"comm_day_placeholder")} style={{width:"100%",minHeight:64,background:th.inputBg,border:`1px solid ${th.border}`,borderRadius:12,padding:12,color:th.text,fontSize:12,resize:"none",lineHeight:1.6,outline:"none",fontFamily:"'Manrope',sans-serif"}}/>
         {photo && (
           <div style={{position:"relative",marginTop:8,borderRadius:12,overflow:"hidden"}}>
             <img src={photo} style={{width:"100%",maxHeight:180,objectFit:"cover",borderRadius:12}} alt="preview"/>
@@ -2383,18 +2979,18 @@ function CommunityTab({user, currentDay, th}) {
             ))}
           </div>
           <button onClick={addPost} disabled={posting||(!txt.trim()&&!photo)} className="btn-p" style={{padding:"8px 16px",width:"auto",fontSize:12,flexShrink:0}}>
-            {posting?<Spinner/>:"Postar 💜"}
+            {posting?<Spinner/>:S(lang,"comm_post_btn")}
           </button>
         </div>
       </div>
 
       {/* Lista de posts */}
       <div style={{flex:1,overflowY:"auto",padding:"12px 16px 100px",display:"flex",flexDirection:"column",gap:12}}>
-        {loading && <div style={{textAlign:"center",color:th.text3,fontSize:13,padding:24}}><Spinner/> Carregando posts...</div>}
+        {loading && <div style={{textAlign:"center",color:th.text3,fontSize:13,padding:24}}><Spinner/> {S(lang,"comm_loading")}</div>}
         {!loading && posts.length===0 && (
           <div style={{textAlign:"center",padding:32}}>
             <div style={{fontSize:40,marginBottom:10}}>💜</div>
-            <div style={{fontSize:13,color:th.text3}}>Seja a primeira a compartilhar!</div>
+            <div style={{fontSize:13,color:th.text3}}>{S(lang,"comm_first_post")}</div>
           </div>
         )}
         {posts.map(post=>(
@@ -2420,7 +3016,7 @@ function CommunityTab({user, currentDay, th}) {
             {(post.comments||[]).length>0&&(
               <div>
                 <button onClick={()=>setExpComm(c=>({...c,[post.id]:!c[post.id]}))} style={{fontSize:11,color:th.primary,background:"none",border:"none",cursor:"pointer",marginBottom:6,fontWeight:700,fontFamily:"'Manrope',sans-serif"}}>
-                  💬 {(post.comments||[]).length} comentário{(post.comments||[]).length>1?"s":""}
+                  💬 {(post.comments||[]).length} {(post.comments||[]).length===1?S(lang,"comm_comment_s"):S(lang,"comm_comment_p")}
                 </button>
                 {expComm[post.id]&&(post.comments||[]).map((c,i)=>(
                   <div key={i} style={{display:"flex",gap:8,marginBottom:6}}>
@@ -2434,7 +3030,7 @@ function CommunityTab({user, currentDay, th}) {
               </div>
             )}
             <div style={{display:"flex",gap:8,marginTop:8}}>
-              <input value={comments[post.id]||""} onChange={e=>setComments(c=>({...c,[post.id]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addComment(post.id)} placeholder="Comentar..." style={{flex:1,background:th.inputBg,border:`1px solid ${th.border}`,borderRadius:10,padding:"7px 12px",color:th.text,fontSize:12,outline:"none",fontFamily:"'Manrope',sans-serif"}}/>
+              <input value={comments[post.id]||""} onChange={e=>setComments(c=>({...c,[post.id]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addComment(post.id)} placeholder={S(lang,"comm_comment_ph")} style={{flex:1,background:th.inputBg,border:`1px solid ${th.border}`,borderRadius:10,padding:"7px 12px",color:th.text,fontSize:12,outline:"none",fontFamily:"'Manrope',sans-serif"}}/>
               <button onClick={()=>addComment(post.id)} style={{background:th.primary,border:"none",borderRadius:10,color:"white",padding:"7px 12px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Manrope',sans-serif"}}>→</button>
             </div>
           </div>
@@ -2461,12 +3057,12 @@ function Dashboard({user, onLogout, darkMode, setDarkMode, lang, setLang, th}) {
   const changeDay = (d) => { setCurrentDay(d); DB.saveCurrentDay(user.email,d); setShowDayPicker(false); };
 
   const TABS=[
-    {id:"home",      icon:"🏠", label:"Home"},
-    {id:"mission",   icon:"🎯", label:"Missão"},
-    {id:"content",   icon:"📖", label:"Conteúdo"},
-    {id:"evolution", icon:"📊", label:"Evolução"},
-    {id:"profile",   icon:"👤", label:"Perfil"},
-    {id:"community", icon:"💬", label:"Comunidade"},
+    {id:"home",      icon:"🏠", label:S(lang,"tab_home")},
+    {id:"mission",   icon:"🎯", label:S(lang,"tab_mission")},
+    {id:"content",   icon:"📖", label:S(lang,"tab_content")},
+    {id:"evolution", icon:"📊", label:S(lang,"tab_evolution")},
+    {id:"profile",   icon:"👤", label:S(lang,"tab_profile")},
+    {id:"community", icon:"💬", label:S(lang,"tab_community")},
   ];
 
   return (
@@ -2481,7 +3077,7 @@ function Dashboard({user, onLogout, darkMode, setDarkMode, lang, setLang, th}) {
           <button onClick={()=>setShowDayPicker(!showDayPicker)} style={{background:th.primaryL,border:`1px solid ${th.border2}`,borderRadius:20,padding:"5px 11px",color:th.primary,fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"'Manrope',sans-serif"}}>
             {PC[currentDay]?.emoji} D{currentDay}
           </button>
-          <XPBadge xp={xp} th={th}/>
+          <XPBadge xp={xp} th={th} lang={lang}/>
         </div>
       </div>
 
@@ -2489,7 +3085,7 @@ function Dashboard({user, onLogout, darkMode, setDarkMode, lang, setLang, th}) {
       {showDayPicker && (
         <div onClick={()=>setShowDayPicker(false)} style={{position:"absolute",top:60,right:16,zIndex:100}}>
           <div onClick={e=>e.stopPropagation()} style={{background:th.bg2,border:`1px solid ${th.border}`,borderRadius:16,padding:12,boxShadow:"0 16px 48px rgba(0,0,0,.4)"}}>
-            <div style={{fontSize:11,color:th.text3,marginBottom:8,fontWeight:700}}>Simular Dia</div>
+            <div style={{fontSize:11,color:th.text3,marginBottom:8,fontWeight:700}}>{S(lang,"simulate_day")}</div>
             <div style={{display:"flex",gap:6,flexWrap:"wrap",maxWidth:210}}>
               {[1,2,3,4,5,6,7].map(d=>(
                 <button key={d} onClick={()=>changeDay(d)} style={{width:34,height:34,borderRadius:10,border:currentDay===d?`2px solid ${th.primary}`:`1px solid ${th.border}`,background:currentDay===d?th.primaryL:th.card2,color:currentDay===d?th.primary:th.text3,fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"'Manrope',sans-serif"}}>D{d}</button>
@@ -2501,12 +3097,12 @@ function Dashboard({user, onLogout, darkMode, setDarkMode, lang, setLang, th}) {
 
       {/* Content */}
       <div style={{flex:1,overflowY:"auto"}} onClick={()=>showDayPicker&&setShowDayPicker(false)}>
-        {activeTab==="home"      && <HomeTab      user={user} currentDay={currentDay} xp={xp} completedMissions={completedMissions} setActiveTab={setActiveTab} th={th}/>}
-        {activeTab==="mission"   && <MissionTab   user={user} currentDay={currentDay} completedMissions={completedMissions} setCompletedMissions={setCompletedMissions} xp={xp} setXp={setXp} th={th}/>}
-        {activeTab==="content"   && <ContentTab   currentDay={currentDay} user={user} onCompleteDay={changeDay} th={th}/>}
-        {activeTab==="evolution" && <EvolutionTab xp={xp} completedMissions={completedMissions} currentDay={currentDay} th={th}/>}
-        {activeTab==="profile"   && <ProfileTab   user={user} xp={xp} currentDay={currentDay} completedMissions={completedMissions} onChangePw={()=>setShowChangePw(true)} th={th}/>}
-        {activeTab==="community" && <CommunityTab user={user} currentDay={currentDay} th={th}/>}
+        {activeTab==="home"      && <HomeTab      user={user} currentDay={currentDay} xp={xp} completedMissions={completedMissions} setActiveTab={setActiveTab} th={th} lang={lang}/>}
+        {activeTab==="mission"   && <MissionTab   user={user} currentDay={currentDay} completedMissions={completedMissions} setCompletedMissions={setCompletedMissions} xp={xp} setXp={setXp} th={th} lang={lang}/>}
+        {activeTab==="content"   && <ContentTab   currentDay={currentDay} user={user} onCompleteDay={changeDay} th={th} lang={lang}/>}
+        {activeTab==="evolution" && <EvolutionTab xp={xp} completedMissions={completedMissions} currentDay={currentDay} th={th} lang={lang}/>}
+        {activeTab==="profile"   && <ProfileTab   user={user} xp={xp} currentDay={currentDay} completedMissions={completedMissions} onChangePw={()=>setShowChangePw(true)} th={th} lang={lang}/>}
+        {activeTab==="community" && <CommunityTab user={user} currentDay={currentDay} th={th} lang={lang}/>}
       </div>
 
       {/* Tab bar */}
@@ -2521,7 +3117,7 @@ function Dashboard({user, onLogout, darkMode, setDarkMode, lang, setLang, th}) {
       </div>
 
       <HamburgerMenu open={menuOpen} onClose={()=>setMenuOpen(false)} th={th} darkMode={darkMode} setDarkMode={setDarkMode} lang={lang} setLang={setLang} onLogout={onLogout} onChangePw={()=>setShowChangePw(true)}/>
-      {showChangePw  && <ChangePwModal   onClose={()=>setShowChangePw(false)} user={user} th={th}/>}
+      {showChangePw  && <ChangePwModal   onClose={()=>setShowChangePw(false)} user={user} th={th} lang={lang}/>}
     </div>
   );
 }
@@ -2529,7 +3125,8 @@ function Dashboard({user, onLogout, darkMode, setDarkMode, lang, setLang, th}) {
 // ── APP PRINCIPAL ─────────────────────────────────────────────
 function App() {
   const [darkMode, setDarkMode] = useState(true);
-  const [lang, setLang]         = useState("pt");
+  const [lang, setLangState]    = useState(() => localStorage.getItem("r7d_lang") || "pt");
+  const setLang = (l) => { setLangState(l); localStorage.setItem("r7d_lang", l); };
   const th = darkMode ? THEMES.dark : THEMES.light;
 
   const [screen, setScreen] = useState(()=>{
@@ -2588,13 +3185,13 @@ function App() {
               </div>
               <div className="serif grad-text" style={{fontSize:26,fontWeight:700,letterSpacing:"-0.5px",marginTop:"2px"}}>Reset 7D</div>
             </div>
-            <QuizScreen th={th} onDone={()=>{ DB.setOnboarded(); setScreen("login"); }}/>
+            <QuizScreen th={th} lang={lang} onDone={()=>{ DB.setOnboarded(); setScreen("login"); }}/>
           </div>
         </>
       )}
-      {screen==="login"    && <LoginScreen    savedEmail={DB.savedEmail()} onLogin={doLogin} onRegister={()=>setScreen("register")} onForgot={()=>setScreen("forgot")}/>}
-      {screen==="register" && <RegisterScreen onBack={()=>setScreen("login")} onSuccess={doLogin}/>}
-      {screen==="forgot"   && <ForgotScreen   onBack={()=>setScreen("login")}/>}
+      {screen==="login"    && <LoginScreen    savedEmail={DB.savedEmail()} onLogin={doLogin} onRegister={()=>setScreen("register")} onForgot={()=>setScreen("forgot")} lang={lang}/>}
+      {screen==="register" && <RegisterScreen onBack={()=>setScreen("login")} onSuccess={doLogin} lang={lang}/>}
+      {screen==="forgot"   && <ForgotScreen   onBack={()=>setScreen("login")} lang={lang}/>}
       {screen==="app"      && user && <Dashboard user={user} onLogout={doLogout} darkMode={darkMode} setDarkMode={setDarkMode} lang={lang} setLang={setLang} th={th}/>}
     </>
   );
