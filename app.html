@@ -142,6 +142,8 @@ input,textarea{font-family:'Manrope',sans-serif;}
 @keyframes btn3dFloat{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-6px) scale(1.012);}}
 @keyframes btn3dFloatGold{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-6px) scale(1.012);}}
 @keyframes btn3dShimmer{0%{background-position:250% center;}100%{background-position:-250% center;}}
+@keyframes drRise{from{transform:translateY(70px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+@keyframes glassIn{from{transform:translateY(24px) scale(0.97);opacity:0;}to{transform:translateY(0) scale(1);opacity:1;}}
 .btn3d{width:100%;padding:20px 24px;border:none;border-radius:22px;font-family:'Manrope',sans-serif;font-weight:900;font-size:16px;color:#fff;cursor:pointer;text-shadow:0 2px 5px rgba(0,0,0,.35);letter-spacing:.04em;position:relative;overflow:hidden;transition:transform .12s ease,box-shadow .12s ease;}
 .btn3d::after{content:'';position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.28) 0%,transparent 48%);border-radius:22px;pointer-events:none;}
 .btn3d-pink{background:linear-gradient(135deg,#f5bdd4 0%,#d6628e 28%,#f0a8c8 55%,#cc5480 100%);background-size:300% 100%;box-shadow:0 8px 0 #8c2a52,0 14px 36px rgba(232,164,192,.55);animation:btn3dFloat 2.5s ease-in-out infinite,btn3dShimmer 3.5s linear infinite;}
@@ -1281,107 +1283,152 @@ function QuizScreen({onDone, th, lang="pt"}) {
     {name:S(lang,"quiz_profile_r5"),pct:61},
   ];
 
+  // estilos reutilizáveis para glass cards
+  const glass = (delay='0s', extra={}) => ({
+    margin:'0 14px',
+    borderRadius:22,
+    padding:'18px 20px',
+    background:'rgba(12,4,20,0.72)',
+    backdropFilter:'blur(18px)',
+    WebkitBackdropFilter:'blur(18px)',
+    border:'1px solid rgba(232,164,192,0.18)',
+    boxShadow:'0 4px 0 rgba(0,0,0,0.45), 0 10px 36px rgba(0,0,0,0.35)',
+    animation:`glassIn .55s ${delay} cubic-bezier(.2,0,.2,1) both`,
+    ...extra,
+  });
+
   if (showResult) return (
     <div style={{
       position:'absolute', inset:0, zIndex:30,
       overflowY:'auto', overflowX:'hidden',
       display:'flex', flexDirection:'column',
+      gap:12,
+      paddingBottom:50,
       background:'transparent',
     }}>
 
-      {/* ══ SEÇÃO DA DRA. ANA PAULA — imagem vazada sobre fundo escuro ══ */}
+      {/* ══ 1. CARD NOME 3D ══ */}
       <div style={{
-        background:'#1a0d22',
-        paddingTop:18,
+        ...glass('0s'),
+        marginTop:18,
         textAlign:'center',
+        position:'relative', zIndex:2,
+        transform:'perspective(700px) rotateX(2deg)',
+        transformOrigin:'center bottom',
+        border:'1px solid rgba(232,164,192,0.35)',
+        boxShadow:'0 6px 0 rgba(0,0,0,0.5), 0 14px 48px rgba(232,164,192,0.14), inset 0 1px 0 rgba(232,164,192,0.18)',
+      }}>
+        {/* brilho interno superior */}
+        <div style={{position:'absolute',inset:0,borderRadius:22,background:'linear-gradient(180deg,rgba(232,164,192,0.10) 0%,transparent 50%)',pointerEvents:'none'}}/>
+        <div style={{fontSize:26, fontWeight:900, color:'#e8a4c0', letterSpacing:'-0.01em', textShadow:'0 0 24px rgba(232,164,192,0.5)'}}>
+          Dra. Ana Paula
+        </div>
+        <div style={{fontSize:10, color:'rgba(255,255,255,0.45)', letterSpacing:'0.14em', fontWeight:700, marginTop:5}}>
+          {S(lang,"quiz_dra_subtitle")}
+        </div>
+      </div>
+
+      {/* ══ 2. FOTO — sobe de baixo do card do nome ══ */}
+      <div style={{
+        position:'relative', zIndex:1,
+        marginTop:-22,
+        textAlign:'center',
+        animation:'drRise .85s .15s cubic-bezier(.22,1,.36,1) both',
         flexShrink:0,
       }}>
+        {/* glow/blur atrás da doutora */}
+        <div style={{
+          position:'absolute',
+          left:'50%', bottom:'-8px',
+          transform:'translateX(-50%)',
+          width:'80%', height:'55%',
+          background:'radial-gradient(ellipse at 50% 70%, rgba(232,164,192,0.55) 0%, rgba(157,217,184,0.2) 45%, transparent 72%)',
+          filter:'blur(28px)',
+          pointerEvents:'none',
+          zIndex:0,
+        }}/>
         <img
           src="/ana-paula.png"
-          alt="Dra. Ana Paula — Nutricionista"
+          alt="Dra. Ana Paula"
           draggable={false}
           style={{
+            position:'relative', zIndex:1,
             display:'block',
-            width:'88%',
+            width:'82%',
             height:'auto',
             margin:'0 auto',
             objectFit:'contain',
+            filter:'drop-shadow(0 12px 36px rgba(232,164,192,0.45)) drop-shadow(0 4px 12px rgba(0,0,0,0.7))',
           }}
         />
       </div>
 
-      {/* ══ NOME + VEREDICTO ══ */}
-      <div style={{
-        background:'#1a0d22',
-        padding:'20px 22px 24px',
-        flexShrink:0,
-      }}>
-        {/* Nome e título */}
-        <div style={{textAlign:'center', marginBottom:18}}>
-          <div style={{fontSize:22, fontWeight:800, color:'#9dd9b8', marginBottom:2}}>Dra. Ana Paula</div>
-          <div style={{fontSize:11, color:'rgba(255,255,255,0.42)', letterSpacing:'0.08em'}}>{S(lang,"quiz_dra_subtitle")}</div>
-        </div>
-
-        <div style={{fontSize:13, color:'rgba(245,230,237,0.88)', lineHeight:1.85, marginBottom:18, textAlign:'center'}}>
+      {/* ══ 3. TEXTO DA DRA ══ */}
+      <div style={glass('.1s')}>
+        <div style={{fontSize:13, color:'rgba(245,230,237,0.88)', lineHeight:1.85, marginBottom:14, textAlign:'center'}}>
           {S(lang,"quiz_dra_p1",{n:"2.800"})}
         </div>
-
-        <div style={{fontSize:13, color:'rgba(245,230,237,0.88)', lineHeight:1.85, marginBottom:22, textAlign:'center'}}>
+        <div style={{fontSize:13, color:'rgba(245,230,237,0.88)', lineHeight:1.85, textAlign:'center'}}>
           {S(lang,"quiz_dra_p2")}
-        </div>
-
-        {/* Perfil identificado */}
-        <div style={{background:'rgba(0,0,0,0.30)', borderRadius:16, padding:'14px 16px', marginBottom:18}}>
-          <div style={{fontSize:10, color:'rgba(255,255,255,0.40)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:12, textAlign:'center'}}>
-            {S(lang,"quiz_profile")}
-          </div>
-          {[
-            [S(lang,"quiz_profile_r1"),'67%','#e8a4c0',S(lang,"quiz_lvl_r1")],
-            [S(lang,"quiz_profile_r2"),'78%','#9dd9b8',S(lang,"quiz_lvl_r2")],
-            [S(lang,"quiz_profile_r3"),'54%','#f4c896',S(lang,"quiz_lvl_r3")],
-            [S(lang,"quiz_profile_r4"),'71%','#e8a4c0',S(lang,"quiz_lvl_r4")],
-            [S(lang,"quiz_profile_r5"),'61%','#9dd9b8',S(lang,"quiz_lvl_r5")],
-          ].map(([label,pct,cor,nivel])=>(
-            <div key={label} style={{display:'flex', alignItems:'center', gap:10, marginBottom:9}}>
-              <div style={{flex:1, fontSize:11, color:'rgba(232,180,204,0.85)'}}>{label}</div>
-              <div style={{fontSize:10, fontWeight:700, color:cor, minWidth:54, textAlign:'right'}}>{nivel}</div>
-              <div style={{width:48, height:4, borderRadius:2, background:'rgba(255,255,255,0.08)', overflow:'hidden', flexShrink:0}}>
-                <div style={{height:'100%', width:pct, borderRadius:2, background:cor}}/>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Citação final */}
-        <div style={{borderLeft:'3px solid #9dd9b8', paddingLeft:16, marginBottom:6}}>
-          <div style={{fontSize:14, color:'#9dd9b8', fontWeight:700, marginBottom:6}}>{S(lang,"quiz_verdict")}</div>
-          <div style={{fontSize:13, color:'rgba(245,230,237,0.9)', lineHeight:1.8, fontStyle:'italic'}}>
-            {S(lang,"quiz_dra_verdict")}
-          </div>
-          <div style={{marginTop:10, fontSize:11, color:'rgba(255,255,255,0.35)', fontStyle:'normal'}}>
-            — Dra. Ana Paula, {lang==="en"?"Nutritionist":"Nutricionista"}
-          </div>
         </div>
       </div>
 
-      {/* ══ RESTANTE DOS CARDS ══ */}
-      <div style={{padding:'14px 18px 50px', display:'flex', flexDirection:'column', gap:14}}>
-
-        {/* Estatística 73% */}
-        <div className="quiz-result-card" style={{borderRadius:18,padding:'20px 20px',background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,border:`2px solid ${th.border2}`,textAlign:'center'}}>
-          <div className="serif" style={{fontSize:56,fontWeight:900,color:th.primary,lineHeight:1}}>73%</div>
-          <div style={{fontSize:11,color:th.text3,marginTop:6,marginBottom:3,letterSpacing:'0.06em',textTransform:'uppercase',fontWeight:700}}>{S(lang,"quiz_stat")}</div>
-          <div style={{fontSize:13,color:th.text,lineHeight:1.6}}>{S(lang,"quiz_stat_sub")}</div>
+      {/* ══ 4. PERFIL IDENTIFICADO ══ */}
+      <div style={glass('.18s')}>
+        <div style={{fontSize:10, color:'rgba(255,255,255,0.4)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:14, textAlign:'center'}}>
+          {S(lang,"quiz_profile")}
         </div>
+        {[
+          [S(lang,"quiz_profile_r1"),'67%','#e8a4c0',S(lang,"quiz_lvl_r1")],
+          [S(lang,"quiz_profile_r2"),'78%','#9dd9b8',S(lang,"quiz_lvl_r2")],
+          [S(lang,"quiz_profile_r3"),'54%','#f4c896',S(lang,"quiz_lvl_r3")],
+          [S(lang,"quiz_profile_r4"),'71%','#e8a4c0',S(lang,"quiz_lvl_r4")],
+          [S(lang,"quiz_profile_r5"),'61%','#9dd9b8',S(lang,"quiz_lvl_r5")],
+        ].map(([label,pct,cor,nivel])=>(
+          <div key={label} style={{display:'flex', alignItems:'center', gap:10, marginBottom:9}}>
+            <div style={{flex:1, fontSize:11, color:'rgba(232,180,204,0.85)'}}>{label}</div>
+            <div style={{fontSize:10, fontWeight:700, color:cor, minWidth:54, textAlign:'right'}}>{nivel}</div>
+            <div style={{width:52, height:4, borderRadius:2, background:'rgba(255,255,255,0.08)', overflow:'hidden', flexShrink:0}}>
+              <div style={{height:'100%', width:pct, borderRadius:2, background:cor}}/>
+            </div>
+          </div>
+        ))}
+      </div>
 
-        {/* Gráfico 3D */}
-        <div className="quiz-result-card" style={{borderRadius:18,padding:18,background:th.primaryL,border:`1px solid ${th.border2}`}}>
-          <div style={{fontSize:13,fontWeight:700,color:th.primary,marginBottom:4}}>{S(lang,"quiz_chart_title")}</div>
-          <div style={{fontSize:11,color:th.text3,marginBottom:12}}>{S(lang,"quiz_chart_sub")}</div>
-          <Chart3D data={chartData}/>
+      {/* ══ 5. VEREDICTO ══ */}
+      <div style={glass('.26s', {borderLeft:'3px solid #9dd9b8', borderRadius:'0 22px 22px 0', paddingLeft:22})}>
+        <div style={{fontSize:13, color:'#9dd9b8', fontWeight:800, marginBottom:8, letterSpacing:'0.04em'}}>
+          {S(lang,"quiz_verdict")}
         </div>
+        <div style={{fontSize:13, color:'rgba(245,230,237,0.92)', lineHeight:1.85, fontStyle:'italic'}}>
+          {S(lang,"quiz_dra_verdict")}
+        </div>
+        <div style={{marginTop:10, fontSize:11, color:'rgba(255,255,255,0.32)', fontStyle:'normal'}}>
+          — Dra. Ana Paula, {lang==="en"?"Nutritionist":"Nutricionista"}
+        </div>
+      </div>
 
-        <button className="btn-p" onClick={(e)=>{addRipple(e);onDone();}} style={{fontSize:'15px',padding:'16px 24px',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',whiteSpace:'nowrap',letterSpacing:'0.01em'}}>
+      {/* ══ 6. ESTATÍSTICA 73% ══ */}
+      <div style={glass('.34s', {
+        textAlign:'center',
+        border:'1px solid rgba(232,164,192,0.35)',
+        boxShadow:'0 4px 0 rgba(0,0,0,0.45), 0 10px 40px rgba(232,164,192,0.12)',
+      })}>
+        <div className="serif" style={{fontSize:60,fontWeight:900,color:'#e8a4c0',lineHeight:1,textShadow:'0 0 32px rgba(232,164,192,0.5)'}}>73%</div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,0.5)',marginTop:8,marginBottom:4,letterSpacing:'0.07em',textTransform:'uppercase',fontWeight:700}}>{S(lang,"quiz_stat")}</div>
+        <div style={{fontSize:13,color:'rgba(245,230,237,0.85)',lineHeight:1.6}}>{S(lang,"quiz_stat_sub")}</div>
+      </div>
+
+      {/* ══ 7. GRÁFICO 3D ══ */}
+      <div style={glass('.42s')}>
+        <div style={{fontSize:13,fontWeight:700,color:'#e8a4c0',marginBottom:4}}>{S(lang,"quiz_chart_title")}</div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,0.4)',marginBottom:12}}>{S(lang,"quiz_chart_sub")}</div>
+        <Chart3D data={chartData}/>
+      </div>
+
+      {/* ══ 8. CTA ══ */}
+      <div style={{margin:'4px 14px 0'}}>
+        <button className="btn-p" onClick={(e)=>{addRipple(e);onDone();}} style={{fontSize:'15px',padding:'16px 24px',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',whiteSpace:'nowrap',letterSpacing:'0.01em',width:'100%'}}>
           <span>{S(lang,"quiz_btn")}</span><span style={{fontSize:'18px',lineHeight:1}}>→</span>
         </button>
       </div>
