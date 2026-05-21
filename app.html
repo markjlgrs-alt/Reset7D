@@ -1546,17 +1546,96 @@ function ForgotScreen({onBack}) {
 }
 
 // ── HAMBURGER MENU ────────────────────────────────────────────
-function HamburgerMenu({open, onClose, th, darkMode, setDarkMode, lang, setLang, onLogout, onChangePw, onNextLevel}) {
+function HamburgerMenu({open, onClose, th, darkMode, setDarkMode, lang, setLang, onLogout, onChangePw}) {
+  const [view, setView]       = useState("menu");   // "menu" | "shop" | "product"
+  const [product, setProduct] = useState(null);
+
+  // reset interno ao fechar/abrir
+  React.useEffect(()=>{ if(!open) setTimeout(()=>{ setView("menu"); setProduct(null); }, 300); },[open]);
+
   if(!open) return null;
+
+  const panelStyle = {position:"absolute",top:0,left:0,width:"78%",maxWidth:300,height:"100%",background:th.bg2,display:"flex",flexDirection:"column",boxShadow:"4px 0 30px rgba(0,0,0,.3)"};
+  const btnBack   = (onClick) => (
+    <button onClick={onClick} style={{background:"rgba(255,255,255,.18)",border:"none",borderRadius:20,color:"white",padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Manrope',sans-serif",marginBottom:8}}>← Voltar</button>
+  );
+
+  /* ── VIEW: detalhe do produto ── */
+  if(view==="product" && product) return (
+    <div className="overlay fade" onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={panelStyle}>
+        <div style={{height:180,background:product.color,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",flexShrink:0,padding:"0 16px",textAlign:"center"}}>
+          {btnBack(()=>setView("shop"))}
+          <div style={{fontSize:44,marginBottom:6}}>{product.emoji}</div>
+          <div className="serif" style={{fontSize:22,fontWeight:700,color:"white"}}>{product.name}</div>
+          <div style={{fontSize:10,color:"rgba(255,255,255,.75)",marginTop:2}}>{product.tag}</div>
+        </div>
+        <div style={{flex:1,overflowY:"auto",padding:"20px 16px 32px"}}>
+          <div className="serif" style={{fontSize:17,fontWeight:700,color:th.text,marginBottom:8}}>{product.tagline}</div>
+          <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+            {product.badges.map(b=><span key={b} style={{fontSize:10,fontWeight:700,color:product.colorAccent,background:`${product.colorAccent}22`,border:`1px solid ${product.colorAccent}50`,borderRadius:20,padding:"3px 9px"}}>{b}</span>)}
+          </div>
+          <div style={{fontSize:12,color:th.text,lineHeight:1.8,whiteSpace:"pre-wrap",marginBottom:20}}>{product.full_copy}</div>
+          <div style={{borderRadius:16,padding:18,background:`${product.colorAccent}18`,border:`2px solid ${product.colorAccent}40`,textAlign:"center"}}>
+            <div className="serif" style={{fontSize:28,fontWeight:700,color:product.colorAccent,marginBottom:2}}>{product.price}</div>
+            <div style={{fontSize:11,color:th.text3,marginBottom:14}}>Acesso completo + Comunidade exclusiva</div>
+            <button
+              className="btn-p"
+              style={{background:`linear-gradient(135deg,${product.colorAccent},${product.color})`,color:"white",width:"100%",opacity:.65,cursor:"not-allowed"}}
+              disabled
+            >
+              Em breve — {product.cta} 🔒
+            </button>
+            <div style={{fontSize:10,color:th.text3,marginTop:8}}>Checkout disponível em breve</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  /* ── VIEW: vitrine de produtos ── */
+  if(view==="shop") return (
+    <div className="overlay fade" onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={panelStyle}>
+        <div style={{padding:"52px 16px 16px",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,borderBottom:`1px solid ${th.border}`,flexShrink:0}}>
+          {btnBack(()=>setView("menu"))}
+          <div className="serif" style={{fontSize:22,fontWeight:700,color:th.primary}}>🚀 Next Level</div>
+          <div style={{fontSize:11,color:th.text3,marginTop:2}}>Você concluiu o RESET 7D. O que vem depois é ainda mais poderoso.</div>
+        </div>
+        <div style={{flex:1,overflowY:"auto",padding:"16px 12px 32px",display:"flex",flexDirection:"column",gap:14}}>
+          {PROTOCOLS_SHOP.map(p=>(
+            <div key={p.id} onClick={()=>{setProduct(p);setView("product");}} className="hover-scale" style={{borderRadius:18,overflow:"hidden",boxShadow:th.shadow,cursor:"pointer"}}>
+              <div style={{height:110,background:p.color,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",padding:"0 14px",textAlign:"center"}}>
+                <span style={{fontSize:30,marginBottom:4}}>{p.emoji}</span>
+                <div className="serif" style={{fontSize:18,fontWeight:700,color:"white"}}>{p.name}</div>
+                <div style={{fontSize:9,color:"rgba(255,255,255,.7)",marginTop:2}}>{p.tag}</div>
+                <div style={{position:"absolute",top:8,right:8,background:"rgba(255,255,255,.2)",borderRadius:20,padding:"2px 8px",fontSize:9,fontWeight:700,color:"white"}}>🔒 Premium</div>
+              </div>
+              <div style={{padding:"12px 14px",background:th.card,borderTop:`3px solid ${p.colorAccent}`}}>
+                <div className="serif" style={{fontSize:14,fontWeight:700,color:th.text,marginBottom:3}}>{p.tagline}</div>
+                <div style={{fontSize:11,color:th.text3,marginBottom:10,lineHeight:1.5}}>{p.cover_copy}</div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div className="serif" style={{fontSize:18,fontWeight:700,color:p.colorAccent}}>{p.price}</div>
+                  <div style={{fontSize:11,fontWeight:700,color:p.colorAccent,background:`${p.colorAccent}20`,border:`1px solid ${p.colorAccent}50`,borderRadius:20,padding:"4px 12px"}}>Ver detalhes →</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  /* ── VIEW: menu principal ── */
   return (
     <div className="overlay fade" onClick={onClose}>
-      <div onClick={e=>e.stopPropagation()} style={{position:"absolute",top:0,left:0,width:"78%",maxWidth:300,height:"100%",background:th.bg2,display:"flex",flexDirection:"column",boxShadow:"4px 0 30px rgba(0,0,0,.3)"}}>
+      <div onClick={e=>e.stopPropagation()} style={panelStyle}>
         <div style={{padding:"52px 20px 20px",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,borderBottom:`1px solid ${th.border}`}}>
           <div className="serif" style={{fontSize:26,fontWeight:600,color:th.primary}}>RESET 7D</div>
           <div style={{fontSize:11,color:th.text3,marginTop:2}}>Menu Principal</div>
         </div>
         <div style={{flex:1,overflowY:"auto"}}>
-          <div onClick={()=>{onNextLevel();onClose();}} className="hover-scale" style={{display:"flex",flexDirection:"column",gap:4,padding:"18px 20px",cursor:"pointer",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,borderBottom:`1px solid ${th.border2}`,borderLeft:`4px solid ${th.primary}`}}>
+          <div onClick={()=>setView("shop")} className="hover-scale" style={{display:"flex",flexDirection:"column",gap:4,padding:"18px 20px",cursor:"pointer",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,borderBottom:`1px solid ${th.border2}`,borderLeft:`4px solid ${th.primary}`}}>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               <span style={{fontSize:24}}>🚀</span>
               <div><div style={{fontSize:15,fontWeight:800,color:th.primary}}>Next Level</div><div style={{fontSize:10,fontWeight:700,color:th.green}}>PROTOCOLOS PREMIUM</div></div>
@@ -1587,67 +1666,6 @@ function HamburgerMenu({open, onClose, th, darkMode, setDarkMode, lang, setLang,
             <span style={{fontSize:22,width:30,textAlign:"center"}}>🚪</span>
             <div style={{fontSize:14,fontWeight:700,color:"#e57373"}}>Sair da Conta</div>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── NEXT LEVEL OVERLAY ────────────────────────────────────────
-function NextLevelOverlay({onClose, th}) {
-  const [detail,setDetail]=useState(null);
-  if(detail) return (
-    <div className="overlay fade" style={{display:"flex",flexDirection:"column"}}>
-      <div style={{flex:1,overflowY:"auto",background:th.bg}}>
-        <div style={{height:200,background:detail.color,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative"}}>
-          <button onClick={()=>setDetail(null)} style={{position:"absolute",top:16,left:16,background:"rgba(255,255,255,.18)",border:"none",borderRadius:20,color:"white",padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Manrope',sans-serif"}}>← Voltar</button>
-          <div style={{fontSize:52,marginBottom:8}}>{detail.emoji}</div>
-          <div className="serif" style={{fontSize:30,fontWeight:600,color:"white",textAlign:"center",padding:"0 20px"}}>{detail.name}</div>
-          <div style={{fontSize:12,color:"rgba(255,255,255,.8)",marginTop:4}}>{detail.tag}</div>
-        </div>
-        <div style={{padding:"24px 20px 100px"}}>
-          <div className="serif" style={{fontSize:20,fontWeight:600,color:th.text,marginBottom:6}}>{detail.tagline}</div>
-          <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
-            {detail.badges.map(b=><span key={b} style={{fontSize:10,fontWeight:700,color:detail.colorAccent,background:`${detail.colorAccent}25`,border:`1px solid ${detail.colorAccent}50`,borderRadius:20,padding:"3px 10px"}}>{b}</span>)}
-          </div>
-          <div style={{fontSize:13,color:th.text,lineHeight:1.8,whiteSpace:"pre-wrap",marginBottom:24}}>{detail.full_copy}</div>
-          <div style={{borderRadius:18,padding:20,background:`${detail.colorAccent}18`,border:`2px solid ${detail.colorAccent}40`,textAlign:"center",marginBottom:16}}>
-            <div className="serif" style={{fontSize:32,fontWeight:700,color:detail.colorAccent,marginBottom:4}}>{detail.price}</div>
-            <div style={{fontSize:11,color:th.text3,marginBottom:14}}>Acesso completo + Comunidade exclusiva</div>
-            <button className="btn-p" style={{background:`linear-gradient(135deg,${detail.colorAccent},${detail.color})`,color:"white"}}>{detail.cta} →</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-  return (
-    <div className="overlay fade" style={{display:"flex",flexDirection:"column"}}>
-      <div style={{flex:1,overflowY:"auto",background:th.bg}}>
-        <div style={{padding:"56px 20px 20px",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,borderBottom:`1px solid ${th.border}`,position:"relative"}}>
-          <button onClick={onClose} style={{position:"absolute",top:16,left:16,background:th.card,border:`1px solid ${th.border}`,borderRadius:20,color:th.text,padding:"6px 14px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Manrope',sans-serif"}}>✕ Fechar</button>
-          <div className="serif" style={{fontSize:30,fontWeight:600,color:th.primary,marginTop:24}}>🚀 Next Level</div>
-          <div style={{fontSize:13,color:th.text3,marginTop:4}}>Descubra como se transformar por completo</div>
-          <div style={{fontSize:12,color:th.text,marginTop:8,lineHeight:1.5}}>Você concluiu o RESET 7D. O que vem depois é ainda mais poderoso.</div>
-        </div>
-        <div style={{padding:"20px 16px 40px",display:"flex",flexDirection:"column",gap:16}}>
-          {PROTOCOLS_SHOP.map(p=>(
-            <div key={p.id} onClick={()=>setDetail(p)} className="hover-scale" style={{borderRadius:20,overflow:"hidden",boxShadow:th.shadow,cursor:"pointer"}}>
-              <div style={{height:140,background:p.color,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",padding:"0 20px",textAlign:"center"}}>
-                <span style={{fontSize:36,marginBottom:6}}>{p.emoji}</span>
-                <div className="serif" style={{fontSize:24,fontWeight:600,color:"white"}}>{p.name}</div>
-                <div style={{fontSize:10,color:"rgba(255,255,255,.7)",marginTop:2}}>{p.tag}</div>
-                <div style={{position:"absolute",top:12,right:12,background:"rgba(255,255,255,.2)",borderRadius:20,padding:"3px 10px",fontSize:10,fontWeight:700,color:"white"}}>🔒 Premium</div>
-              </div>
-              <div style={{padding:"16px 18px",background:th.card,borderTop:`3px solid ${p.colorAccent}`}}>
-                <div className="serif" style={{fontSize:17,fontWeight:600,color:th.text,marginBottom:4}}>{p.tagline}</div>
-                <div style={{fontSize:12,color:th.text3,marginBottom:12,lineHeight:1.5}}>{p.cover_copy}</div>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <div className="serif" style={{fontSize:22,fontWeight:700,color:p.colorAccent}}>{p.price}</div>
-                  <div style={{fontSize:12,fontWeight:700,color:p.colorAccent,background:`${p.colorAccent}20`,border:`1px solid ${p.colorAccent}50`,borderRadius:20,padding:"5px 14px"}}>{p.cta} →</div>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>
@@ -2430,7 +2448,6 @@ function CommunityTab({user, currentDay, th}) {
 function Dashboard({user, onLogout, darkMode, setDarkMode, lang, setLang, th}) {
   const [activeTab, setActiveTab] = useState("home");
   const [menuOpen, setMenuOpen]   = useState(false);
-  const [showNextLevel, setShowNextLevel] = useState(false);
   const [showChangePw, setShowChangePw]   = useState(false);
   const [showDayPicker, setShowDayPicker] = useState(false);
 
@@ -2503,8 +2520,7 @@ function Dashboard({user, onLogout, darkMode, setDarkMode, lang, setLang, th}) {
         ))}
       </div>
 
-      <HamburgerMenu open={menuOpen} onClose={()=>setMenuOpen(false)} th={th} darkMode={darkMode} setDarkMode={setDarkMode} lang={lang} setLang={setLang} onLogout={onLogout} onChangePw={()=>setShowChangePw(true)} onNextLevel={()=>setShowNextLevel(true)}/>
-      {showNextLevel && <NextLevelOverlay onClose={()=>setShowNextLevel(false)} th={th}/>}
+      <HamburgerMenu open={menuOpen} onClose={()=>setMenuOpen(false)} th={th} darkMode={darkMode} setDarkMode={setDarkMode} lang={lang} setLang={setLang} onLogout={onLogout} onChangePw={()=>setShowChangePw(true)}/>
       {showChangePw  && <ChangePwModal   onClose={()=>setShowChangePw(false)} user={user} th={th}/>}
     </div>
   );
