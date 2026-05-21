@@ -1255,7 +1255,7 @@ function Chart3D({data}) {
 }
 
 // ── QUIZ ──────────────────────────────────────────────────────
-function QuizScreen({onDone, th, lang="pt"}) {
+function QuizScreen({onDone, th, lang="pt", onShowResult}) {
   const [step, setStep]           = useState(0);
   const [answers, setAnswers]     = useState([]);
   const [showResult, setShowResult] = useState(false);
@@ -1283,6 +1283,7 @@ function QuizScreen({onDone, th, lang="pt"}) {
           setTimeout(() => setAnimPhase('idle'), 520);
         } else {
           setShowResult(true);
+          if(onShowResult) onShowResult(true);
         }
       }, 400);
     }, 320);
@@ -1318,10 +1319,45 @@ function QuizScreen({onDone, th, lang="pt"}) {
       background:'transparent',
     }}>
 
-      {/* ══ 1. CARD NOME 3D ══ */}
+      {/* ══ 1. FOTO — sobe de trás do nome e fica acima dele ══ */}
+      <div style={{
+        position:'relative', zIndex:1,
+        marginTop:18,
+        textAlign:'center',
+        animation:'drRise .85s .1s cubic-bezier(.22,1,.36,1) both',
+        flexShrink:0,
+      }}>
+        {/* glow/blur atrás da doutora */}
+        <div style={{
+          position:'absolute',
+          left:'50%', bottom:0,
+          transform:'translateX(-50%)',
+          width:'84%', height:'60%',
+          background:'radial-gradient(ellipse at 50% 80%, rgba(232,164,192,0.6) 0%, rgba(157,217,184,0.22) 45%, transparent 70%)',
+          filter:'blur(30px)',
+          pointerEvents:'none',
+          zIndex:0,
+        }}/>
+        <img
+          src="/ana-paula.png"
+          alt="Dra. Ana Paula"
+          draggable={false}
+          style={{
+            position:'relative', zIndex:1,
+            display:'block',
+            width:'80%',
+            height:'auto',
+            margin:'0 auto',
+            objectFit:'contain',
+            filter:'drop-shadow(0 14px 40px rgba(232,164,192,0.5)) drop-shadow(0 4px 14px rgba(0,0,0,0.75))',
+          }}
+        />
+      </div>
+
+      {/* ══ 2. CARD NOME 3D — colado abaixo da foto ══ */}
       <div style={{
         ...glass('0s'),
-        marginTop:18,
+        marginTop:-18,
         textAlign:'center',
         position:'relative', zIndex:2,
         transform:'perspective(700px) rotateX(2deg)',
@@ -1337,41 +1373,6 @@ function QuizScreen({onDone, th, lang="pt"}) {
         <div style={{fontSize:10, color:'rgba(255,255,255,0.45)', letterSpacing:'0.14em', fontWeight:700, marginTop:5}}>
           {S(lang,"quiz_dra_subtitle")}
         </div>
-      </div>
-
-      {/* ══ 2. FOTO — sobe de baixo do card do nome ══ */}
-      <div style={{
-        position:'relative', zIndex:1,
-        marginTop:-22,
-        textAlign:'center',
-        animation:'drRise .85s .15s cubic-bezier(.22,1,.36,1) both',
-        flexShrink:0,
-      }}>
-        {/* glow/blur atrás da doutora */}
-        <div style={{
-          position:'absolute',
-          left:'50%', bottom:'-8px',
-          transform:'translateX(-50%)',
-          width:'80%', height:'55%',
-          background:'radial-gradient(ellipse at 50% 70%, rgba(232,164,192,0.55) 0%, rgba(157,217,184,0.2) 45%, transparent 72%)',
-          filter:'blur(28px)',
-          pointerEvents:'none',
-          zIndex:0,
-        }}/>
-        <img
-          src="/ana-paula.png"
-          alt="Dra. Ana Paula"
-          draggable={false}
-          style={{
-            position:'relative', zIndex:1,
-            display:'block',
-            width:'82%',
-            height:'auto',
-            margin:'0 auto',
-            objectFit:'contain',
-            filter:'drop-shadow(0 12px 36px rgba(232,164,192,0.45)) drop-shadow(0 4px 12px rgba(0,0,0,0.7))',
-          }}
-        />
       </div>
 
       {/* ══ 3. TEXTO DA DRA ══ */}
@@ -3196,6 +3197,7 @@ function App() {
     return "quiz";
   });
   const [user, setUser] = useState(()=> DB.session());
+  const [quizResult, setQuizResult] = useState(false);
 
   const doLogin  = (u) => {
     DB.setSession(u);
@@ -3243,13 +3245,15 @@ function App() {
           {/* Background cinematográfico em tela cheia — fora do container 430px */}
           <QuizSilBackground/>
           <div style={{maxWidth:430,margin:"0 auto",height:"100vh",display:"flex",flexDirection:"column",background:"transparent",position:'relative',zIndex:10}}>
-            <div style={{padding:"10px 20px 6px",textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",background:"transparent"}}>
-              <div className="float-anim" style={{marginBottom:"4px",filter:"drop-shadow(0 4px 16px rgba(232,164,192,0.5))"}}>
-                <LogoR7D size={108}/>
+            {!quizResult && (
+              <div style={{padding:"10px 20px 6px",textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",background:"transparent"}}>
+                <div className="float-anim" style={{marginBottom:"4px",filter:"drop-shadow(0 4px 16px rgba(232,164,192,0.5))"}}>
+                  <LogoR7D size={108}/>
+                </div>
+                <div className="serif grad-text" style={{fontSize:26,fontWeight:700,letterSpacing:"-0.5px",marginTop:"2px"}}>Reset 7D</div>
               </div>
-              <div className="serif grad-text" style={{fontSize:26,fontWeight:700,letterSpacing:"-0.5px",marginTop:"2px"}}>Reset 7D</div>
-            </div>
-            <QuizScreen th={th} lang={lang} onDone={()=>{ DB.setOnboarded(); setScreen("login"); }}/>
+            )}
+            <QuizScreen th={th} lang={lang} onDone={()=>{ DB.setOnboarded(); setScreen("login"); }} onShowResult={setQuizResult}/>
           </div>
         </>
       )}
