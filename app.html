@@ -649,15 +649,21 @@ function QuizScreen({onDone, th}) {
         <Chart3D data={chartData}/>
       </div>
 
-      <div className="quiz-result-card" style={{borderRadius:18,padding:20,background:th.greenL,border:"1px solid rgba(157,217,184,.3)",animationDelay:'.2s'}}>
-        <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
-          <div style={{fontSize:40,flexShrink:0,filter:"drop-shadow(0 2px 8px rgba(157,217,184,0.4))"}}>👩‍⚕️</div>
-          <div>
-            <div style={{fontSize:13,fontWeight:800,color:th.green,marginBottom:4}}>Olá! Sou a Dra. Ana Paula 💚</div>
+      <div className="quiz-result-card" style={{borderRadius:18,padding:0,overflow:'hidden',background:`linear-gradient(135deg,rgba(157,217,184,0.12),rgba(232,164,192,0.08))`,border:"1px solid rgba(157,217,184,.35)",animationDelay:'.2s'}}>
+        <div style={{display:"flex",alignItems:"stretch"}}>
+          {/* Foto real da Dra. Ana Paula */}
+          <div style={{width:90,flexShrink:0,overflow:'hidden',background:'#f8f4f6',borderRight:'1px solid rgba(157,217,184,.2)'}}>
+            <img src="/ana-paula.png" alt="Dra. Ana Paula" draggable={false}
+              style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center top',display:'block'}}/>
+          </div>
+          {/* Texto */}
+          <div style={{flex:1,padding:'14px 14px'}}>
+            <div style={{fontSize:10,color:th.text3,marginBottom:3,letterSpacing:'0.06em',textTransform:'uppercase',fontWeight:700}}>Nutricionista responsável</div>
+            <div style={{fontSize:14,fontWeight:800,color:th.green,marginBottom:8}}>Dra. Ana Paula 💚</div>
             <div style={{fontSize:12,color:th.text,lineHeight:1.7}}>
               <strong>Parabéns por dar esse passo!</strong> Baseado no seu perfil, você se encaixa perfeitamente no <strong>RESET 7D</strong>. Você faz parte dos <strong>73% das mulheres</strong> que lutam contra os mesmos desafios.
             </div>
-            <div style={{marginTop:8,fontSize:12,color:th.text,lineHeight:1.7}}>A boa notícia? Seu corpo não está quebrado. Ele está pedindo direção. 🌟</div>
+            <div style={{marginTop:6,fontSize:12,color:th.text,lineHeight:1.7}}>A boa notícia? Seu corpo não está quebrado. Ele está pedindo direção. 🌟</div>
           </div>
         </div>
       </div>
@@ -781,7 +787,6 @@ function LogoR7D({size=90}) {
   const layer = (clip, minPh, delay) => ({
     position:'absolute', inset:0, width:'100%', height:'100%',
     objectFit:'contain', display:'block', userSelect:'none', draggable:false,
-    mixBlendMode:'lighten',
     clipPath: clip,
     opacity:  ph >= minPh ? 1 : 0,
     transform: ph >= minPh ? 'scale(1) translateY(0)' : 'scale(0.82) translateY(7px)',
