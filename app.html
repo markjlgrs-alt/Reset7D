@@ -1911,7 +1911,7 @@ function GratitudeModal({onClose, th}) {
     {type:"para", text:"Mas agora vem a parte mais importante: não transforme esse fim em ponto final."},
     {type:"para", text:"Se você sente que falhou em alguns dias, repita o protocolo. Sem culpa. Sem drama. Sem se diminuir. Recomeçar não é fracassar. Recomeçar é ter maturidade para cuidar de si de novo. 🌱"},
     {type:"para", text:"Se você conseguiu completar os 7 dias, vá além. Faça mais dois ciclos. Transforme o RESET 7D em 21 dias de construção, 3 ciclos para consolidar aquilo que começou como esforço e pode se tornar um hábito inabalável."},
-    {type:"para", text:"E se dentro de você existe aquela voz dizendo: "eu quero continuar, eu quero mais, eu estou pronta para o próximo nível", então acesse a aba Next Level. 🚀"},
+    {type:"para", text:'E se dentro de você existe aquela voz dizendo: "eu quero continuar, eu quero mais, eu estou pronta para o próximo nível", então acesse a aba Next Level. 🚀'},
     {type:"divider"},
     {type:"para", text:"Você não precisa decidir por medo."},
     {type:"list", items:[
@@ -1987,6 +1987,7 @@ function ContentTab({currentDay, user, onCompleteDay, th}) {
   };
 
   return (
+    <>
     <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
       <div style={{padding:"12px 16px 0",overflowX:"auto",flexShrink:0}}>
         <div style={{display:"flex",gap:8,paddingBottom:12}}>
@@ -2078,6 +2079,7 @@ function ContentTab({currentDay, user, onCompleteDay, th}) {
       </div>
     </div>
     {showGratitude && <GratitudeModal onClose={()=>setShowGratitude(false)} th={th}/>}
+    </>
   );
 }
 
