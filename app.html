@@ -313,6 +313,12 @@ const DB = {
   saveMissions:(email,v)=> localStorage.setItem(`r7d_miss_${email}`, JSON.stringify(v)),
   currentDay:(email)=> JSON.parse(localStorage.getItem(`r7d_day_${email}`)||"1"),
   saveCurrentDay:(email,v)=> localStorage.setItem(`r7d_day_${email}`, JSON.stringify(v)),
+  // Onboarding: marca que o usuário já passou pelo quiz/cadastro ao menos uma vez
+  isOnboarded:()=> localStorage.getItem("r7d_onboarded") === "1",
+  setOnboarded:()=> localStorage.setItem("r7d_onboarded", "1"),
+  // Email salvo: pré-preenche o campo de e-mail no login
+  savedEmail:()=> localStorage.getItem("r7d_saved_email") || "",
+  setSavedEmail:(email)=> localStorage.setItem("r7d_saved_email", email),
 };
 
 function getAuthHeader() {
@@ -636,63 +642,154 @@ function QuizScreen({onDone, th}) {
   const chartData = [{name:"Inchaço",pct:67},{name:"Energia",pct:78},{name:"Compulsão",pct:54},{name:"Peso",pct:71},{name:"Hormônios",pct:61}];
 
   if (showResult) return (
-    <div style={{flex:1,overflowY:"auto",padding:"16px 20px 40px",display:"flex",flexDirection:"column",gap:14,background:"transparent"}}>
+    /* Cobre o header da logo — position:absolute sobre o container position:relative do pai */
+    <div style={{
+      position:'absolute', inset:0, zIndex:30,
+      overflowY:'auto', overflowX:'hidden',
+      padding:'18px 18px 50px',
+      display:'flex', flexDirection:'column', gap:14,
+      background:'transparent',
+    }}>
 
-      {/* ── HERO: Dra. Ana Paula — foto real, 1ª coisa que aparece ── */}
-      <div className="quiz-result-card" style={{borderRadius:20,padding:0,overflow:'hidden',border:'1px solid rgba(157,217,184,.4)'}}>
-        {/* Foto real — full-width, 240px de altura */}
-        <div style={{width:'100%',height:240,overflow:'hidden',background:'#ddd5e2',position:'relative',flexShrink:0}}>
-          <img
-            src="/ana-paula.png"
-            alt="Dra. Ana Paula — Nutricionista"
-            draggable={false}
-            style={{
-              width:'100%', height:'100%',
-              objectFit:'cover', objectPosition:'center 22%',
-              display:'block',
-            }}
-          />
-          {/* Gradiente top e bottom para esconder fundo branco e dar legibilidade */}
-          <div style={{position:'absolute',inset:0,background:'linear-gradient(180deg,rgba(12,6,16,0.55) 0%,transparent 28%,transparent 50%,rgba(12,6,16,0.92) 100%)',pointerEvents:'none'}}/>
-          {/* Título no topo */}
-          <div style={{position:'absolute',top:14,left:16,right:16,textAlign:'center'}}>
-            <div className="serif grad-text" style={{fontSize:22,fontWeight:700,letterSpacing:'-0.3px'}}>Sua Análise está Pronta!</div>
+      {/* ── CARD PRINCIPAL: Veredicto da Dra. Ana Paula ── */}
+      <div className="quiz-result-card" style={{
+        borderRadius:20, padding:0, overflow:'hidden',
+        border:'1px solid rgba(157,217,184,.38)',
+        background:'rgba(22,14,26,0.82)',
+        backdropFilter:'blur(8px)',
+      }}>
+
+        {/* Linha superior: texto à esq. + foto à dir. */}
+        <div style={{display:'flex', gap:0, alignItems:'stretch'}}>
+
+          {/* Coluna de texto */}
+          <div style={{flex:1, padding:'18px 16px 16px'}}>
+            <div style={{
+              display:'inline-block', fontSize:9, fontWeight:800,
+              color:th.green, letterSpacing:'0.12em', textTransform:'uppercase',
+              background:'rgba(157,217,184,0.12)', borderRadius:6,
+              padding:'3px 8px', marginBottom:10,
+            }}>✦ Veredicto Clínico</div>
+
+            <div style={{fontSize:18, fontWeight:800, color:th.text, lineHeight:1.2, marginBottom:2}}>
+              Dra. Ana Paula
+            </div>
+            <div style={{fontSize:10, color:th.text3, marginBottom:14}}>
+              Nutricionista • Reset 7D
+            </div>
+
+            <div style={{
+              fontSize:13, color:th.text, lineHeight:1.75,
+              borderLeft:`2px solid ${th.green}`, paddingLeft:10,
+            }}>
+              <em>"Analisei mais de <strong style={{color:th.primary}}>2.800 mulheres</strong> com exatamente o seu perfil. Os dados não mentem."</em>
+            </div>
           </div>
-          {/* Nome no rodapé da foto */}
-          <div style={{position:'absolute',bottom:14,left:16}}>
-            <div style={{fontSize:9,color:'rgba(255,255,255,0.55)',textTransform:'uppercase',letterSpacing:'0.1em',fontWeight:700,marginBottom:3}}>Nutricionista • Reset 7D</div>
-            <div style={{fontSize:17,fontWeight:800,color:'#9dd9b8',lineHeight:1}}>Dra. Ana Paula 💚</div>
+
+          {/* Foto da doutora — pequena, sem fundo aparente */}
+          <div style={{
+            width:118, flexShrink:0,
+            overflow:'hidden',
+            background:'linear-gradient(180deg,#f0ecf4 0%,#e8e0f0 100%)',
+            borderLeft:'1px solid rgba(157,217,184,.18)',
+            position:'relative',
+          }}>
+            <img
+              src="/ana-paula.png"
+              alt="Dra. Ana Paula"
+              draggable={false}
+              style={{
+                width:'100%',
+                height:'100%',
+                objectFit:'cover',
+                objectPosition:'center 8%',
+                display:'block',
+                /* fade suave nas bordas para remover fundo branco */
+                WebkitMaskImage:'linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 10%,rgba(0,0,0,1) 82%,rgba(0,0,0,0) 100%)',
+                maskImage:'linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 10%,rgba(0,0,0,1) 82%,rgba(0,0,0,0) 100%)',
+              }}
+            />
           </div>
         </div>
-        {/* Mensagem da doutora */}
-        <div style={{padding:'14px 16px 16px',background:'linear-gradient(135deg,rgba(157,217,184,0.08),rgba(232,164,192,0.05))'}}>
-          <div style={{fontSize:13,color:th.text,lineHeight:1.75,marginBottom:8}}>
-            <strong>"Olá! Analisei suas respostas e tenho ótimas notícias.</strong> Você se encaixa perfeitamente no <strong>RESET 7D</strong>. <strong>73% das mulheres</strong> com o seu perfil percebem diferença visível nos <strong>primeiros 3 dias</strong>."
+
+        {/* Divisor */}
+        <div style={{height:1, background:'rgba(157,217,184,.15)', margin:'0 16px'}}/>
+
+        {/* Storytelling / veredicto completo */}
+        <div style={{padding:'16px 18px 18px'}}>
+
+          <div style={{fontSize:14, fontWeight:700, color:th.primary, marginBottom:10, lineHeight:1.4}}>
+            O que seus dados revelam:
           </div>
-          <div style={{fontSize:12,color:th.text2,lineHeight:1.7,marginBottom:10}}>
-            Seu perfil indica <strong>retenção de líquidos</strong>, queda de energia e compulsão alimentar — os 3 gatilhos que o Reset 7D ataca diretamente. Você está no lugar certo. 🌟
+
+          <div style={{fontSize:13, color:th.text, lineHeight:1.8, marginBottom:12}}>
+            O que você sente — o <strong>inchaço que aparece sem razão</strong>, a energia que desaparece antes do meio-dia, a vontade de comer mesmo sem fome real — não é fraqueza. É o seu corpo pedindo um reset urgente.
           </div>
-          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-            {[['Inchaço','67%','#e8a4c0'],['Energia','78%','#9dd9b8'],['Peso','71%','#f4c896']].map(([label,val,cor])=>(
-              <div key={label} style={{background:'rgba(0,0,0,0.22)',borderRadius:10,padding:'5px 10px',fontSize:11,fontWeight:700,color:cor,letterSpacing:'0.02em'}}>
-                {label}: <span style={{color:'#fff'}}>{val}</span>
-              </div>
-            ))}
+
+          <div style={{fontSize:13, color:th.text, lineHeight:1.8, marginBottom:16}}>
+            Estudamos mulheres com exatamente o seu perfil hormonal e metabólico. <strong style={{color:th.green}}>73% delas perceberam diferença real nos primeiros 3 dias</strong> — menos inchaço, mais energia, menos compulsão. Não foi coincidência. Foi protocolo.
+          </div>
+
+          {/* Métricas do perfil */}
+          <div style={{
+            background:'rgba(0,0,0,0.22)', borderRadius:14,
+            padding:'12px 14px', marginBottom:14,
+          }}>
+            <div style={{fontSize:10, color:th.text3, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:10}}>
+              Seu perfil identificado
+            </div>
+            <div style={{display:'flex', flexDirection:'column', gap:8}}>
+              {[
+                ['Retenção de líquidos','67%','#e8a4c0','Alta'],
+                ['Deficit de energia','78%','#9dd9b8','Crítico'],
+                ['Compulsão alimentar','54%','#f4c896','Moderado'],
+                ['Acúmulo de gordura','71%','#e8a4c0','Alto'],
+                ['Desequilíbrio hormonal','61%','#9dd9b8','Presente'],
+              ].map(([label,pct,cor,nivel])=>(
+                <div key={label} style={{display:'flex', alignItems:'center', gap:10}}>
+                  <div style={{flex:1, fontSize:11, color:th.text2}}>{label}</div>
+                  <div style={{fontSize:10, fontWeight:700, color:cor, minWidth:52, textAlign:'right'}}>{nivel}</div>
+                  <div style={{width:50, height:4, borderRadius:2, background:'rgba(255,255,255,0.1)', overflow:'hidden', flexShrink:0}}>
+                    <div style={{height:'100%', width:pct, borderRadius:2, background:cor, opacity:0.85}}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Veredicto final */}
+          <div style={{
+            background:`linear-gradient(135deg,rgba(157,217,184,0.14),rgba(232,164,192,0.1))`,
+            borderRadius:14, padding:'12px 14px',
+            border:'1px solid rgba(157,217,184,.25)',
+          }}>
+            <div style={{fontSize:13, fontWeight:800, color:th.green, marginBottom:6}}>
+              ✦ Meu veredicto:
+            </div>
+            <div style={{fontSize:13, color:th.text, lineHeight:1.75}}>
+              <em>"Seu corpo não está quebrado. Ele está sobrecarregado. E existe um caminho de <strong>7 dias</strong> desenhado exatamente para o seu caso. Comece hoje — você já esperou tempo suficiente."</em>
+            </div>
+            <div style={{marginTop:8, fontSize:11, color:th.text3, fontStyle:'italic'}}>— Dra. Ana Paula, Nutricionista</div>
           </div>
         </div>
       </div>
 
       {/* ── Gráfico 3D ── */}
-      <div className="quiz-result-card" style={{borderRadius:18,padding:18,background:th.primaryL,border:`1px solid ${th.border2}`,animationDelay:'.1s'}}>
+      <div className="quiz-result-card" style={{borderRadius:18,padding:18,background:th.primaryL,border:`1px solid ${th.border2}`}}>
         <div style={{fontSize:13,fontWeight:700,color:th.primary,marginBottom:4}}>📊 Comparação com outras mulheres</div>
-        <div style={{fontSize:11,color:th.text3,marginBottom:12}}>Passe o mouse sobre as barras para detalhes</div>
+        <div style={{fontSize:11,color:th.text3,marginBottom:12}}>Toque nas barras para ver os detalhes</div>
         <Chart3D data={chartData}/>
       </div>
 
-      {/* ── Estatística 73% ── */}
-      <div className="quiz-result-card" style={{borderRadius:16,padding:16,background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,border:`2px solid ${th.border2}`,textAlign:"center",animationDelay:'.2s'}}>
-        <div className="serif" style={{fontSize:42,fontWeight:900,color:th.primary}}>73%</div>
-        <div style={{fontSize:12,color:th.text,lineHeight:1.5}}>das mulheres com seu perfil percebem diferença nos primeiros 3 dias.</div>
+      {/* ── Estatística 73% destaque ── */}
+      <div className="quiz-result-card" style={{
+        borderRadius:18, padding:'18px 20px',
+        background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,
+        border:`2px solid ${th.border2}`, textAlign:'center',
+      }}>
+        <div className="serif" style={{fontSize:52,fontWeight:900,color:th.primary,lineHeight:1}}>73%</div>
+        <div style={{fontSize:11,color:th.text3,marginTop:4,marginBottom:2,letterSpacing:'0.05em',textTransform:'uppercase',fontWeight:700}}>das mulheres com seu perfil</div>
+        <div style={{fontSize:13,color:th.text,lineHeight:1.6}}>percebem diferença real nos <strong>primeiros 3 dias</strong>.</div>
       </div>
 
       <button className="btn-p" onClick={(e)=>{addRipple(e);onDone();}} style={{fontSize:'15px',padding:'16px 24px',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',whiteSpace:'nowrap',letterSpacing:'0.01em'}}>
@@ -1244,8 +1341,8 @@ function RegisterScreen({onBack, onSuccess}) {
 }
 
 // ── TELA: LOGIN ───────────────────────────────────────────────
-function LoginScreen({onLogin, onRegister, onForgot}) {
-  const [email,setEmail] = useState("");
+function LoginScreen({onLogin, onRegister, onForgot, savedEmail=""}) {
+  const [email,setEmail] = useState(savedEmail);
   const [pw,setPw]       = useState("");
   const [showPw,setShowPw] = useState(false);
   const [loading,setLoading] = useState(false);
@@ -2291,12 +2388,20 @@ function App() {
     const token = getTokenFromURL();
     if(token) return "forgot";
     if(DB.session()) return "app";
+    // Se já fez o quiz/cadastro antes, vai direto para login (sem quiz)
+    if(DB.isOnboarded()) return "login";
     return "quiz";
   });
   const [user, setUser] = useState(()=> DB.session());
 
-  const doLogin  = (u) => { DB.setSession(u); setUser(u); setScreen("app"); };
-  const doLogout = () => { DB.clearSession(); setUser(null); setScreen("quiz"); };
+  const doLogin  = (u) => {
+    DB.setSession(u);
+    DB.setOnboarded();
+    DB.setSavedEmail(u.email);
+    setUser(u);
+    setScreen("app");
+  };
+  const doLogout = () => { DB.clearSession(); setUser(null); setScreen("login"); };
 
   // Ripple global em todos os .btn-p e .card-interactive
   useEffect(() => {
@@ -2335,11 +2440,11 @@ function App() {
               </div>
               <div className="serif grad-text" style={{fontSize:26,fontWeight:700,letterSpacing:"-0.5px",marginTop:"2px"}}>Reset 7D</div>
             </div>
-            <QuizScreen th={th} onDone={()=>setScreen("login")}/>
+            <QuizScreen th={th} onDone={()=>{ DB.setOnboarded(); setScreen("login"); }}/>
           </div>
         </>
       )}
-      {screen==="login"    && <LoginScreen    onLogin={doLogin} onRegister={()=>setScreen("register")} onForgot={()=>setScreen("forgot")}/>}
+      {screen==="login"    && <LoginScreen    savedEmail={DB.savedEmail()} onLogin={doLogin} onRegister={()=>setScreen("register")} onForgot={()=>setScreen("forgot")}/>}
       {screen==="register" && <RegisterScreen onBack={()=>setScreen("login")} onSuccess={doLogin}/>}
       {screen==="forgot"   && <ForgotScreen   onBack={()=>setScreen("login")}/>}
       {screen==="app"      && user && <Dashboard user={user} onLogout={doLogout} darkMode={darkMode} setDarkMode={setDarkMode} lang={lang} setLang={setLang} th={th}/>}
