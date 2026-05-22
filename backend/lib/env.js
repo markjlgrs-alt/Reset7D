@@ -11,40 +11,56 @@ if (typeof window !== "undefined") {
   );
 }
 
-/**
- * Módulo centralizado de variáveis de ambiente — Reset 7D Backend
- *
- * Regras de segurança:
- *  - Variáveis server-only NUNCA são enviadas ao browser.
- *  - O app acessa env apenas por este módulo; process.env não é
- *    acessado diretamente no restante do código.
- *  - Se alguma variável obrigatória estiver ausente o processo
- *    termina com exit code 1 antes de qualquer rota ser registrada.
- */
+// Módulo centralizado de variáveis de ambiente — Reset 7D Backend
+//
+// Regras de segurança:
+//  - Variáveis server-only NUNCA são enviadas ao browser.
+//  - process.env só é lido neste arquivo (ESLint proíbe no restante).
+//  - Se alguma variável obrigatória estiver ausente o processo
+//    termina com exit code 1 antes de qualquer rota ser registrada.
+//
+// Compatibilidade temporária (remover após Etapa D do VERCEL_ENV_MIGRATION.md):
+//  - Cada variável aceita nome novo PRIMEIRO; fallback para nome antigo da Vercel.
+//  - Exemplo: SUPABASE_SERVICE_ROLE_KEY → fallback SUPABASE_SERVICE_KEY.
 
 const path = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
-// ── Variáveis SERVER-ONLY ─────────────────────────────────────────
-// Nunca exponha estes valores em respostas HTTP, logs públicos
-// ou arquivos client-side.
-const SERVER_ONLY_REQUIRED = [
-  "SUPABASE_SERVICE_ROLE_KEY", // Supabase service role — acesso total ao banco
-  "JWT_SECRET",                // Assina e verifica tokens de sessão
-  "RESEND_API_KEY",            // Chave de envio de e-mail (Resend)
+// ── Função de compatibilidade ─────────────────────────────────────
+// Tenta newName; se ausente ou vazio, tenta oldName.
+// Remover esta função e os fallbacks após confirmar que os nomes novos
+// estão configurados na Vercel e o app funciona em Preview + Production.
+function envFallback(newName, oldName) {
+  const v = process.env[newName];
+  if (v && v.trim() !== "") return v.trim();
+  if (!oldName) return undefined;
+  const w = process.env[oldName];
+  return (w && w.trim() !== "") ? w.trim() : undefined;
+}
+
+// ── Pares (nome_novo, fallback_nome_antigo) ───────────────────────
+// SERVER-ONLY: jamais expor ao browser ou em respostas HTTP.
+const SERVER_ONLY_PAIRS = [
+  // novo                      → antigo (Vercel atual)
+  ["SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SERVICE_KEY"],   // acesso total ao banco
+  ["JWT_SECRET",                 null],                     // assina tokens de sessão
+  ["RESEND_API_KEY",             null],                     // envio de e-mail
 ];
 
-// ── Variáveis PÚBLICAS ────────────────────────────────────────────
-// Seguras para uso em logs e mensagens de diagnóstico (não são secrets).
-// Em um projeto Next.js equivaleriam a NEXT_PUBLIC_SUPABASE_URL.
-const PUBLIC_REQUIRED = [
-  "SUPABASE_URL", // URL base do projeto Supabase (não é secret)
+// PÚBLICAS: seguras para logs; não são secrets.
+const PUBLIC_PAIRS = [
+  ["SUPABASE_URL", "URL_SUPABASE"],  // URL pública do projeto Supabase
 ];
 
 // ── Verificação de inicialização ──────────────────────────────────
-const missing = [...SERVER_ONLY_REQUIRED, ...PUBLIC_REQUIRED].filter(
-  (k) => !process.env[k] || process.env[k].trim() === ""
-);
+const missing = [
+  ...SERVER_ONLY_PAIRS
+    .filter(([n, o]) => !envFallback(n, o))
+    .map(([n, o])    => o ? `${n}  (ou fallback: ${o})` : n),
+  ...PUBLIC_PAIRS
+    .filter(([n, o]) => !envFallback(n, o))
+    .map(([n, o])    => o ? `${n}  (ou fallback: ${o})` : n),
+];
 
 if (missing.length > 0) {
   process.stderr.write(
@@ -53,6 +69,8 @@ if (missing.length > 0) {
       "[env] FATAL — Variáveis de ambiente obrigatórias não definidas:",
       missing.map((k) => `  • ${k}`).join("\n"),
       "  → Copie backend/.env.example para backend/.env e preencha os valores.",
+      "  → Em produção, configure as variáveis no painel da Vercel.",
+      "  → Ver: VERCEL_ENV_MIGRATION.md para nomes corretos.",
       "",
     ].join("\n")
   );
@@ -61,37 +79,38 @@ if (missing.length > 0) {
 
 // ── Exports ───────────────────────────────────────────────────────
 
-/**
- * Variáveis SERVER-ONLY.
- * Acesse apenas em código de servidor (routes, middlewares, helpers).
- * Nunca inclua em resposta JSON enviada ao browser.
- */
+// Variáveis SERVER-ONLY.
+// Use apenas em código de servidor (routes, middlewares, helpers de backend).
+// Nunca inclua em resposta JSON enviada ao browser.
 const serverEnv = Object.freeze({
-  // Supabase — acesso privilegiado (service role)
-  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  // Supabase — acesso privilegiado (bypassa RLS — não expor ao browser)
+  supabaseServiceRoleKey: envFallback("SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SERVICE_KEY"),
 
-  // Autenticação JWT
+  // Autenticação JWT — nunca expor
   jwtSecret: process.env.JWT_SECRET,
 
-  // Serviço de e-mail
+  // Resend — envio de e-mail
   resendApiKey: process.env.RESEND_API_KEY,
-  fromEmail:    process.env.FROM_EMAIL  || "onboarding@resend.dev",
-  fromName:     process.env.FROM_NAME   || "Reset 7D",
+  fromEmail:    process.env.FROM_EMAIL || "onboarding@resend.dev",
+  fromName:     process.env.FROM_NAME  || "Reset 7D",
 
   // Configuração de servidor
-  appUrl:         process.env.APP_URL           || "http://localhost:3001",
-  allowedOrigins: process.env.ALLOWED_ORIGINS   || "http://localhost:3001",
-  port:           Number(process.env.PORT)       || 3001,
+  // APP_URL → fallback URL_DO_APLICATIVO (nome antigo na Vercel)
+  appUrl:         envFallback("APP_URL", "URL_DO_APLICATIVO")          || "http://localhost:3001",
+  // ALLOWED_ORIGINS → fallback ORIGENS_PERMITIDAS (nome antigo na Vercel)
+  allowedOrigins: envFallback("ALLOWED_ORIGINS", "ORIGENS_PERMITIDAS") || "http://localhost:3001",
+  port:           Number(process.env.PORT) || 3001,
 });
 
-/**
- * Variáveis PÚBLICAS.
- * Não contêm secrets — equivalem a NEXT_PUBLIC_* em Next.js.
- * Podem aparecer em logs e mensagens de diagnóstico.
- */
+// Variáveis PÚBLICAS.
+// Não contêm secrets. Podem aparecer em logs e mensagens de diagnóstico.
+// Este projeto é Express.js puro (não Next.js): não há prefixo NEXT_PUBLIC_.
+// Se migrar para Next.js no futuro, SUPABASE_URL → NEXT_PUBLIC_SUPABASE_URL.
 const publicEnv = Object.freeze({
-  supabaseUrl:     process.env.SUPABASE_URL,
-  supabaseAnonKey: process.env.SUPABASE_ANON_KEY || null, // opcional — usado por supabase/server.js com RLS
+  // SUPABASE_URL → fallback URL_SUPABASE (nome antigo na Vercel)
+  supabaseUrl:     envFallback("SUPABASE_URL", "URL_SUPABASE"),
+  // SUPABASE_ANON_KEY — opcional; só necessária se usar RLS por usuário
+  supabaseAnonKey: process.env.SUPABASE_ANON_KEY || null,
 });
 
 module.exports = { serverEnv, publicEnv };
