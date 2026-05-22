@@ -338,6 +338,47 @@ function getAuthHeader() {
   return t ? { "Authorization": "Bearer " + t } : {};
 }
 
+// ── AUTH GUARD ────────────────────────────────────────────────
+// Decodifica o claim exp do JWT no cliente sem verificar a assinatura.
+// A assinatura continua sendo verificada pelo backend em toda chamada autenticada.
+// O objetivo aqui é UX: redirecionar para login imediatamente se o token expirou,
+// sem esperar a primeira chamada de API falhar com 401.
+function isTokenValid() {
+  const token = sessionStorage.getItem("r7d_token");
+  if (!token) return false;
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return false;
+    // base64url → base64 padrão antes do atob
+    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(b64));
+    return typeof payload.exp === "number" && payload.exp * 1000 > Date.now();
+  } catch { return false; }
+}
+
+// Valida sessão + token e retorna o usuário autenticado, ou null se inválido.
+// Limpa sessionStorage se o token expirou (previne sessão fantasma).
+function guardSession() {
+  if (!isTokenValid()) {
+    DB.clearSession();
+    return null;
+  }
+  return DB.session();
+}
+
+// Wrapper para chamadas de API autenticadas.
+// Emite o evento r7d:session-expired se o servidor retornar 401,
+// permitindo que o componente App redirecione para login sem loops.
+async function apiFetch(url, options = {}) {
+  let res;
+  try { res = await fetch(url, options); }
+  catch { throw new Error("BACKEND_OFFLINE"); }
+  if (res.status === 401) {
+    window.dispatchEvent(new CustomEvent("r7d:session-expired"));
+  }
+  return res;
+}
+
 // ── UTIL ───────────────────────────────────────────────────────
 function hashPassword(password) {
   // Hash simples para demo (não use em produção)
@@ -2345,7 +2386,7 @@ function ChangePwModal({onClose, user, th, lang="pt"}) {
     if(nw!==nw2){setErr(S(lang,"forgot_err_pw_match"));return;}
     setLoading(true);
     try {
-      const res = await fetch(`${window.BACKEND_URL}/api/change-password`,{
+      const res = await apiFetch(`${window.BACKEND_URL}/api/change-password`,{
         method:"POST", headers:{"Content-Type":"application/json",...getAuthHeader()},
         body: JSON.stringify({currentPassword:cur, newPassword:nw}),
       });
@@ -2986,9 +3027,9 @@ function CommunityTab({user, currentDay, th, lang="pt"}) {
     if (!txt.trim() && !photo) return;
     setPosting(true);
     try {
-      const res = await fetch(`${window.BACKEND_URL}/api/community`,{
+      const res = await apiFetch(`${window.BACKEND_URL}/api/community`,{
         method:"POST", headers:{"Content-Type":"application/json",...getAuthHeader()},
-        body: JSON.stringify({email:user?.email, name:user?.name||"Guerreira", day:selDay||currentDay, text:txt.trim(), photo:photo||null}),
+        body: JSON.stringify({day:selDay||currentDay, text:txt.trim(), photo:photo||null}),
       });
       const data = await res.json();
       if (res.ok) { setPosts(p=>[data.post,...p]); setTxt(""); setSelDay(null); setPhoto(null); }
@@ -3001,7 +3042,7 @@ function CommunityTab({user, currentDay, th, lang="pt"}) {
       if(post.id!==pid) return post;
       return{...post, reactions:{...(post.reactions||{}), [emoji]:((post.reactions||{})[emoji]||0)+1}};
     }));
-    try { await fetch(`${window.BACKEND_URL}/api/community/${pid}/react`,{method:"PATCH",headers:{"Content-Type":"application/json",...getAuthHeader()},body:JSON.stringify({emoji})}); } catch {}
+    try { await apiFetch(`${window.BACKEND_URL}/api/community/${pid}/react`,{method:"PATCH",headers:{"Content-Type":"application/json",...getAuthHeader()},body:JSON.stringify({emoji})}); } catch {}
   };
 
   const addComment = async (pid) => {
@@ -3013,7 +3054,7 @@ function CommunityTab({user, currentDay, th, lang="pt"}) {
       return{...post, comments:[...(post.comments||[]),{u:name,t}]};
     }));
     setComments(c=>({...c,[pid]:""}));
-    try { await fetch(`${window.BACKEND_URL}/api/community/${pid}/comment`,{method:"POST",headers:{"Content-Type":"application/json",...getAuthHeader()},body:JSON.stringify({name,text:t})}); } catch {}
+    try { await apiFetch(`${window.BACKEND_URL}/api/community/${pid}/comment`,{method:"POST",headers:{"Content-Type":"application/json",...getAuthHeader()},body:JSON.stringify({text:t})}); } catch {}
   };
 
   return (
@@ -3030,8 +3071,8 @@ function CommunityTab({user, currentDay, th, lang="pt"}) {
         )}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10,gap:6}}>
           <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
-            <label style={{width:28,height:28,borderRadius:8,background:th.primaryL,border:`1px solid ${th.border2}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:14,flexShrink:0}}>
-              📷<input type="file" accept="image/*" capture="user" style={{display:"none"}} onChange={handlePhotoSelect}/>
+            <label title="Escolher foto da galeria" style={{height:28,borderRadius:8,background:th.primaryL,border:`1px solid ${th.border2}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:11,fontWeight:700,color:th.primary,padding:"0 10px",gap:4,flexShrink:0,fontFamily:"'Manrope',sans-serif"}}>
+              📷 Foto<input type="file" accept="image/*" style={{display:"none"}} onChange={handlePhotoSelect}/>
             </label>
             {[1,2,3,4,5,6,7].map(d=>(
               <button key={d} onClick={()=>setSelDay(selDay===d?null:d)} style={{width:26,height:26,borderRadius:7,border:selDay===d?`2px solid ${th.primary}`:`1px solid ${th.border}`,background:selDay===d?th.primaryL:"transparent",color:selDay===d?th.primary:th.text3,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"'Manrope',sans-serif"}}>D{d}</button>
@@ -3188,15 +3229,16 @@ function App() {
   const setLang = (l) => { setLangState(l); localStorage.setItem("r7d_lang", l); };
   const th = darkMode ? THEMES.dark : THEMES.light;
 
-  const [screen, setScreen] = useState(()=>{
-    const token = getTokenFromURL();
-    if(token) return "forgot";
-    if(DB.session()) return "app";
-    // Se já fez o quiz/cadastro antes, vai direto para login (sem quiz)
-    if(DB.isOnboarded()) return "login";
+  const [screen, setScreen] = useState(() => {
+    const resetToken = getTokenFromURL();
+    if (resetToken) return "forgot";
+    // guardSession() valida token + exp; limpa sessionStorage se expirado
+    if (guardSession()) return "app";
+    // Token expirou ou não existe — vai para login se já fez onboarding
+    if (DB.isOnboarded()) return "login";
     return "quiz";
   });
-  const [user, setUser] = useState(()=> DB.session());
+  const [user, setUser] = useState(() => guardSession());
   const [quizResult, setQuizResult] = useState(false);
 
   const doLogin  = (u) => {
@@ -3228,6 +3270,33 @@ function App() {
     document.addEventListener('click', handler);
     return () => document.removeEventListener('click', handler);
   }, []);
+
+  // ── PROTEÇÃO DE SESSÃO ────────────────────────────────────────
+  // Redireciona para login quando o backend retorna 401 (token expirado/inválido).
+  // apiFetch() emite r7d:session-expired; este handler reage sem loop de redirect.
+  useEffect(() => {
+    const onExpired = () => {
+      DB.clearSession();
+      setUser(null);
+      setScreen("login");
+    };
+    window.addEventListener("r7d:session-expired", onExpired);
+    return () => window.removeEventListener("r7d:session-expired", onExpired);
+  }, []);
+
+  // Valida o token quando o usuário volta para a aba após longos períodos.
+  // Previne "sessão fantasma": tab aberta por horas com token já expirado.
+  useEffect(() => {
+    const onVisible = () => {
+      if (screen === "app" && !isTokenValid()) {
+        DB.clearSession();
+        setUser(null);
+        setScreen("login");
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [screen]);
 
   const cssStr = makeCSS(th);
 

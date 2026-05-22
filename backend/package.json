@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "lint": "node --check server.js lib/storage.js lib/schemas.js lib/middleware.js lib/http.js lib/env.js lib/logger.js lib/supabase/admin.js lib/supabase/server.js && npx --no-install eslint .",
+    "build": "node -e \"require('./lib/schemas'); require('./lib/storage'); console.log('Build OK');\""
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",
@@ -16,9 +18,11 @@
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
-    "resend": "^6.12.3"
+    "resend": "^6.12.3",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "eslint": "^9.39.4",
     "nodemon": "^3.1.0"
   }
 }

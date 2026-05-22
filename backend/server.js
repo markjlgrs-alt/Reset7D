@@ -1,4 +1,6 @@
-require("dotenv").config();
+// env.js deve ser o PRIMEIRO import — carrega dotenv e valida variáveis obrigatórias
+const { serverEnv, publicEnv } = require("./lib/env");
+
 const express    = require("express");
 const cors       = require("cors");
 const helmet     = require("helmet");
@@ -7,37 +9,93 @@ const crypto     = require("crypto");
 const bcrypt     = require("bcrypt");
 const jwt        = require("jsonwebtoken");
 const { Resend } = require("resend");
-const { createClient } = require("@supabase/supabase-js");
+const { supabaseAdmin: supabase } = require("./lib/supabase/admin");
 const path       = require("path");
 
-const app  = express();
-const PORT = process.env.PORT || 3001;
+// Helpers de resposta HTTP — nunca use res.status(X).json() diretamente nas rotas
+const { badRequest, unauthorized, forbidden, notFound, conflict,
+        serverError, serviceUnavailable } = require("./lib/http");
 
-// ── Supabase ──────────────────────────────────────────────────
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+// Middlewares: requireAuth valida JWT; validate* valida inputs com Zod
+// requireAdmin está disponível em ./lib/middleware — adicionar quando rotas admin forem criadas
+const { requireAuth, validateBody, validateParams } = require("./lib/middleware");
+
+// Schemas Zod — um schema por rota que recebe dados do usuário
+const {
+  uuidParam,
+  registerSchema,
+  loginSchema,
+  changePasswordSchema,
+  sendRecoveryEmailSchema,
+  resetPasswordSchema,
+  communityPostSchema,
+  communityReactSchema,
+  communityCommentSchema,
+} = require("./lib/schemas");
+
+// Storage helpers — upload seguro para Supabase Storage
+const {
+  COMMUNITY_BUCKET,
+  validateImageFile,
+  sanitizeFileName,
+  buildUserStoragePath,
+  uploadToStorage,
+  getPublicStorageUrl,
+} = require("./lib/storage");
+
+// Logger seguro — nunca loga PII, tokens ou mensagens brutas de serviços externos
+const { safeLog, safeError } = require("./lib/logger");
+
+const app  = express();
+const PORT = serverEnv.port;
+
+// Vercel e outros proxies reversos: necessário para que req.ip retorne
+// o IP real do cliente (X-Forwarded-For) em vez do IP do proxy.
+// Sem isto o rate limiting aplica cotas por proxy, não por usuário.
+app.set("trust proxy", 1);
 
 // ── Segurança: cabeçalhos HTTP ────────────────────────────────
 app.use(helmet({
+  hsts: {
+    maxAge: 63072000,       // 2 anos (recomendado para preload list)
+    includeSubDomains: true,
+    preload: true,
+  },
+  referrerPolicy: {
+    policy: "strict-origin-when-cross-origin",
+  },
   contentSecurityPolicy: {
+    // TODO: endurecer a CSP removendo 'unsafe-inline' e 'unsafe-eval'
+    // após configurar nonces/hashes para scripts e estilos inline.
     directives: {
       defaultSrc:  ["'self'"],
-      scriptSrc:   ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
+      scriptSrc:   ["'self'", "'unsafe-inline'", "'unsafe-eval'",
+                    "https://unpkg.com", "https://cdnjs.cloudflare.com"],
       styleSrc:    ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc:     ["'self'", "https://fonts.gstatic.com"],
-      imgSrc:      ["'self'", "data:", "blob:"],
+      fontSrc:     ["'self'", "data:", "https://fonts.gstatic.com"],
+      // Supabase Storage URL adicionado para permitir fotos da comunidade
+      imgSrc:      ["'self'", "data:", "blob:",
+                    ...(publicEnv.supabaseUrl ? [publicEnv.supabaseUrl] : [])],
       connectSrc:  ["'self'"],
       frameSrc:    ["'none'"],
       objectSrc:   ["'none'"],
+      baseUri:        ["'self'"],
+      frameAncestors: ["'none'"],
+      formAction:     ["'self'"],
+      upgradeInsecureRequests: [],
     },
   },
   crossOriginEmbedderPolicy: false,
 }));
 
+// Permissions-Policy — Helmet v8 não cobre este header; adicionado manualmente
+app.use((_req, res, next) => {
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  next();
+});
+
 // ── Segurança: CORS restrito ──────────────────────────────────
-const allowed = (process.env.ALLOWED_ORIGINS || "http://localhost:3001")
+const allowed = serverEnv.allowedOrigins
   .split(",")
   .map(o => o.trim());
 
@@ -81,8 +139,7 @@ app.use(limiterGlobal);
 
 // ── Helpers ───────────────────────────────────────────────────
 function isResendConfigured() {
-  const key = process.env.RESEND_API_KEY || "";
-  return key.startsWith("re_") && key.length > 10;
+  return serverEnv.resendApiKey.startsWith("re_") && serverEnv.resendApiKey.length > 10;
 }
 
 // Sanitiza texto: remove tags HTML e limita tamanho
@@ -90,29 +147,12 @@ function sanitize(str, maxLen = 2000) {
   return (str || "").replace(/<[^>]*>/g, "").replace(/[^\S\n]+/g, " ").trim().slice(0, maxLen);
 }
 
-// Valida email
-const RE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// Emojis permitidos nas reações
-const ALLOWED_EMOJIS = new Set(["❤️","🔥","💪","💜","🌟","👏","✨","🎉"]);
-
-// Gera JWT
+// Gera JWT — assina com serverEnv.jwtSecret (server-only, nunca exposto)
 function signToken(payload) {
-  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "24h" });
+  return jwt.sign(payload, serverEnv.jwtSecret, { expiresIn: "24h" });
 }
 
-// Middleware de autenticação JWT
-function requireAuth(req, res, next) {
-  const header = req.headers.authorization || "";
-  const token  = header.startsWith("Bearer ") ? header.slice(7) : null;
-  if (!token) return res.status(401).json({ error: "UNAUTHORIZED", message: "Autenticação necessária." });
-  try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    return res.status(401).json({ error: "TOKEN_INVALID", message: "Sessão expirada. Faça login novamente." });
-  }
-}
+// requireAuth e validate* vêm de ./lib/middleware (carregados acima)
 
 // ── Email templates (internos — não expostos) ─────────────────
 function buildHTML(toEmail, resetLink) {
@@ -190,59 +230,46 @@ app.get("/api/health", (_req, res) => {
 });
 
 // ── Cadastro ──────────────────────────────────────────────────
-app.post("/api/register", limiterAuth, async (req, res) => {
-  const name     = sanitize(req.body?.name, 100);
-  const email    = (req.body?.email || "").toLowerCase().trim().slice(0, 200);
-  const password = req.body?.password || "";
-
-  if (!name || !email || !password) {
-    return res.status(400).json({ error: "MISSING_FIELDS", message: "Preencha todos os campos." });
-  }
-  if (!RE_EMAIL.test(email)) {
-    return res.status(400).json({ error: "INVALID_EMAIL", message: "E-mail inválido." });
-  }
-  if (password.length < 6 || password.length > 128) {
-    return res.status(400).json({ error: "INVALID_PASSWORD", message: "Senha deve ter entre 6 e 128 caracteres." });
-  }
+// Pública. Zod valida e transforma (trim, lowercase, comprimento).
+// user_id NÃO vem do frontend — gerado pelo Supabase (gen_random_uuid).
+app.post("/api/register", limiterAuth, validateBody(registerSchema), async (req, res) => {
+  const { name, email, password } = req.validated.body;
 
   const { data: existing } = await supabase
     .from("users").select("id").eq("email", email).maybeSingle();
 
-  // Mesma mensagem para usuário existente e novo — evita enumeração de e-mails
   if (existing) {
-    return res.status(409).json({ error: "EMAIL_EXISTS", message: "Este e-mail já está cadastrado." });
+    return conflict(res, "EMAIL_EXISTS", "Este e-mail já está cadastrado.");
   }
 
   const password_hash = await bcrypt.hash(password, 12);
   const { error } = await supabase.from("users").insert({ name, email, password_hash });
+
   if (error) {
-    console.error("[DB] Register:", error.code);
-    return res.status(500).json({ error: "DB_ERROR", message: "Erro ao criar conta." });
+    safeError("[DB] Register", error.code);
+    return serverError(res, "DB_ERROR", "Erro ao criar conta.");
   }
 
   const token = signToken({ email, name });
-  res.json({ success: true, name, email, token });
+  res.status(201).json({ success: true, name, email, token });
 });
 
 // ── Login ─────────────────────────────────────────────────────
-app.post("/api/login", limiterAuth, async (req, res) => {
-  const email    = (req.body?.email || "").toLowerCase().trim().slice(0, 200);
-  const password = req.body?.password || "";
-
-  if (!email || !password) {
-    return res.status(400).json({ error: "MISSING_FIELDS", message: "Preencha e-mail e senha." });
-  }
+// Pública. A sessão (email/name) é derivada do registro encontrado no banco,
+// nunca dos valores enviados pelo cliente diretamente.
+app.post("/api/login", limiterAuth, validateBody(loginSchema), async (req, res) => {
+  const { email, password } = req.validated.body;
 
   const { data: user } = await supabase
     .from("users").select("id, name, email, password_hash").eq("email", email).maybeSingle();
 
-  // Tempo constante para evitar timing attack (compara mesmo se user não existir)
-  const dummyHash = "$2b$12$invalidhashfortimingreasonsonlyXXXXXXXXXXXXXXXXXXXXX";
+  // Tempo constante para evitar timing attack — compara mesmo se user não existir
+  const dummyHash     = "$2b$12$invalidhashfortimingreasonsonlyXXXXXXXXXXXXXXXXXXXXX";
   const hashToCompare = user ? user.password_hash : dummyHash;
-  const match = await bcrypt.compare(password, hashToCompare);
+  const match         = await bcrypt.compare(password, hashToCompare);
 
   if (!user || !match) {
-    return res.status(401).json({ error: "INVALID_CREDENTIALS", message: "E-mail ou senha incorretos." });
+    return unauthorized(res, "INVALID_CREDENTIALS", "E-mail ou senha incorretos.");
   }
 
   const token = signToken({ email: user.email, name: user.name });
@@ -250,131 +277,138 @@ app.post("/api/login", limiterAuth, async (req, res) => {
 });
 
 // ── Alterar senha (autenticado) ───────────────────────────────
-app.post("/api/change-password", requireAuth, limiterAuth, async (req, res) => {
-  const currentPassword = req.body?.currentPassword || "";
-  const newPassword     = req.body?.newPassword || "";
+// IDOR: o email do usuário vem exclusivamente do JWT (req.user.email).
+// O body não tem campo email — impossível modificar senha de outro usuário.
+app.post(
+  "/api/change-password",
+  requireAuth,
+  limiterAuth,
+  validateBody(changePasswordSchema),
+  async (req, res) => {
+    const { currentPassword, newPassword } = req.validated.body;
 
-  if (!currentPassword || !newPassword) {
-    return res.status(400).json({ error: "MISSING_FIELDS", message: "Preencha todos os campos." });
-  }
-  if (newPassword.length < 6 || newPassword.length > 128) {
-    return res.status(400).json({ error: "INVALID_PASSWORD", message: "Nova senha deve ter entre 6 e 128 caracteres." });
-  }
+    // Deriva email da sessão autenticada — nunca do body
+    const { data: user } = await supabase
+      .from("users").select("password_hash").eq("email", req.user.email).maybeSingle();
 
-  const { data: user } = await supabase
-    .from("users").select("password_hash").eq("email", req.user.email).maybeSingle();
-
-  if (!user || !(await bcrypt.compare(currentPassword, user.password_hash))) {
-    return res.status(401).json({ error: "WRONG_PASSWORD", message: "Senha atual incorreta." });
-  }
-
-  const password_hash = await bcrypt.hash(newPassword, 12);
-  await supabase.from("users").update({ password_hash }).eq("email", req.user.email);
-  res.json({ success: true, message: "Senha alterada com sucesso." });
-});
-
-// ── Recuperação de senha ──────────────────────────────────────
-app.post("/api/send-recovery-email", limiterEmail, async (req, res) => {
-  const email = (req.body?.email || "").toLowerCase().trim().slice(0, 200);
-
-  if (!email || !RE_EMAIL.test(email)) {
-    return res.status(400).json({ error: "INVALID_EMAIL", message: "E-mail inválido." });
-  }
-  if (!isResendConfigured()) {
-    return res.status(503).json({ error: "SERVICE_UNAVAILABLE", message: "Serviço de e-mail indisponível." });
-  }
-
-  const token     = crypto.randomBytes(32).toString("hex");
-  const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-
-  const { error: dbError } = await supabase
-    .from("password_reset_tokens")
-    .insert({ email, token, expires_at: expiresAt });
-
-  if (dbError) {
-    console.error("[DB] Token insert:", dbError.code);
-    return res.status(500).json({ error: "DB_ERROR", message: "Erro interno. Tente novamente." });
-  }
-
-  const appOrigin = process.env.APP_URL || `http://localhost:${PORT}`;
-  const resetLink = `${appOrigin}?reset=${token}`;
-
-  const resend    = new Resend(process.env.RESEND_API_KEY);
-  const fromName  = process.env.FROM_NAME  || "Reset 7D";
-  const fromEmail = process.env.FROM_EMAIL || "onboarding@resend.dev";
-
-  try {
-    const { data, error } = await resend.emails.send({
-      from: `${fromName} <${fromEmail}>`,
-      to:   email,
-      subject: "Recuperação de senha — Reset 7D",
-      html: buildHTML(email, resetLink),
-      text: buildText(email, resetLink),
-    });
-
-    if (error) {
-      console.error("[Resend]", error.name);
-      if (error.name === "validation_error" || (error.message || "").includes("domain")) {
-        return res.status(403).json({ error: "DOMAIN_NOT_VERIFIED", message: "Domínio do remetente não verificado." });
-      }
-      return res.status(500).json({ error: "SEND_FAILED", message: "Falha ao enviar e-mail." });
+    if (!user || !(await bcrypt.compare(currentPassword, user.password_hash))) {
+      return unauthorized(res, "WRONG_PASSWORD", "Senha atual incorreta.");
     }
 
-    console.log(`[Resend] Enviado → ${email} (${data?.id})`);
-    res.json({ success: true, message: "E-mail enviado com sucesso." });
-  } catch (err) {
-    console.error("[Resend] Exception:", err.statusCode || "unknown");
-    res.status(500).json({ error: "SEND_FAILED", message: "Falha ao enviar e-mail." });
+    const password_hash = await bcrypt.hash(newPassword, 12);
+    const { error } = await supabase
+      .from("users").update({ password_hash }).eq("email", req.user.email);
+
+    if (error) {
+      safeError("[DB] ChangePassword", error.code);
+      return serverError(res, "DB_ERROR", "Erro ao alterar senha.");
+    }
+
+    res.json({ success: true, message: "Senha alterada com sucesso." });
   }
-});
+);
+
+// ── Recuperação de senha ──────────────────────────────────────
+// Pública (rate limitada por e-mail + IP via Zod + limiterEmail).
+// Não retorna erro diferente se o e-mail não existir — evita enumeração.
+app.post(
+  "/api/send-recovery-email",
+  limiterEmail,
+  validateBody(sendRecoveryEmailSchema),
+  async (req, res) => {
+    const { email } = req.validated.body;
+
+    if (!isResendConfigured()) {
+      return serviceUnavailable(res, "SERVICE_UNAVAILABLE", "Serviço de e-mail indisponível.");
+    }
+
+    const token     = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+
+    const { error: dbError } = await supabase
+      .from("password_reset_tokens")
+      .insert({ email, token, expires_at: expiresAt });
+
+    if (dbError) {
+      safeError("[DB] Token insert", dbError.code);
+      return serverError(res, "DB_ERROR", "Erro interno. Tente novamente.");
+    }
+
+    const resetLink = `${serverEnv.appUrl}?reset=${token}`;
+    const resend    = new Resend(serverEnv.resendApiKey);
+
+    try {
+      const { data, error } = await resend.emails.send({
+        from: `${serverEnv.fromName} <${serverEnv.fromEmail}>`,
+        to:   email,
+        subject: "Recuperação de senha — Reset 7D",
+        html: buildHTML(email, resetLink),
+        text: buildText(email, resetLink),
+      });
+
+      if (error) {
+        safeError("[Resend]", error.name);
+        if (error.name === "validation_error" || (error.message || "").includes("domain")) {
+          return forbidden(res, "DOMAIN_NOT_VERIFIED", "Domínio do remetente não verificado.");
+        }
+        return serverError(res, "SEND_FAILED", "Falha ao enviar e-mail.");
+      }
+
+      // Não loga o email do destinatário — loga apenas o ID da mensagem Resend
+      safeLog("[Resend] Enviado", data?.id || "no-id");
+      res.json({ success: true, message: "E-mail enviado com sucesso." });
+    } catch (err) {
+      safeError("[Resend] Exception", err.statusCode || "unknown");
+      return serverError(res, "SEND_FAILED", "Falha ao enviar e-mail.");
+    }
+  }
+);
 
 // ── Redefinição de senha ──────────────────────────────────────
-app.post("/api/reset-password", async (req, res) => {
-  const token       = (req.body?.token || "").trim().slice(0, 128);
-  const newPassword = req.body?.newPassword || "";
+// Pública (rate limitada). Zod valida formato do token (hex 64 chars).
+// IDOR: email derivado do registro do token no banco — nunca do body.
+// TOCTOU: marca token como `used` antes de atualizar a senha.
+app.post(
+  "/api/reset-password",
+  limiterAuth,
+  validateBody(resetPasswordSchema),
+  async (req, res) => {
+    const { token, newPassword } = req.validated.body;
 
-  if (!token || !newPassword) {
-    return res.status(400).json({ error: "MISSING_FIELDS", message: "Dados incompletos." });
+    const { data: record } = await supabase
+      .from("password_reset_tokens")
+      .select("id, email, expires_at, used")
+      .eq("token", token)
+      .eq("used", false)
+      .maybeSingle();
+
+    if (!record || new Date(record.expires_at) < new Date()) {
+      return badRequest(res, "TOKEN_EXPIRED", "Link inválido ou expirado. Solicite um novo.");
+    }
+
+    // Marca como usado ANTES de alterar a senha (previne TOCTOU / replay)
+    const { error: updateErr } = await supabase
+      .from("password_reset_tokens").update({ used: true }).eq("id", record.id);
+
+    if (updateErr) {
+      return badRequest(res, "TOKEN_EXPIRED", "Link inválido ou expirado.");
+    }
+
+    // email derivado do registro do banco — NÃO do req.body (IDOR seguro)
+    const password_hash = await bcrypt.hash(newPassword, 12);
+    const { data: existingUser } = await supabase
+      .from("users").select("id").eq("email", record.email).maybeSingle();
+
+    if (existingUser) {
+      await supabase.from("users").update({ password_hash }).eq("email", record.email);
+    }
+
+    res.json({ success: true, message: "Senha redefinida com sucesso." });
   }
-  if (newPassword.length < 6 || newPassword.length > 128) {
-    return res.status(400).json({ error: "INVALID_PASSWORD", message: "Senha deve ter entre 6 e 128 caracteres." });
-  }
-  // Valida que token é apenas hex (32 bytes = 64 chars)
-  if (!/^[a-f0-9]{64}$/.test(token)) {
-    return res.status(400).json({ error: "INVALID_TOKEN", message: "Token inválido." });
-  }
-
-  const { data: record } = await supabase
-    .from("password_reset_tokens")
-    .select("id, email, expires_at, used")
-    .eq("token", token)
-    .eq("used", false)
-    .maybeSingle();
-
-  if (!record || new Date(record.expires_at) < new Date()) {
-    return res.status(400).json({ error: "TOKEN_EXPIRED", message: "Link inválido ou expirado. Solicite um novo." });
-  }
-
-  // Marca como usado ANTES de alterar a senha (previne TOCTOU)
-  const { error: updateErr } = await supabase
-    .from("password_reset_tokens").update({ used: true }).eq("id", record.id);
-
-  if (updateErr) {
-    return res.status(400).json({ error: "TOKEN_EXPIRED", message: "Link inválido ou expirado." });
-  }
-
-  const password_hash = await bcrypt.hash(newPassword, 12);
-  const { data: existingUser } = await supabase
-    .from("users").select("id").eq("email", record.email).maybeSingle();
-
-  if (existingUser) {
-    await supabase.from("users").update({ password_hash }).eq("email", record.email);
-  }
-
-  res.json({ success: true, message: "Senha redefinida com sucesso." });
-});
+);
 
 // ── Comunidade — leitura pública ──────────────────────────────
+// Sem auth — feed público. user_email NÃO é retornado na select list.
 app.get("/api/community", async (_req, res) => {
   const { data, error } = await supabase
     .from("community_posts")
@@ -383,98 +417,161 @@ app.get("/api/community", async (_req, res) => {
     .limit(50);
 
   if (error) {
-    console.error("[DB] Community get:", error.code);
-    return res.status(500).json({ error: "DB_ERROR", message: "Erro ao carregar posts." });
+    safeError("[DB] Community get", error.code);
+    return serverError(res, "DB_ERROR", "Erro ao carregar posts.");
   }
   res.json({ posts: data });
 });
 
 // ── Comunidade — escrita autenticada ─────────────────────────
-app.post("/api/community", requireAuth, async (req, res) => {
-  const day   = Math.max(1, Math.min(7, parseInt(req.body?.day) || 1));
-  const text  = sanitize(req.body?.text, 1000);
-  const photo = req.body?.photo || null;
+// IDOR: user_email e user_name derivados do JWT — nunca do body.
+// Foto: base64 validado por magic bytes → upload para Storage → URL salva no DB.
+app.post(
+  "/api/community",
+  requireAuth,
+  validateBody(communityPostSchema),
+  async (req, res) => {
+    const { day, text, photo: photoData } = req.validated.body;
 
-  // Valida foto: deve ser data URL de imagem JPEG/PNG/WEBP
-  if (photo && !/^data:image\/(jpeg|png|webp);base64,/.test(photo)) {
-    return res.status(400).json({ error: "INVALID_PHOTO", message: "Formato de imagem inválido." });
-  }
-  if (!text && !photo) {
-    return res.status(400).json({ error: "EMPTY_POST", message: "Post não pode ser vazio." });
-  }
+    // Processar foto: validar conteúdo e fazer upload para Supabase Storage
+    let photoUrl = null;
+    if (photoData) {
+      let validated;
+      try {
+        validated = validateImageFile(photoData);
+      } catch (err) {
+        return badRequest(res, "INVALID_PHOTO", err.message);
+      }
 
-  const { data, error } = await supabase
-    .from("community_posts")
-    .insert({
-      user_email: req.user.email,
-      user_name:  sanitize(req.user.name, 100),
-      day, text,
-      photo: photo || null,
-    })
-    .select()
-    .single();
+      const { mime, buffer, ext } = validated;
+      const filename    = sanitizeFileName("photo", ext);
+      const storagePath = buildUserStoragePath(req.user.email, "community", filename);
 
-  if (error) {
-    console.error("[DB] Community post:", error.code);
-    return res.status(500).json({ error: "DB_ERROR", message: "Erro ao criar post." });
+      try {
+        await uploadToStorage(COMMUNITY_BUCKET, storagePath, buffer, mime);
+        photoUrl = getPublicStorageUrl(COMMUNITY_BUCKET, storagePath);
+      } catch (_err) {
+        // Não loga _err.message — pode conter paths internos ou config do Storage
+        safeError("[Storage] Community upload", "upload_failed");
+        return serverError(res, "UPLOAD_ERROR", "Erro ao salvar imagem.");
+      }
+    }
+
+    const { data, error } = await supabase
+      .from("community_posts")
+      .insert({
+        // user_email e user_name sempre do JWT — nunca do body
+        user_email: req.user.email,
+        user_name:  sanitize(req.user.name, 100),
+        day,
+        text:  sanitize(text, 1000),
+        photo: photoUrl,  // URL do Storage, nunca base64
+      })
+      .select("id, user_name, day, text, photo, reactions, comments, created_at")
+      .single();
+
+    if (error) {
+      safeError("[DB] Community post", error.code);
+      return serverError(res, "DB_ERROR", "Erro ao criar post.");
+    }
+
+    res.status(201).json({ success: true, post: data });
   }
-  res.json({ success: true, post: data });
-});
+);
 
 // ── Reação (autenticada) ──────────────────────────────────────
-app.patch("/api/community/:id/react", requireAuth, async (req, res) => {
-  const emoji = req.body?.emoji || "";
-  const { id } = req.params;
+// Qualquer usuário autenticado pode reagir a qualquer post (feature social).
+// UUID validado pelo Zod; emoji validado contra allowlist estrita no schema.
+// Não há IDOR: reações são públicas e incrementais por design.
+app.patch(
+  "/api/community/:id/react",
+  requireAuth,
+  validateParams(uuidParam),
+  validateBody(communityReactSchema),
+  async (req, res) => {
+    const { id }    = req.validated.params;
+    const { emoji } = req.validated.body;
 
-  if (!ALLOWED_EMOJIS.has(emoji)) {
-    return res.status(400).json({ error: "INVALID_EMOJI", message: "Emoji não permitido." });
+    const { data: post } = await supabase
+      .from("community_posts").select("reactions").eq("id", id).maybeSingle();
+
+    if (!post) return notFound(res, "POST_NOT_FOUND", "Post não encontrado.");
+
+    const reactions = {
+      ...(post.reactions || {}),
+      [emoji]: ((post.reactions || {})[emoji] || 0) + 1,
+    };
+
+    const { error } = await supabase
+      .from("community_posts").update({ reactions }).eq("id", id);
+
+    if (error) {
+      safeError("[DB] React", error.code);
+      return serverError(res, "DB_ERROR", "Erro ao registrar reação.");
+    }
+
+    res.json({ success: true, reactions });
   }
-  // Valida que id é UUID
-  if (!/^[0-9a-f-]{36}$/.test(id)) {
-    return res.status(400).json({ error: "INVALID_ID" });
-  }
-
-  const { data: post } = await supabase
-    .from("community_posts").select("reactions").eq("id", id).maybeSingle();
-
-  if (!post) return res.status(404).json({ error: "NOT_FOUND" });
-
-  const reactions = { ...(post.reactions || {}), [emoji]: ((post.reactions || {})[emoji] || 0) + 1 };
-  await supabase.from("community_posts").update({ reactions }).eq("id", id);
-  res.json({ success: true, reactions });
-});
+);
 
 // ── Comentário (autenticado) ──────────────────────────────────
-app.post("/api/community/:id/comment", requireAuth, async (req, res) => {
-  const text = sanitize(req.body?.text, 500);
-  const { id } = req.params;
+// Qualquer usuário autenticado pode comentar em qualquer post (feature social).
+// Nome do comentarista derivado do JWT — nunca do body.
+app.post(
+  "/api/community/:id/comment",
+  requireAuth,
+  validateParams(uuidParam),
+  validateBody(communityCommentSchema),
+  async (req, res) => {
+    const { id }   = req.validated.params;
+    const { text } = req.validated.body;
 
-  if (!text) {
-    return res.status(400).json({ error: "MISSING_FIELDS", message: "Comentário não pode ser vazio." });
+    const { data: post } = await supabase
+      .from("community_posts").select("comments").eq("id", id).maybeSingle();
+
+    if (!post) return notFound(res, "POST_NOT_FOUND", "Post não encontrado.");
+
+    // Nome derivado do JWT — nunca do body
+    const name     = sanitize(req.user.name.split(" ")[0], 50);
+    const comments = [
+      ...(post.comments || []),
+      { u: name, t: sanitize(text, 500), ts: new Date().toISOString() },
+    ];
+
+    const { error } = await supabase
+      .from("community_posts").update({ comments }).eq("id", id);
+
+    if (error) {
+      safeError("[DB] Comment", error.code);
+      return serverError(res, "DB_ERROR", "Erro ao adicionar comentário.");
+    }
+
+    res.status(201).json({ success: true });
   }
-  if (!/^[0-9a-f-]{36}$/.test(id)) {
-    return res.status(400).json({ error: "INVALID_ID" });
-  }
+);
 
-  const { data: post } = await supabase
-    .from("community_posts").select("comments").eq("id", id).maybeSingle();
-
-  if (!post) return res.status(404).json({ error: "NOT_FOUND" });
-
-  const name     = sanitize(req.user.name.split(" ")[0], 50);
-  const comments = [...(post.comments || []), { u: name, t: text, ts: new Date().toISOString() }];
-  await supabase.from("community_posts").update({ comments }).eq("id", id);
-  res.json({ success: true });
+// ── Bloqueio preventivo de rotas admin ───────────────────────
+// Nenhuma rota /api/admin/* existe ainda no sistema.
+// Este handler captura qualquer tentativa de acesso — autenticada ou não —
+// e retorna 403, garantindo que nenhum endpoint admin seja acidentalmente
+// exposto antes de ter requireAuth + requireAdmin aplicados.
+//
+// Quando uma rota admin for criada, registrá-la ANTES deste bloco:
+//   app.get("/api/admin/users", requireAuth, requireAdmin, handler);
+//
+// requireAdmin está disponível em ./lib/middleware e verifica role no banco.
+// NUNCA aceitar isAdmin ou role vindos do client.
+app.use("/api/admin", (_req, res) => {
+  return forbidden(res, "FORBIDDEN", "Acesso negado.");
 });
 
 // ── Export para Vercel / Start local ─────────────────────────
 if (require.main === module) {
   app.listen(PORT, () => {
     const url = `http://localhost:${PORT}`;
-    console.log(`\n🚀  Reset 7D Backend — ${url}`);
-    console.log(`🔒  Segurança:  JWT + Helmet + Rate Limit + CORS restrito`);
-    console.log(`🗄️   Supabase:   ${process.env.SUPABASE_URL ? "✅" : "⚠️  SUPABASE_URL não definida"}`);
-    console.log(`📧  Resend:     ${isResendConfigured() ? "✅" : "⚠️  RESEND_API_KEY ausente"}`);
+    safeLog("[Startup]", `Reset 7D Backend — ${url}`);
+    safeLog("[Startup]", `Supabase: ${publicEnv.supabaseUrl ? "ok" : "SUPABASE_URL nao definida"}`);
+    safeLog("[Startup]", `Resend: ${isResendConfigured() ? "ok" : "RESEND_API_KEY ausente"}`);
   });
 }
 

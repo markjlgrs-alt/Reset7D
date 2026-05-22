@@ -1,8 +1,23 @@
+# ── Dependências ──────────────────────────────────────────────
 node_modules/
-backend/.env
+
+# ── Variáveis de ambiente (NUNCA commitar) ─────────────────────
 .env
-*.zip
+.env.*
+!.env.example
+
+# ── Vercel ────────────────────────────────────────────────────
+.vercel
+
+# ── Build outputs ─────────────────────────────────────────────
+.next/
+dist/
+build/
+out/
+
+# ── Sistema operacional ───────────────────────────────────────
 .DS_Store
 Thumbs.db
 
-.vercel
+# ── Arquivos temporários / compactados ────────────────────────
+*.zip

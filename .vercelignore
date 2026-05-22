@@ -1,0 +1,33 @@
+# ── .vercelignore — Reset 7D ─────────────────────────────────────────────────
+#
+# Arquivos que NÃO devem ser incluídos no deploy da Vercel.
+# A Vercel usa este arquivo para excluir conteúdo do bundle de deploy,
+# reduzindo a superfície de ataque e o tamanho do artefato.
+#
+# Referência: https://vercel.com/docs/project-configuration#vercelignore
+#
+# IMPORTANTE: backend/server.js continua sendo deployado como serverless
+# function via vercel.json builds[]. O .vercelignore só exclui arquivos
+# que não precisam estar no filesystem de deploy.
+
+# Ambiente de desenvolvimento
+node_modules
+*.log
+*.zip
+
+# Arquivos de desenvolvimento local (não devem ir para produção)
+Abrir\ Reset\ 7D.bat
+iniciar.ps1
+RecuperarSenha.jsx
+recuperar-senha-demo.html
+_candidates/
+temp_extract/
+
+# Arquivos de workspace do editor
+*.code-workspace
+
+# Source maps e artefatos de build intermediários
+*.map
+
+# Documentação de auditoria interna (não precisa estar no deploy)
+SECURITY_AUDIT.md
