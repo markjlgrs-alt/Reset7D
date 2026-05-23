@@ -1,138 +1,227 @@
 # SUPABASE_RLS_REVIEW.md — Reset 7D
-**Data:** 2026-05-21  
-**Branch:** `security-hardening`  
-**Migration:** `supabase/migrations/20260521000000_storage_security_policies.sql`
+
+> Data: 2026-05-22 | Branch: `security-hardening`
+> Atualizado: inclui tabelas públicas + Storage.
 
 ---
 
-## 1. Inventário de Buckets
+## Inventário completo
 
-| Bucket | Tipo | Tamanho máx. | MIMEs permitidos | Contém PII? |
-|--------|------|-------------|-----------------|-------------|
-| `community-photos` | **PUBLIC** | 5 MB | jpeg, png, webp | Indireto — nome de usuário visível nos posts |
-| `profile-photos` | **PRIVATE** | 5 MB | jpeg, png, webp | **Sim** — imagens corporais do usuário |
+### Tabelas (schema `public`)
 
----
+| Tabela | Tipo | Coluna dona | RLS ativo | Policies (anon/auth) | Operações permitidas via anon key |
+|---|---|---|---|---|---|
+| `users` | Privada por usuário | `email` | ✅ Migration criada | **Nenhuma** | 🚫 Tudo bloqueado |
+| `password_reset_tokens` | Privada por email | `email` | ✅ Migration criada | **Nenhuma** | 🚫 Tudo bloqueado |
+| `community_posts` | Semi-pública (escrita privada) | `user_email` | ✅ Migration criada | **Nenhuma** | 🚫 Tudo bloqueado |
 
-## 2. Policies por Bucket
+### Buckets (schema `storage`)
 
-### 2.1 `community-photos` — PUBLIC
-
-| Operação | Role | Condição | Decisão |
-|----------|------|---------|---------|
-| SELECT | anon, authenticated | `bucket_id = 'community-photos'` | ✅ ALLOW |
-| INSERT | anon, authenticated | — sem policy — | 🚫 DENY |
-| UPDATE | anon, authenticated | — sem policy — | 🚫 DENY |
-| DELETE | anon, authenticated | — sem policy — | 🚫 DENY |
-| * | service_role | bypassa RLS | ✅ ALLOW |
-
-**Justificativa bucket público:** O feed da comunidade é visível sem login (`GET /api/community` é público). As URLs das fotos precisam ser acessíveis pelo `<img src>` do browser sem autenticação adicional. Não contém dados sensíveis individuais — as fotos são postadas intencionalmente pelo usuário para compartilhar com a comunidade.
-
-**Controle de escrita:** Nenhum cliente pode subir, alterar ou deletar fotos diretamente. Todo write passa pela API (`POST /api/community`) que valida autenticação, MIME type, magic bytes e tamanho antes de chamar `uploadToStorage()` com a service_role key.
+| Bucket | Tipo | RLS | Policies | SELECT | INSERT | UPDATE | DELETE |
+|---|---|---|---|---|---|---|---|
+| `community-photos` | PUBLIC | ✅ (Supabase padrão) | `public read` | ✅ Anon/auth | 🚫 Somente service_role | 🚫 Somente service_role | 🚫 Somente service_role |
+| `profile-photos` | PRIVATE | ✅ (Supabase padrão) | `owner read/insert/update/delete` | 🚫 (auth.uid()=NULL) | 🚫 (auth.uid()=NULL) | 🚫 (auth.uid()=NULL) | 🚫 (auth.uid()=NULL) |
 
 ---
 
-### 2.2 `profile-photos` — PRIVATE
+## Decisão arquitetural: Por que não usar `USING (auth.uid())`?
 
-| Operação | Role | Condição | Decisão |
-|----------|------|---------|---------|
-| SELECT | authenticated | `bucket_id = 'profile-photos'` AND `foldername[1] = auth.uid()` | ✅ ALLOW (owner) |
-| SELECT | anon | — sem policy — | 🚫 DENY |
-| INSERT | authenticated | `bucket_id = 'profile-photos'` AND `foldername[1] = auth.uid()` | ✅ ALLOW (owner) |
-| UPDATE | authenticated | `bucket_id = 'profile-photos'` AND `foldername[1] = auth.uid()` | ✅ ALLOW (owner) |
-| DELETE | authenticated | `bucket_id = 'profile-photos'` AND `foldername[1] = auth.uid()` | ✅ ALLOW (owner) |
-| * | anon | — sem policy — | 🚫 DENY |
-| * | service_role | bypassa RLS | ✅ ALLOW |
-
-**Acesso ao conteúdo:** Feito exclusivamente via `createPrivateSignedUrl()` no backend, com TTL de 1 hora. `getPublicUrl()` nunca é chamada para este bucket.
-
----
-
-## 3. Lacuna Arquitetural — auth.uid() vs. JWT Customizado
-
-### Estado atual
-
-O app usa JWT **customizado** (assinado com `JWT_SECRET` no backend, não Supabase Auth). Isso significa:
+O app usa **JWT customizado** (não Supabase Auth). Consequência direta:
 
 ```
-Supabase RLS context: auth.uid() → NULL
+auth.uid() → NULL para todo request via app
 ```
 
-**Impacto por bucket:**
+**Com `auth.uid()` = NULL:**
+- `USING (id = auth.uid())` avalia como `USING (id = NULL)` → **sempre FALSE**
+- Políticas baseadas em `auth.uid()` bloqueariam até o próprio usuário
+- service_role bypassa RLS → backend não é afetado
 
-| Bucket | Impacto |
-|--------|---------|
-| `community-photos` | Nenhum — SELECT aberto não depende de auth.uid() |
-| `profile-photos` | auth.uid() = NULL → condição `foldername[1] = NULL` nunca é TRUE → **todo acesso direto bloqueado** (inclui authenticated) |
-
-Ou seja, as policies de `profile-photos` funcionam como **bloqueio total de acesso direto** — que é o comportamento correto enquanto o app usa JWT customizado. Todo acesso legítimo passa pelo backend via service_role.
-
-### Path scheme atual vs. esperado pelas policies
-
-| | Atual (`buildUserStoragePath`) | Esperado pelas policies |
-|--|-------------------------------|------------------------|
-| Primeiro segmento | `sha256(email)[0:16]` (ex: `a3f7c12d8e4b9061`) | `auth.uid()` (UUID do Supabase, ex: `550e8400-e29b-41d4-a716-446655440000`) |
-
-### Caminho de migração para ativar as policies completamente
-
-Para que as policies de `profile-photos` funcionem com acesso direto (quando necessário):
-
-1. **Adotar Supabase Auth** substituindo o JWT customizado, ou
-2. **Manter JWT customizado + lookup do UUID:** no handler de upload, buscar `users.id` (UUID) pelo `req.user.email` e usar esse UUID como primeiro segmento do path em vez do hash do email.
-
-Enquanto isso não for feito, as policies atuais oferecem **defense-in-depth**: bloqueiam qualquer acesso direto ao Storage privado sem depender de auth.uid().
+**Estratégia adotada: RLS ativo sem policies → bloqueio total para anon/authenticated.**
+Backend acessa via service_role, que bypassa RLS. Sem impacto funcional.
 
 ---
 
-## 4. Verificação de Conformidade
+## Detalhe por tabela
 
-| Requisito | Status | Detalhe |
-|-----------|--------|---------|
-| Usuário autenticado para escrita | ✅ | `TO authenticated` em todas as policies de write |
-| bucket_id correto nas conditions | ✅ | `bucket_id = 'profile-photos'` em todas as policies |
-| Primeira pasta = auth.uid() | ✅ (estrutural) | `(storage.foldername(name))[1] = auth.uid()::text` — ativa com Supabase Auth |
-| Sem acesso público a bucket privado | ✅ | Sem policy SELECT para `anon` em `profile-photos` |
-| Bucket público documentado | ✅ | `community-photos` documentado na seção 2.1 |
-| Bucket público sem dados sensíveis | ✅ | Fotos de comunidade postadas voluntariamente |
-| getPublicUrl nunca em bucket privado | ✅ | `getPublicStorageUrl()` só chamada com `COMMUNITY_BUCKET` |
-| Migration idempotente | ✅ | `DROP POLICY IF EXISTS` antes de cada `CREATE POLICY` |
-| Sem `supabase db push` | ✅ | Migration apenas como arquivo SQL |
+### `public.users`
+
+| Operação | Anon key | Auth (custom JWT) | service_role | Motivo |
+|---|---|---|---|---|
+| SELECT | 🚫 | 🚫 | ✅ | Contém `password_hash`, `email`, `role` — altamente sensível |
+| INSERT | 🚫 | 🚫 | ✅ | Cadastro só via `/api/register` com validação Zod |
+| UPDATE | 🚫 | 🚫 | ✅ | Alteração de senha só via `/api/change-password` com `bcrypt.compare` |
+| DELETE | 🚫 | 🚫 | ✅ | Nenhuma rota de delete existe; bloqueio total é correto |
+
+**TODOs:**
+- [ ] Quando migrar para Supabase Auth: criar policies com `USING (id = auth.uid())`
+- [ ] A coluna `role` NUNCA deve ser alterável via policy de usuário
+- [ ] Para promover admin: `UPDATE users SET role='admin' WHERE email='...'` direto no SQL Editor
 
 ---
 
-## 5. Como Aplicar
+### `public.password_reset_tokens`
 
-**Não usar `supabase db push`.** Aplicar manualmente:
+| Operação | Anon key | Auth | service_role | Motivo |
+|---|---|---|---|---|
+| SELECT | 🚫 | 🚫 | ✅ | Token é um secret — não pode ser enumerado |
+| INSERT | 🚫 | 🚫 | ✅ | Inserção só via `/api/send-recovery-email` |
+| UPDATE | 🚫 | 🚫 | ✅ | Marcar `used=true` só via `/api/reset-password` |
+| DELETE | 🚫 | 🚫 | ✅ | Sem rota de delete |
 
-1. Abrir o painel Supabase → **SQL Editor** → **Create a new snippet**
-2. Copiar o conteúdo de `supabase/migrations/20260521000000_storage_security_policies.sql`
-3. Colar e clicar **Run**
-4. Resultado esperado: `Success. No rows returned`
+**TODOs:**
+- [ ] Criar limpeza periódica de tokens expirados:
+  ```sql
+  DELETE FROM password_reset_tokens
+  WHERE expires_at < NOW() OR used = true;
+  ```
+  Pode ser executado via `pg_cron` (extensão Supabase) ou job agendado externo.
 
-**Verificação pós-execução:**
+---
+
+### `public.community_posts`
+
+| Operação | Anon key | Auth | service_role | Motivo |
+|---|---|---|---|---|
+| SELECT | 🚫 | 🚫 | ✅ | `user_email` armazenada — policy aberta exporia PII |
+| INSERT | 🚫 | 🚫 | ✅ | Post só via `/api/community` com `requireAuth` |
+| UPDATE | 🚫 | 🚫 | ✅ | Reações/comentários via API autenticada |
+| DELETE | 🚫 | 🚫 | ✅ | Nenhuma rota de delete existe |
+
+**Observação:** O feed público é acessível via `GET /api/community` (sem auth).
+A API usa `service_role` e retorna apenas as colunas seguras — `user_email` é explicitamente excluído da query SELECT. A combinação "RLS bloqueia anon" + "API serve dados filtrados" é mais segura do que "RLS permite anon + confia em projeção de colunas".
+
+**TODOs:**
+- [ ] Migração futura: substituir `user_email` por `user_id` (UUID FK para `users.id`) antes de criar policy `USING (true)` para SELECT público. Com `user_email` na tabela, `USING (true)` exporia PII.
+- [ ] Adicionar `DELETE /api/community/:id` (autenticada, verifica `user_email = req.user.email`) quando feature de exclusão de post for necessária.
+- [ ] Ao implementar exclusão: remover objeto do Storage correspondente (`community-photos` bucket) via `supabaseAdmin.storage.from(COMMUNITY_BUCKET).remove([storagePath])`.
+
+---
+
+## Storage — Buckets
+
+### `community-photos` — PUBLIC
+
+| Operação | Roles | Condição | Resultado |
+|---|---|---|---|
+| SELECT | anon, authenticated | `bucket_id = 'community-photos'` | ✅ Permitido |
+| INSERT | anon, authenticated | — sem policy — | 🚫 Bloqueado |
+| UPDATE | anon, authenticated | — sem policy — | 🚫 Bloqueado |
+| DELETE | anon, authenticated | — sem policy — | 🚫 Bloqueado |
+| ALL | service_role | bypassa RLS | ✅ Permitido |
+
+**Justificativa:** Feed público por design. URLs acessíveis via CDN sem auth para `<img src>`.
+Writes passam pelo backend: valida MIME, magic bytes, tamanho, path sanitizado antes de `upload()`.
+
+---
+
+### `profile-photos` — PRIVATE
+
+| Operação | Roles | Condição | Resultado atual |
+|---|---|---|---|
+| SELECT | authenticated | `bucket_id = 'profile-photos' AND foldername[1] = auth.uid()` | 🚫 Bloqueado (auth.uid()=NULL) |
+| INSERT | authenticated | idem | 🚫 Bloqueado |
+| UPDATE | authenticated | idem | 🚫 Bloqueado |
+| DELETE | authenticated | idem | 🚫 Bloqueado |
+| SELECT | anon | — sem policy — | 🚫 Bloqueado |
+| ALL | service_role | bypassa RLS | ✅ Permitido |
+
+**Acesso:** Exclusivamente via `createPrivateSignedUrl()` no backend (TTL: 1 hora).
+`getPublicUrl()` **nunca** é chamado para este bucket.
+
+**Estado:** Bucket definido, mas **nenhuma rota ativa** utiliza `profile-photos` ainda.
+A função `createPrivateSignedUrl()` está pronta em `backend/lib/storage.js`.
+
+**TODO antes de implementar rota de profile-photos:**
+- [ ] Definir path scheme: usar `users.id` (UUID Supabase) como primeiro segmento,
+  ou manter hash do email e aceitar que policies de auth.uid() não funcionam com clientes diretos.
+- [ ] Criar endpoint `POST /api/profile/photo` (autenticado) que:
+  1. Valida arquivo (MIME, magic bytes, tamanho)
+  2. Faz upload para `{user_uuid}/profile/{timestamp}.ext`
+  3. Retorna signed URL (não a URL pública)
+- [ ] Criar endpoint `GET /api/profile/photo` (autenticado) que gera signed URL com TTL curto.
+
+---
+
+## Migrations criadas
+
+| Arquivo | Tabelas/Buckets | Status |
+|---|---|---|
+| `supabase_migration.sql` | Criação das tabelas + buckets (existia antes) | Aplicar manualmente |
+| `supabase/migrations/20260521000000_storage_security_policies.sql` | Policies de Storage | Aplicar manualmente |
+| `supabase/migrations/20260522000000_enable_rls_tables.sql` | RLS nas tabelas `public.*` | **Novo — aplicar manualmente** |
+
+---
+
+## Como aplicar as migrations
+
+**Não usar `supabase db push`.** Aplicar na seguinte ordem:
+
+### Ordem de aplicação
+
+```
+1. supabase_migration.sql             (se ainda não aplicado)
+2. 20260521000000_storage_security_policies.sql
+3. 20260522000000_enable_rls_tables.sql   ← NOVA
+```
+
+### Passos para `20260522000000_enable_rls_tables.sql`
+
+1. Abrir **Supabase Dashboard** → seu projeto
+2. Menu lateral → **SQL Editor** → **New query**
+3. Copiar todo o conteúdo do arquivo
+4. Colar e clicar **Run**
+5. Resultado esperado: `Success. No rows returned`
+
+### Verificação pós-execução
 
 ```sql
--- Listar todas as policies de storage
-SELECT policyname, cmd, roles, qual, with_check
+-- Confirmar RLS ativo nas 3 tabelas
+SELECT tablename, rowsecurity
+FROM pg_tables
+WHERE schemaname = 'public'
+  AND tablename IN ('users', 'password_reset_tokens', 'community_posts');
+-- Esperado: rowsecurity = true para todas
+
+-- Confirmar que não há policies problemáticas (deve retornar 0 linhas)
+SELECT tablename, policyname, cmd, roles, qual
+FROM pg_policies
+WHERE schemaname = 'public'
+  AND tablename IN ('users', 'password_reset_tokens', 'community_posts')
+ORDER BY tablename, policyname;
+-- Esperado: 0 linhas (sem policies para anon/authenticated)
+
+-- Confirmar policies de Storage (deve retornar 5 linhas)
+SELECT policyname, cmd, roles
 FROM pg_policies
 WHERE schemaname = 'storage' AND tablename = 'objects'
 ORDER BY policyname;
 ```
 
-Deve retornar 5 linhas:
-- `community-photos: public read`
-- `profile-photos: owner delete`
-- `profile-photos: owner insert`
-- `profile-photos: owner read`
-- `profile-photos: owner update`
+---
+
+## Riscos residuais
+
+| # | Risco | Severidade | Mitigação | Próximo passo |
+|---|---|---|---|---|
+| RR-01 | `auth.uid()` = NULL com JWT customizado — policies owner-based inativas | Média | Defense-in-depth via RLS sem policy | Migrar para Supabase Auth quando conveniente |
+| RR-02 | `password_reset_tokens` acumula tokens expirados | Baixa | Tokens expirados são inofensivos | Criar pg_cron job de limpeza |
+| RR-03 | `community_posts.user_email` exposta a admins Supabase com acesso ao banco | Baixa | Acesso ao banco restrito a service_role via API | Considerar substituir por user_id futuro |
+| RR-04 | `profile-photos` — feature incompleta sem rota ativa | Média | Bucket existe; nenhum dado exposto | Implementar rota antes de expor ao usuário |
+| RR-05 | Signed URLs de profile-photos com TTL 1h podem ser compartilhadas | Baixa | Expiração limita o dano | Reduzir TTL para 15 min se feature for ativada |
+| RR-06 | `community_posts` sem USING (true) para SELECT via anon key bloqueia apps de terceiros | Baixa | Intencional — protege user_email | Documentar: feed público = via API |
 
 ---
 
-## 6. Riscos Residuais
+## Confirmações de segurança
 
-| # | Risco | Mitigação | Próximo passo |
-|---|-------|-----------|--------------|
-| RR-1 | auth.uid() = NULL desativa owner-check em profile-photos | Bloqueio total de clientes diretos (somente service_role) | Migrar para Supabase Auth ou usar UUID do banco no path |
-| RR-2 | Fotos antigas em base64 no banco (legado) | Dados no banco, não no Storage — sem URL pública | Script de migração + limpeza opcional |
-| RR-3 | Signed URLs de 1h podem ser compartilhadas por terceiros antes de expirar | Expiração curta limita o dano | Reduzir para 15 min se necessário |
-| RR-4 | Sem policy de DELETE em community-photos para usuário dono do post | Foto fica no Storage mesmo se post for deletado | Adicionar endpoint `DELETE /api/community/:id` que remove o objeto do Storage |
+| Item | Status |
+|---|---|
+| Nenhuma policy com `USING (true)` para dados privados | ✅ Confirmado |
+| `USING (true)` evitado em `community_posts` para proteger `user_email` | ✅ Confirmado |
+| service_role apenas em arquivos server-only | ✅ Confirmado |
+| `getPublicUrl()` nunca chamado para bucket privado | ✅ Confirmado |
+| `createSignedUrl()` disponível para profile-photos (TTL configurável) | ✅ Implementado |
+| Uploads validam MIME + magic bytes + tamanho + path sanitizado | ✅ Implementado |
+| Nenhuma migration usa `supabase db push` | ✅ Confirmado |
+| Nenhuma tabela ou coluna foi apagada | ✅ Confirmado |
