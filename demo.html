@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Reset 7D — Demo</title>
+  <style>
+    body {
+      font-family: 'Manrope', 'Segoe UI', sans-serif;
+      background: #1f1620;
+      color: #f5e6ed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      gap: 12px;
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid rgba(232,164,192,0.2);
+      border-top: 3px solid #e8a4c0;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    p { font-size: 13px; color: #a89098; }
+  </style>
+</head>
+<body>
+<div class="spinner"></div>
+<p>Carregando demo…</p>
+
+<script>
+(function () {
+  // ── JWT fake mas estruturalmente válido ──────────────────────
+  // isTokenValid() só verifica formato + claim exp — não verifica assinatura.
+  // A assinatura real só é checada pelo backend, que não é chamado neste fluxo.
+  function b64url(str) {
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  }
+
+  var exp = Math.floor(Date.now() / 1000) + 90 * 24 * 60 * 60; // 90 dias
+  var header  = b64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  var payload = b64url(JSON.stringify({
+    sub: 'demo-user',
+    email: 'demo@reset7d.com',
+    name: 'Usuária Demo',
+    iat: Math.floor(Date.now() / 1000),
+    exp: exp
+  }));
+  var demoToken = header + '.' + payload + '.demo-signature';
+
+  var demoUser = {
+    id: 'demo-user-001',
+    email: 'demo@reset7d.com',
+    name: 'Usuária Demo'
+  };
+
+  // ── Sessão (persiste na mesma aba após redirect) ─────────────
+  sessionStorage.setItem('r7d_token', demoToken);
+  sessionStorage.setItem('r7d_user', JSON.stringify(demoUser));
+
+  // ── Estado local do usuário demo ─────────────────────────────
+  var email = demoUser.email;
+
+  localStorage.setItem('r7d_onboarded', '1');
+  localStorage.setItem('r7d_lang', 'pt');
+
+  // Dia atual: 7 (todos os dias desbloqueados)
+  localStorage.setItem('r7d_day_' + email, '7');
+
+  // XP acumulado: 1820 (todas as missões completas)
+  localStorage.setItem('r7d_xp_' + email, '1820');
+
+  // Todas as missões de todos os dias completas
+  localStorage.setItem('r7d_miss_' + email, JSON.stringify({
+    '1': ['1a','1b','1c','1d','1e','1f'],
+    '2': ['2a','2b','2c','2d','2e','2f'],
+    '3': ['3a','3b','3c','3d','3e','3f'],
+    '4': ['4a','4b','4c','4d','4e','4f'],
+    '5': ['5a','5b','5c','5d','5e','5f'],
+    '6': ['6a','6b','6c','6d','6e','6f'],
+    '7': ['7a','7b','7c','7d','7e','7f']
+  }));
+
+  // ── Redireciona para o app (mesma aba = sessionStorage mantida) ─
+  window.location.replace('app.html');
+})();
+</script>
+</body>
+</html>
