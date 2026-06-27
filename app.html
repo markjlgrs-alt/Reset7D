@@ -160,7 +160,15 @@
 </head>
 <body>
 <div id="root"></div>
-<script>window.BACKEND_URL=window.location.hostname==="localhost"?"http://localhost:3001":"";</script>
+<div id="dbg-err" style="display:none;position:fixed;inset:0;z-index:99999;background:#1f1620;color:#f5e6ed;padding:24px;font-family:monospace;font-size:13px;overflow:auto;white-space:pre-wrap;"></div>
+<script>
+window.BACKEND_URL=window.location.hostname==="localhost"?"http://localhost:3001":"";
+window.onerror=function(msg,src,line,col,err){
+  var d=document.getElementById('dbg-err');
+  if(d){d.style.display='block';d.textContent='ERRO JAVASCRIPT:\n'+msg+'\nArquivo: '+src+'\nLinha: '+line+'\n\n'+(err&&err.stack?err.stack:'');}
+  return false;
+};
+</script>
 
 <script type="text/babel">
 const { useState, useEffect, useRef, useCallback } = React;
@@ -4647,7 +4655,12 @@ function App() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+try {
+  ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+} catch(e) {
+  var d=document.getElementById('dbg-err');
+  if(d){d.style.display='block';d.textContent='ERRO AO INICIAR REACT:\n'+e.message+'\n\n'+e.stack;}
+}
 </script>
 </body>
 </html>
