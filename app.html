@@ -3080,11 +3080,12 @@ function MissionTab({user, currentDay, completedMissions, setCompletedMissions, 
   const [showXP,setShowXP]=useState(null);
   const activeMissions=getMissions(lang);
   const dayMissions=activeMissions[currentDay]||[];
-  const keystone=dayMissions.find(m=>m.keystone);
+  const keystone=dayMissions.find(m=>m.keystone)||null;
   const regularMissions=dayMissions.filter(m=>!m.keystone);
   const dayDone=(completedMissions[currentDay]||[]).length;
   const extraDone=(completedMissions["extra"]||[]).length;
-  const pcDay=getPC(lang)[currentDay];
+  const pcDay=getPC(lang)[currentDay]||null;
+  const keystoneDone=keystone?(completedMissions[currentDay]||[]).includes(keystone.id):false;
 
   const toggle=(dayKey, mId, mXp, isExtra=false)=>{
     setCompletedMissions(prev=>{
@@ -3121,22 +3122,19 @@ function MissionTab({user, currentDay, completedMissions, setCompletedMissions, 
       </div>
 
       {/* ⭐ KEYSTONE — missão principal */}
-      {keystone && (()=>{
-        const done=(completedMissions[currentDay]||[]).includes(keystone.id);
-        return (
-          <div>
-            <div style={{fontSize:10,fontWeight:800,color:th.accent,textTransform:"uppercase",letterSpacing:1.2,marginBottom:6}}>{S(lang,"mission_keystone")}</div>
-            <div onClick={()=>toggle(currentDay,keystone.id,keystone.xp)} className="hover-scale" style={{display:"flex",gap:12,padding:"14px 16px",borderRadius:16,cursor:"pointer",background:done?th.accentL:`linear-gradient(135deg,${th.accent}20,${th.accent}08)`,border:`2px solid ${done?th.accent+"60":th.accent}`,alignItems:"flex-start"}}>
-              <span style={{fontSize:22,flexShrink:0,marginTop:1}}>{done?"✅":"⭐"}</span>
-              <div style={{flex:1}}>
-                <div style={{fontSize:13,fontWeight:700,color:done?th.text3:th.text,textDecoration:done?"line-through":"none",marginBottom:keystone.tip?4:0}}>{keystone.t}</div>
-                {keystone.tip && !done && <div style={{fontSize:11,color:th.text3,lineHeight:1.5}}>{keystone.tip}</div>}
-              </div>
-              <div style={{fontSize:11,fontWeight:700,color:th.accent,background:th.accentL,padding:"3px 8px",borderRadius:10,flexShrink:0}}>+{keystone.xp}</div>
+      {keystone && (
+        <div>
+          <div style={{fontSize:10,fontWeight:800,color:th.accent,textTransform:"uppercase",letterSpacing:1.2,marginBottom:6}}>{S(lang,"mission_keystone")}</div>
+          <div onClick={()=>toggle(currentDay,keystone.id,keystone.xp)} className="hover-scale" style={{display:"flex",gap:12,padding:"14px 16px",borderRadius:16,cursor:"pointer",background:keystoneDone?th.accentL:`linear-gradient(135deg,${th.accent}20,${th.accent}08)`,border:keystoneDone?`2px solid ${th.accent}60`:`2px solid ${th.accent}`,alignItems:"flex-start"}}>
+            <span style={{fontSize:22,flexShrink:0,marginTop:1}}>{keystoneDone?"✅":"⭐"}</span>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:700,color:keystoneDone?th.text3:th.text,textDecoration:keystoneDone?"line-through":"none",marginBottom:keystone.tip?4:0}}>{keystone.t}</div>
+              {keystone.tip && !keystoneDone && <div style={{fontSize:11,color:th.text3,lineHeight:1.5}}>{keystone.tip}</div>}
             </div>
+            <div style={{fontSize:11,fontWeight:700,color:th.accent,background:th.accentL,padding:"3px 8px",borderRadius:10,flexShrink:0}}>+{keystone.xp}</div>
           </div>
-        );
-      })()}
+        </div>
+      )}
 
       {/* 🔑 INEGOCIÁVEIS */}
       <div style={{borderRadius:16,padding:"12px 14px",background:th.card2,border:`1px solid ${th.border2}`}}>
