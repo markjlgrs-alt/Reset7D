@@ -209,8 +209,8 @@ const makeCSS = (th) => `
 body{font-family:'Manrope',sans-serif;background:${th.bg};color:${th.text};-webkit-font-smoothing:antialiased;}
 ::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:${th.primary};border-radius:2px;}
 .serif{font-family:'Fraunces',serif;font-optical-sizing:auto;letter-spacing:-0.01em;}
-.glass{background:${th.card};border:1px solid ${th.border};}
-.glass2{background:${th.card2};border:1px solid ${th.border};}
+.glass{background:${th.card};border:1px solid ${th.cardBorder};box-shadow:0 6px 20px rgba(0,0,0,0.22),inset 0 1px 0 rgba(255,255,255,0.05);}
+.glass2{background:${th.card2};border:1px solid ${th.cardBorder};box-shadow:0 3px 12px rgba(0,0,0,0.16);}
 .hover-scale{transition:transform .18s,box-shadow .18s;cursor:pointer;}
 .hover-scale:active{transform:scale(0.97);}
 .slide-up{animation:su .38s ease forwards;}
@@ -223,8 +223,10 @@ body{font-family:'Manrope',sans-serif;background:${th.bg};color:${th.text};-webk
 @keyframes checkPop{0%{transform:scale(0) rotate(-20deg);opacity:0}65%{transform:scale(1.25);opacity:1}100%{transform:scale(1);opacity:1}}
 .check-circle{width:72px;height:72px;border-radius:50%;background:${th.greenL};border:2px solid ${th.green};display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;color:${th.green};animation:checkPop .5s ease forwards;}
 .grad-text{background:linear-gradient(135deg,${th.primary},${th.green});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.btn-s{background:${th.primaryL};border:1.5px solid ${th.border2};border-radius:13px;color:${th.primary};font-weight:700;font-size:13px;padding:11px 18px;cursor:pointer;font-family:'Manrope',sans-serif;}
-.btn-g{background:${th.greenL};border:1.5px solid rgba(157,217,184,.3);border-radius:13px;color:${th.green};font-weight:700;font-size:13px;padding:11px 18px;cursor:pointer;font-family:'Manrope',sans-serif;}
+.btn-s{background:linear-gradient(135deg,${th.primaryL},${th.card});border:1.5px solid ${th.border2};border-radius:13px;color:${th.primary};font-weight:700;font-size:13px;padding:11px 18px;cursor:pointer;font-family:'Manrope',sans-serif;transition:all .18s;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+.btn-s:hover{border-color:rgba(228,186,136,0.65);box-shadow:0 4px 16px rgba(228,186,136,0.22);transform:translateY(-1px);}
+.btn-g{background:linear-gradient(135deg,${th.greenL},${th.card});border:1.5px solid rgba(132,200,164,.35);border-radius:13px;color:${th.green};font-weight:700;font-size:13px;padding:11px 18px;cursor:pointer;font-family:'Manrope',sans-serif;transition:all .18s;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+.btn-g:hover{border-color:rgba(132,200,164,.65);box-shadow:0 4px 16px rgba(132,200,164,0.22);transform:translateY(-1px);}
 .xp-fly{position:fixed;top:35%;left:50%;transform:translateX(-50%);z-index:999;background:linear-gradient(135deg,${th.primary},${th.accent});border-radius:20px;padding:10px 22px;font-size:20px;font-weight:900;color:${th.bg};pointer-events:none;animation:xpf .9s ease forwards;}
 @keyframes xpf{0%{opacity:1;transform:translateX(-50%) scale(1) translateY(0);}60%{opacity:1;transform:translateX(-50%) scale(1.3) translateY(-20px);}100%{opacity:0;transform:translateX(-50%) scale(0.8) translateY(-50px);}}
 .pbar{height:100%;border-radius:999px;transition:width .8s ease;}
@@ -239,7 +241,7 @@ body{font-family:'Manrope',sans-serif;background:${th.bg};color:${th.text};-webk
 .pass-bar-track{height:5px;border-radius:99px;background:${th.border};overflow:hidden;margin-top:8px;}
 .pass-bar{height:5px;border-radius:99px;transition:width .45s,background .45s;}
 input,textarea{font-family:'Manrope',sans-serif;}
-.glass{background:${th.card};border:1px solid ${th.border};backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);}
+.glass{background:${th.card};border:1px solid ${th.cardBorder};backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 6px 20px rgba(0,0,0,0.22),inset 0 1px 0 rgba(255,255,255,0.05);}
 .auth-card{position:relative;z-index:1;box-shadow:0 0 60px rgba(232,164,192,0.08),0 20px 60px rgba(0,0,0,0.4);transition:box-shadow .3s;}
 .auth-card:hover{box-shadow:0 0 80px rgba(232,164,192,0.15),0 24px 70px rgba(0,0,0,0.5);}
 .btn-p{background:linear-gradient(135deg,${th.primary},${th.text2});border:none;border-radius:14px;color:${th.bg};font-weight:700;font-size:14px;padding:13px;cursor:pointer;width:100%;font-family:'Manrope',sans-serif;transition:all .2s;position:relative;overflow:hidden;}
@@ -278,7 +280,7 @@ input,textarea{font-family:'Manrope',sans-serif;}
 .quiz-opt-selected{animation:optionPick .45s ease forwards !important;}
 .ripple-wave{position:absolute;border-radius:50%;pointer-events:none;transform:scale(0);animation:rippleWave .6s ease-out forwards;}
 .card-interactive{transition:transform .25s cubic-bezier(.2,0,.2,1),box-shadow .25s;}
-.card-interactive:hover{transform:translateY(-5px) scale(1.015);box-shadow:0 18px 44px rgba(232,164,192,0.16) !important;}
+.card-interactive:hover{transform:translateY(-5px) scale(1.015);box-shadow:0 18px 44px rgba(228,186,136,0.20),0 6px 20px rgba(0,0,0,0.25) !important;}
 .auth-form-panel{background:rgba(43,28,53,0.42);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(212,138,192,0.14);border-radius:22px;}
 @keyframes logoSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 @keyframes quizResultIn{from{transform:translateY(30px) scale(0.95);opacity:0;}to{transform:translateY(0) scale(1);opacity:1;}}
@@ -3171,13 +3173,62 @@ const MSGS={
     "Você não está perdendo peso. Você está ganhando clareza sobre quem decide ser — e isso muda tudo que vem depois.",
     "Ninguém vai aplaudir suas escolhas silenciosas das 6h da manhã. Mas a mulher que você está se tornando vai sentir cada uma delas.",
   ],
+  reflex:[
+    "Qual a última vez que você agiu diferente do que sempre age — não porque alguém pediu, mas porque você decidiu ser outra pessoa?",
+    "Você repete o mesmo padrão não porque é fraca. Você o repete porque ele ainda cumpre uma função que você ainda não identificou.",
+    "O que você chama de 'eu sou assim' quase sempre é 'eu aprendi a ser assim quando era perigoso ser diferente'.",
+    "Se você pudesse observar suas próprias decisões da última semana como uma estranha — o que perceberia que ainda não percebeu?",
+    "Existe uma crença sobre você mesma que você carrega há anos e que nunca foi sua. Foi instalada por alguém que também a carregava.",
+    "Você sabe o que quer. O que vale examinar de verdade é o que você acredita que vai acontecer se você realmente conseguir.",
+    "Autossabotagem raramente parece autossabotagem. Ela parece bom senso, cansaço, exceção razoável, motivo completamente legítimo.",
+    "Quanto do que você faz todos os dias foi genuinamente escolhido — e quanto foi apenas herdado sem nenhum questionamento?",
+    "Existe uma diferença entre desistir de algo e reconhecer que aquilo nunca foi seu. Qual das duas você está chamando de desistência?",
+    "O desconforto que você sente quando está prestes a mudar não é um sinal de que você está errada. É sinal de que está chegando perto.",
+    "Você mantém hábitos que te diminuem porque em algum momento eles te protegeram. De quê exatamente você ainda está se protegendo?",
+    "A história que você conta sobre por que não consegue é elaborada e coerente. A história sobre por que poderia ainda está em rascunho.",
+    "Em que momento você decidiu que precisar de tempo para si mesma era um luxo — e não uma necessidade fundamental para continuar?",
+    "A versão de você que você mais julga existiu porque precisou existir. A questão não é condená-la — é entender o que ela precisava.",
+  ],
 };
 
 // ── DESIGN DE MENSAGENS ────────────────────────────────────────
 const MSG_DESIGN={
-  relax:{bg:"linear-gradient(160deg,#081A0F 0%,#0B2316 100%)",accent:"#6FCBA0",text:"#C8E8DC",glow:"rgba(111,203,160,0.22)",tabGlow:"0 0 18px rgba(111,203,160,0.28),0 0 36px rgba(111,203,160,0.10)",icon:"🌿"},
-  hard: {bg:"linear-gradient(160deg,#110202 0%,#1D0606 100%)",accent:"#D03B1F",text:"#EDE8E8",glow:"rgba(208,59,31,0.22)",tabGlow:"0 0 18px rgba(208,59,31,0.32),0 0 36px rgba(208,59,31,0.10)",icon:"⚔️"},
-  vai:  {bg:"linear-gradient(160deg,#150A26 0%,#240F3C 100%)",accent:"#D48AC0",text:"#ECD8F5",glow:"rgba(212,138,192,0.22)",tabGlow:"0 0 18px rgba(212,138,192,0.30),0 0 36px rgba(212,138,192,0.10)",icon:"🔥"},
+  relax: {
+    bg:"linear-gradient(155deg,#050D08 0%,#08180C 100%)",
+    accent:"#5DC899",text:"#BAE8D2",
+    orbA:"radial-gradient(circle,rgba(93,200,153,0.32) 0%,transparent 70%)",
+    orbB:"radial-gradient(circle,rgba(93,200,153,0.16) 0%,transparent 70%)",
+    shadow:"rgba(93,200,153,0.22)",
+    tabGlow:"0 0 16px rgba(93,200,153,0.26),0 0 32px rgba(93,200,153,0.08)",
+    icon:"🌿",
+  },
+  reflex:{
+    bg:"linear-gradient(155deg,#06080F 0%,#0A0F1E 100%)",
+    accent:"#7BA8D4",text:"#C0D4EC",
+    orbA:"radial-gradient(circle,rgba(123,168,212,0.28) 0%,transparent 70%)",
+    orbB:"radial-gradient(circle,rgba(123,168,212,0.13) 0%,transparent 70%)",
+    shadow:"rgba(123,168,212,0.20)",
+    tabGlow:"0 0 16px rgba(123,168,212,0.24),0 0 32px rgba(123,168,212,0.08)",
+    icon:"🪞",
+  },
+  hard:  {
+    bg:"linear-gradient(155deg,#0B0502 0%,#190805 100%)",
+    accent:"#D9461E",text:"#EDE8E8",
+    orbA:"radial-gradient(circle,rgba(217,70,30,0.34) 0%,transparent 70%)",
+    orbB:"radial-gradient(circle,rgba(217,70,30,0.16) 0%,transparent 70%)",
+    shadow:"rgba(217,70,30,0.24)",
+    tabGlow:"0 0 16px rgba(217,70,30,0.28),0 0 32px rgba(217,70,30,0.08)",
+    icon:"⚔️",
+  },
+  vai:   {
+    bg:"linear-gradient(155deg,#0C0520 0%,#1C0A3A 100%)",
+    accent:"#C88AC0",text:"#ECD8F5",
+    orbA:"radial-gradient(circle,rgba(200,138,192,0.30) 0%,transparent 70%)",
+    orbB:"radial-gradient(circle,rgba(200,138,192,0.14) 0%,transparent 70%)",
+    shadow:"rgba(200,138,192,0.22)",
+    tabGlow:"0 0 16px rgba(200,138,192,0.26),0 0 32px rgba(200,138,192,0.08)",
+    icon:"🔥",
+  },
 };
 
 // ── HOME TAB ──────────────────────────────────────────────────
@@ -3187,8 +3238,8 @@ function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th, lan
   const [msgCat,setMsgCat]=useState("relax");
   const [msgIdx,setMsgIdx]=useState(()=>Math.floor(Math.random()*MSGS.relax.length));
   const [msgKey,setMsgKey]=useState(0);
-  const MSG_CATS=[{id:"relax",label:"🌿 Relax"},{id:"hard",label:"⚔️ Hard"},{id:"vai",label:"🔥 Vai"}];
-  const curD=MSG_DESIGN[msgCat];
+  const MSG_CATS=[{id:"relax",label:"RELAX"},{id:"reflex",label:"REFLEX"},{id:"hard",label:"HARD"},{id:"vai",label:"VAI"}];
+  const curD=MSG_DESIGN[msgCat]||MSG_DESIGN.relax;
   const curMsg=MSGS[msgCat][msgIdx%MSGS[msgCat].length];
   const msgWords=curMsg.split(' ');
   const nextMsg=()=>{setMsgIdx(i=>(i+1)%MSGS[msgCat].length);setMsgKey(k=>k+1);};
@@ -3229,41 +3280,52 @@ function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th, lan
       </div>
 
       {/* ── MENSAGEM DO DIA ── */}
-      <div className="slide-up" style={{borderRadius:26,overflow:"hidden",animationDelay:".04s",boxShadow:`0 16px 60px ${curD.glow},0 4px 20px rgba(0,0,0,0.55)`}}>
-        {/* Pill tabs */}
-        <div style={{background:"#080808",padding:"14px 14px 0",display:"flex",gap:8}}>
+      <div className="slide-up" style={{borderRadius:28,overflow:"hidden",animationDelay:".04s",boxShadow:`0 20px 70px ${curD.shadow},0 6px 24px rgba(0,0,0,0.65)`}}>
+        {/* Tab bar — 4 categorias */}
+        <div style={{background:"#050505",display:"flex",padding:"10px 6px 0",gap:0}}>
           {MSG_CATS.map(cat=>{
             const d=MSG_DESIGN[cat.id];const active=msgCat===cat.id;
             return (
-              <button key={cat.id} onClick={()=>switchMsgCat(cat.id)} style={{flex:1,padding:"11px 6px",borderRadius:15,border:active?`1.5px solid ${d.accent}55`:"1.5px solid rgba(255,255,255,0.07)",background:active?`${d.accent}1A`:"transparent",cursor:"pointer",fontSize:11,fontWeight:900,color:active?d.accent:"rgba(255,255,255,0.22)",fontFamily:"'Manrope',sans-serif",letterSpacing:.7,transition:"all .28s ease",boxShadow:active?d.tabGlow:"none"}}>
-                {cat.label}
+              <button key={cat.id} onClick={()=>switchMsgCat(cat.id)} style={{flex:1,padding:"9px 2px 10px",background:active?`${d.accent}0E`:"transparent",border:"none",borderBottom:active?`2.5px solid ${d.accent}`:"2.5px solid rgba(255,255,255,0.05)",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4,transition:"all .28s",boxShadow:active?d.tabGlow:"none"}}>
+                <span style={{fontSize:17,lineHeight:1,filter:active?"none":"grayscale(1)",opacity:active?1:.28,transform:active?"scale(1.14)":"scale(1)",transition:"all .28s",display:"block"}}>{d.icon}</span>
+                <span style={{fontSize:8,fontWeight:900,letterSpacing:1.8,color:active?d.accent:"rgba(255,255,255,0.16)",fontFamily:"'Manrope',sans-serif",transition:"color .28s"}}>{cat.label}</span>
               </button>
             );
           })}
         </div>
-        {/* Message area */}
-        <div style={{background:curD.bg,padding:"26px 24px 20px",minHeight:228,position:"relative",overflow:"hidden"}}>
-          {/* Radial glow orb */}
-          <div style={{position:"absolute",top:-50,right:-50,width:200,height:200,borderRadius:"50%",background:curD.glow,filter:"blur(55px)",pointerEvents:"none",opacity:.7}}/>
-          {/* Ghost icon texture */}
-          <div style={{position:"absolute",right:-18,bottom:-14,fontSize:155,opacity:.055,lineHeight:1,pointerEvents:"none",userSelect:"none",transform:"rotate(-8deg)",filter:"saturate(0) brightness(1.4)"}}>{curD.icon}</div>
-          {/* Message */}
+        {/* Corpo do card */}
+        <div style={{background:curD.bg,padding:"26px 22px 20px",minHeight:248,position:"relative",overflow:"hidden"}}>
+          {/* Orb A — superior direito */}
+          <div style={{position:"absolute",top:-60,right:-60,width:190,height:190,borderRadius:"50%",background:curD.orbA,filter:"blur(45px)",pointerEvents:"none"}}/>
+          {/* Orb B — inferior esquerdo */}
+          <div style={{position:"absolute",bottom:-45,left:-45,width:140,height:140,borderRadius:"50%",background:curD.orbB,filter:"blur(38px)",pointerEvents:"none"}}/>
+          {/* Ícone fantasma */}
+          <div style={{position:"absolute",right:-10,bottom:-8,fontSize:150,opacity:.046,lineHeight:1,pointerEvents:"none",userSelect:"none",transform:"rotate(-5deg)",filter:"saturate(0)"}}>{curD.icon}</div>
+          {/* Eyebrow */}
+          <div style={{position:"relative",zIndex:1,marginBottom:18}}>
+            <div style={{fontSize:8,fontWeight:900,letterSpacing:2.8,color:`${curD.accent}70`,fontFamily:"'Manrope',sans-serif",textTransform:"uppercase",marginBottom:6}}>mensagem do dia</div>
+            <div style={{width:28,height:1.5,background:curD.accent,opacity:.35,borderRadius:999}}/>
+          </div>
+          {/* Mensagem */}
           <div key={msgKey} className="fade" style={{position:"relative",zIndex:1,marginBottom:26}}>
-            <div style={{fontFamily:"'Fraunces',serif",fontSize:19,fontWeight:500,fontStyle:"italic",lineHeight:1.75,color:curD.text,letterSpacing:.02}}>
+            <div style={{fontFamily:"'Fraunces',serif",fontSize:20,fontWeight:500,fontStyle:"italic",lineHeight:1.76,color:curD.text,letterSpacing:.012}}>
               <span style={{color:curD.accent,fontWeight:700}}>{msgWords[0]}</span>
               {' '+msgWords.slice(1).join(' ')}
             </div>
           </div>
-          {/* Controls */}
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",position:"relative",zIndex:1}}>
-            <div style={{display:"flex",gap:5,alignItems:"center"}}>
-              {Array.from({length:MSGS[msgCat].length}).map((_,i)=>{
-                const cur=msgIdx%MSGS[msgCat].length;
-                return <button key={i} onClick={()=>{setMsgIdx(i);setMsgKey(k=>k+1);}} style={{width:cur===i?18:5,height:5,borderRadius:999,background:cur===i?curD.accent:`${curD.accent}28`,border:"none",cursor:"pointer",padding:0,transition:"all .35s ease",flexShrink:0}}/>;
-              })}
+          {/* Controles */}
+          <div style={{display:"flex",alignItems:"center",gap:12,position:"relative",zIndex:1}}>
+            {/* Barra de progresso */}
+            <div style={{flex:1,height:2,background:`${curD.accent}14`,borderRadius:999,overflow:"hidden"}}>
+              <div style={{height:"100%",width:`${((msgIdx%MSGS[msgCat].length)+1)/MSGS[msgCat].length*100}%`,background:curD.accent,borderRadius:999,transition:"width .45s cubic-bezier(.4,0,.2,1)",boxShadow:`0 0 8px ${curD.shadow}`}}/>
             </div>
-            <button onClick={nextMsg} style={{background:`${curD.accent}1C`,border:`1.5px solid ${curD.accent}40`,borderRadius:14,padding:"9px 16px",color:curD.accent,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"'Manrope',sans-serif",letterSpacing:.5,display:"flex",alignItems:"center",gap:6}}>
-              próxima <span style={{fontSize:14}}>→</span>
+            {/* Contador */}
+            <span style={{fontSize:10,fontWeight:700,color:`${curD.accent}70`,fontFamily:"'Manrope',sans-serif",letterSpacing:.4,flexShrink:0}}>
+              {(msgIdx%MSGS[msgCat].length)+1}<span style={{opacity:.45}}>/{MSGS[msgCat].length}</span>
+            </span>
+            {/* Botão próxima */}
+            <button onClick={nextMsg} style={{background:`${curD.accent}16`,border:`1.5px solid ${curD.accent}35`,borderRadius:13,padding:"9px 15px",color:curD.accent,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"'Manrope',sans-serif",letterSpacing:.5,display:"flex",alignItems:"center",gap:6,flexShrink:0,boxShadow:`0 0 16px ${curD.shadow}`,transition:"box-shadow .2s,transform .15s"}}>
+              próxima <span style={{fontSize:13}}>→</span>
             </button>
           </div>
         </div>
