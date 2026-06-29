@@ -37,6 +37,8 @@ app.use(helmet({
 }));
 
 // ── Segurança: CORS restrito ──────────────────────────────────
+// Para deploy na Vercel/Netlify, adicione a URL EXATA em ALLOWED_ORIGINS:
+//   ALLOWED_ORIGINS=https://seuapp.vercel.app,https://reset7d.com.br
 const allowed = (process.env.ALLOWED_ORIGINS || "http://localhost:3001")
   .split(",")
   .map(o => o.trim());
@@ -45,8 +47,6 @@ app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
     if (allowed.includes(origin)) return cb(null, true);
-    // Permite qualquer subdomínio Vercel em produção
-    if (origin.endsWith(".vercel.app")) return cb(null, true);
     cb(new Error("CORS bloqueado: origem não autorizada."));
   },
   credentials: true,
@@ -77,6 +77,12 @@ const limiterEmail = rateLimit({
   message: { error: "RATE_LIMIT_EXCEEDED", message: "Muitas tentativas. Tente novamente em 5 minutos." },
 });
 
+const limiterReset = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 10,
+  standardHeaders: true, legacyHeaders: false,
+  message: { error: "TOO_MANY_REQUESTS", message: "Muitas tentativas de redefinição. Aguarde 15 minutos." },
+});
+
 app.use(limiterGlobal);
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -88,6 +94,22 @@ function isResendConfigured() {
 // Sanitiza texto: remove tags HTML e limita tamanho
 function sanitize(str, maxLen = 2000) {
   return (str || "").replace(/<[^>]*>/g, "").replace(/[^\S\n]+/g, " ").trim().slice(0, maxLen);
+}
+
+// Mascara email nos logs: joao@gmail.com → joa***@gmail.com
+function maskEmail(email) {
+  const parts = (email || "").split("@");
+  if (parts.length !== 2) return "***";
+  return parts[0].slice(0, 3) + "***@" + parts[1];
+}
+
+// Registra evento de segurança na tabela security_events
+async function logSecurityEvent(type, userEmail, ip, detail) {
+  try {
+    await supabase.from("security_events").insert({
+      type, user_email: userEmail || null, ip_addr: ip || null, detail: detail || null,
+    });
+  } catch { /* não bloqueia o fluxo se o log falhar */ }
 }
 
 // Valida email
@@ -242,6 +264,7 @@ app.post("/api/login", limiterAuth, async (req, res) => {
   const match = await bcrypt.compare(password, hashToCompare);
 
   if (!user || !match) {
+    await logSecurityEvent("failed_login", email, req.ip, "Credenciais inválidas");
     return res.status(401).json({ error: "INVALID_CREDENTIALS", message: "E-mail ou senha incorretos." });
   }
 
@@ -320,7 +343,7 @@ app.post("/api/send-recovery-email", limiterEmail, async (req, res) => {
       return res.status(500).json({ error: "SEND_FAILED", message: "Falha ao enviar e-mail." });
     }
 
-    console.log(`[Resend] Enviado → ${email} (${data?.id})`);
+    console.log(`[Resend] Enviado → ${maskEmail(email)} (${data?.id})`);
     res.json({ success: true, message: "E-mail enviado com sucesso." });
   } catch (err) {
     console.error("[Resend] Exception:", err.statusCode || "unknown");
@@ -329,7 +352,7 @@ app.post("/api/send-recovery-email", limiterEmail, async (req, res) => {
 });
 
 // ── Redefinição de senha ──────────────────────────────────────
-app.post("/api/reset-password", async (req, res) => {
+app.post("/api/reset-password", limiterReset, async (req, res) => {
   const token       = (req.body?.token || "").trim().slice(0, 128);
   const newPassword = req.body?.newPassword || "";
 
@@ -352,6 +375,7 @@ app.post("/api/reset-password", async (req, res) => {
     .maybeSingle();
 
   if (!record || new Date(record.expires_at) < new Date()) {
+    await logSecurityEvent("invalid_reset_token", null, req.ip, "Token inválido ou expirado");
     return res.status(400).json({ error: "TOKEN_EXPIRED", message: "Link inválido ou expirado. Solicite um novo." });
   }
 
@@ -395,9 +419,12 @@ app.post("/api/community", requireAuth, async (req, res) => {
   const text  = sanitize(req.body?.text, 1000);
   const photo = req.body?.photo || null;
 
-  // Valida foto: deve ser data URL de imagem JPEG/PNG/WEBP
+  // Valida foto: deve ser data URL de imagem JPEG/PNG/WEBP com no máximo ~1MB
   if (photo && !/^data:image\/(jpeg|png|webp);base64,/.test(photo)) {
     return res.status(400).json({ error: "INVALID_PHOTO", message: "Formato de imagem inválido." });
+  }
+  if (photo && photo.length > 1_400_000) {
+    return res.status(413).json({ error: "PHOTO_TOO_LARGE", message: "Imagem muito grande. Máximo: 1MB." });
   }
   if (!text && !photo) {
     return res.status(400).json({ error: "EMPTY_POST", message: "Post não pode ser vazio." });
@@ -467,6 +494,145 @@ app.post("/api/community/:id/comment", requireAuth, async (req, res) => {
   res.json({ success: true });
 });
 
+// ── Validação de Cupom ────────────────────────────────────────
+// Cupons vivem no banco — nunca no frontend.
+// Retorna desconto apenas; a APLICAÇÃO do desconto acontece no checkout.
+app.post("/api/validate-coupon", requireAuth, limiterAuth, async (req, res) => {
+  const code = sanitize(req.body?.code, 50).toUpperCase().replace(/\s/g, "");
+
+  if (!code || !/^[A-Z0-9_\-]{3,30}$/.test(code)) {
+    return res.status(400).json({ error: "INVALID_CODE", message: "Código inválido." });
+  }
+
+  const { data: coupon } = await supabase
+    .from("coupons")
+    .select("id, discount_pct, discount_fixed, product_id, max_uses, uses_count, expires_at, active")
+    .eq("code", code)
+    .eq("active", true)
+    .maybeSingle();
+
+  if (!coupon) {
+    return res.status(404).json({ error: "COUPON_NOT_FOUND", message: "Cupom não encontrado ou inválido." });
+  }
+  if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
+    return res.status(400).json({ error: "COUPON_EXPIRED", message: "Cupom expirado." });
+  }
+  if (coupon.max_uses !== null && coupon.uses_count >= coupon.max_uses) {
+    return res.status(400).json({ error: "COUPON_EXHAUSTED", message: "Cupom esgotado." });
+  }
+
+  // Verifica se este usuário já usou o cupom
+  const { data: used } = await supabase
+    .from("coupon_uses")
+    .select("id")
+    .eq("coupon_id", coupon.id)
+    .eq("user_email", req.user.email)
+    .maybeSingle();
+
+  if (used) {
+    await logSecurityEvent("coupon_abuse", req.user.email, req.ip, `Reutilização do cupom ${code}`);
+    return res.status(400).json({ error: "COUPON_ALREADY_USED", message: "Você já utilizou este cupom." });
+  }
+
+  res.json({
+    success:        true,
+    discount_pct:   coupon.discount_pct   || 0,
+    discount_fixed: coupon.discount_fixed || 0,
+    product_id:     coupon.product_id     || null,
+    message:        "Cupom válido! ✅",
+  });
+});
+
+// ── Consulta de Acesso Premium do Usuário ─────────────────────
+app.get("/api/my-access", requireAuth, async (req, res) => {
+  const { data, error } = await supabase
+    .from("purchases")
+    .select("product_id, status, created_at")
+    .eq("user_email", req.user.email)
+    .eq("status", "confirmed");
+
+  if (error) {
+    console.error("[DB] my-access:", error.code);
+    return res.status(500).json({ error: "DB_ERROR" });
+  }
+  res.json({ products: (data || []).map(p => p.product_id) });
+});
+
+// ── Webhook de Pagamento (Hotmart / Kiwify) ───────────────────
+// Hotmart:  X-Hotmart-Hottok header com o token secreto
+// Kiwify:   X-Kiwify-Signature header
+// Configure WEBHOOK_TOKEN em .env com o token gerado no painel.
+app.post("/api/webhook/payment", express.json({ limit: "1mb" }), async (req, res) => {
+  const incomingToken =
+    req.headers["x-hotmart-hottok"]     ||
+    req.headers["x-kiwify-signature"]   ||
+    req.headers["x-webhook-token"]      || "";
+
+  const expectedToken = process.env.WEBHOOK_TOKEN || "";
+
+  // Rejeita se token ausente ou incorreto
+  if (!expectedToken || incomingToken !== expectedToken) {
+    console.warn("[Webhook] Token inválido de", req.ip);
+    return res.status(401).json({ error: "UNAUTHORIZED" });
+  }
+
+  const body = req.body || {};
+  const event = body.event || body.type || "";
+
+  // Eventos de pagamento confirmado
+  const APPROVED_EVENTS = [
+    "PURCHASE_APPROVED", "PURCHASE_COMPLETE",  // Hotmart
+    "order.paid", "order.approved",             // Kiwify
+    "payment_confirmed",                         // genérico
+  ];
+
+  if (!APPROVED_EVENTS.includes(event)) {
+    // Outros eventos (reembolso, chargeback etc.) são ignorados por ora
+    return res.json({ ok: true, ignored: true });
+  }
+
+  // Extrai e-mail e produto — campos diferem por plataforma
+  const email = (
+    body?.data?.buyer?.email       ||   // Hotmart
+    body?.data?.customer?.email    ||   // Kiwify
+    body?.customer?.email          ||
+    body?.buyer?.email             || ""
+  ).toLowerCase().trim();
+
+  const productId = String(
+    body?.data?.product?.id        ||
+    body?.data?.product_id         ||
+    body?.product?.id              ||
+    body?.product_id               || "r7d_premium"
+  ).slice(0, 100);
+
+  if (!email) {
+    console.error("[Webhook] E-mail ausente no evento", event);
+    return res.status(400).json({ error: "NO_EMAIL" });
+  }
+
+  const { error: dbErr } = await supabase
+    .from("purchases")
+    .upsert(
+      {
+        user_email:  email,
+        product_id:  productId,
+        status:      "confirmed",
+        raw_event:   JSON.stringify(body).slice(0, 8000),
+        confirmed_at: new Date().toISOString(),
+      },
+      { onConflict: "user_email,product_id" }
+    );
+
+  if (dbErr) {
+    console.error("[Webhook] DB error:", dbErr.code);
+    return res.status(500).json({ error: "DB_ERROR" });
+  }
+
+  console.log(`[Webhook] Compra confirmada: ${maskEmail(email)} → produto ${productId}`);
+  res.json({ ok: true });
+});
+
 // ── Export para Vercel / Start local ─────────────────────────
 if (require.main === module) {
   app.listen(PORT, () => {
@@ -475,6 +641,7 @@ if (require.main === module) {
     console.log(`🔒  Segurança:  JWT + Helmet + Rate Limit + CORS restrito`);
     console.log(`🗄️   Supabase:   ${process.env.SUPABASE_URL ? "✅" : "⚠️  SUPABASE_URL não definida"}`);
     console.log(`📧  Resend:     ${isResendConfigured() ? "✅" : "⚠️  RESEND_API_KEY ausente"}`);
+    console.log(`🎟️   Webhook:   ${process.env.WEBHOOK_TOKEN ? "✅" : "⚠️  WEBHOOK_TOKEN ausente"}`);
   });
 }
 

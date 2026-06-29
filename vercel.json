@@ -6,6 +6,8 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/backend/server.js" },
+    { "src": "/demo.html", "dest": "/app.html" },
+    { "src": "/recuperar-senha-demo.html", "dest": "/app.html" },
     { "src": "/", "dest": "/app.html" },
     { "src": "/(.*)", "dest": "/$1" }
   ]

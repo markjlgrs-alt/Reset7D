@@ -154,13 +154,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Manrope',sans-serif;background:#1f1620;}
+    body{font-family:'Manrope',sans-serif;background:#2b1c35;}
     #root{height:100vh;}
   </style>
 </head>
 <body>
 <div id="root"></div>
-<div id="dbg-err" style="display:none;position:fixed;inset:0;z-index:99999;background:#1f1620;color:#f5e6ed;padding:24px;font-family:monospace;font-size:13px;overflow:auto;white-space:pre-wrap;"></div>
+<div id="dbg-err" style="display:none;position:fixed;inset:0;z-index:99999;background:#2b1c35;color:#eedff5;padding:24px;font-family:monospace;font-size:13px;overflow:auto;white-space:pre-wrap;"></div>
 <script>
 window.BACKEND_URL=window.location.hostname==="localhost"?"http://localhost:3001":"";
 window.onerror=function(msg,src,line,col,err){
@@ -180,24 +180,24 @@ const { AreaChart, Area, BarChart, Bar, RadarChart, Radar,
 // ── TEMA ─────────────────────────────────────────────────────
 const THEMES = {
   dark: {
-    bg:"#1f1620", bg2:"#251a26", bg3:"#2a1d2c",
-    card:"#2c1f2e", card2:"#332433", cardSolid:"#2c1f2e",
-    text:"#f5e6ed", text2:"#e8b4cc", text3:"#a89098",
-    border:"rgba(245,230,237,0.08)", border2:"rgba(232,180,204,0.22)",
-    primary:"#e8a4c0", primaryL:"rgba(232,164,192,0.13)", primaryM:"rgba(232,164,192,0.25)",
-    green:"#9dd9b8", greenL:"rgba(157,217,184,0.14)",
-    accent:"#f4c896", accentL:"rgba(244,200,150,0.14)",
-    inputBg:"#332433", shadow:"0 4px 24px rgba(0,0,0,0.3)",
+    bg:"#2b1c35", bg2:"#321f3d", bg3:"#3a2448",
+    card:"#3e2455", card2:"#472c63", cardSolid:"#3e2455",
+    text:"#eedff5", text2:"#cca8de", text3:"#8a6ea6",
+    border:"rgba(238,223,245,0.08)", border2:"rgba(204,168,222,0.22)",
+    primary:"#d48ac0", primaryL:"rgba(212,138,192,0.13)", primaryM:"rgba(212,138,192,0.25)",
+    green:"#84c8a4", greenL:"rgba(132,200,164,0.14)",
+    accent:"#e4ba88", accentL:"rgba(228,186,136,0.14)",
+    inputBg:"#3e2455", shadow:"0 4px 22px rgba(0,0,0,0.28)",
   },
   light: {
-    bg:"#fff7fa", bg2:"#ffe9f0", bg3:"#ffd9e3",
-    card:"#ffffff", card2:"#fff3f7", cardSolid:"#ffffff",
-    text:"#2d1521", text2:"#b54573", text3:"#8a7681",
-    border:"rgba(0,0,0,0.06)", border2:"rgba(225,29,72,0.18)",
-    primary:"#d6628e", primaryL:"rgba(214,98,142,0.08)", primaryM:"rgba(214,98,142,0.18)",
-    green:"#56b685", greenL:"rgba(86,182,133,0.1)",
-    accent:"#d4922f", accentL:"rgba(212,146,47,0.12)",
-    inputBg:"#fdf4f7", shadow:"0 2px 16px rgba(0,0,0,0.06)",
+    bg:"#faf5ff", bg2:"#f2e8ff", bg3:"#e8d8f8",
+    card:"#ffffff", card2:"#f8f0fe", cardSolid:"#ffffff",
+    text:"#2c1a3c", text2:"#8040a8", text3:"#7862a0",
+    border:"rgba(0,0,0,0.06)", border2:"rgba(180,80,180,0.18)",
+    primary:"#bf5a9a", primaryL:"rgba(191,90,154,0.08)", primaryM:"rgba(191,90,154,0.18)",
+    green:"#4aa878", greenL:"rgba(74,168,120,0.1)",
+    accent:"#c88828", accentL:"rgba(200,136,40,0.12)",
+    inputBg:"#f2e8ff", shadow:"0 2px 16px rgba(0,0,0,0.06)",
   }
 };
 // alias para compatibilidade com código de auth (usa T.primary etc)
@@ -230,8 +230,8 @@ body{font-family:'Manrope',sans-serif;background:${th.bg};color:${th.text};-webk
 .pbar{height:100%;border-radius:999px;transition:width .8s ease;}
 .pb-rose{background:linear-gradient(90deg,${th.primary},${th.text2});}
 .pb-green{background:linear-gradient(90deg,${th.green},${th.green});}
-.overlay{position:fixed;inset:0;z-index:200;background:rgba(20,12,18,0.55);backdrop-filter:blur(4px);}
-.modal-wrap{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(20,12,18,0.5);}
+.overlay{position:fixed;inset:0;z-index:200;background:rgba(22,12,32,0.60);backdrop-filter:blur(4px);}
+.modal-wrap{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(22,12,32,0.55);}
 .divider{height:1px;background:${th.border};margin:12px 0;}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top:2px solid #fff;border-radius:50%;animation:spin .65s linear infinite;vertical-align:middle;}
 .inp-wrap{position:relative;}
@@ -279,7 +279,7 @@ input,textarea{font-family:'Manrope',sans-serif;}
 .ripple-wave{position:absolute;border-radius:50%;pointer-events:none;transform:scale(0);animation:rippleWave .6s ease-out forwards;}
 .card-interactive{transition:transform .25s cubic-bezier(.2,0,.2,1),box-shadow .25s;}
 .card-interactive:hover{transform:translateY(-5px) scale(1.015);box-shadow:0 18px 44px rgba(232,164,192,0.16) !important;}
-.auth-form-panel{background:rgba(31,22,32,0.35);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(232,164,192,0.12);border-radius:22px;}
+.auth-form-panel{background:rgba(43,28,53,0.42);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(212,138,192,0.14);border-radius:22px;}
 @keyframes logoSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 @keyframes quizResultIn{from{transform:translateY(30px) scale(0.95);opacity:0;}to{transform:translateY(0) scale(1);opacity:1;}}
 .quiz-result-card{animation:quizResultIn .5s cubic-bezier(.2,0,.2,1) both;}
@@ -602,24 +602,24 @@ DB.saveClDay     = (email,v) => localStorage.setItem(`r7d_cl_day_${email}`, JSON
 // ── CALÇA LARGA — TEMAS ───────────────────────────────────────
 const CL_THEMES = {
   dark:{
-    bg:"#182218",bg2:"#1e2a1e",bg3:"#223028",
-    card:"#1f2c1f",card2:"#233228",cardSolid:"#1f2c1f",
-    text:"#e6f5e9",text2:"#9dd9b8",text3:"#7a9a80",
-    border:"rgba(230,245,233,0.08)",border2:"rgba(157,217,184,0.22)",
-    primary:"#5db88a",primaryL:"rgba(93,184,138,0.13)",primaryM:"rgba(93,184,138,0.25)",
-    green:"#9dd9b8",greenL:"rgba(157,217,184,0.14)",
-    accent:"#a8d68c",accentL:"rgba(168,214,140,0.14)",
-    inputBg:"#233228",shadow:"0 4px 24px rgba(0,0,0,0.3)",
+    bg:"#192a1e",bg2:"#1f3324",bg3:"#25382a",
+    card:"#253c2b",card2:"#2c4633",cardSolid:"#253c2b",
+    text:"#e2f2e8",text2:"#90cc9e",text3:"#6a8870",
+    border:"rgba(226,242,232,0.08)",border2:"rgba(144,204,158,0.22)",
+    primary:"#54a87e",primaryL:"rgba(84,168,126,0.13)",primaryM:"rgba(84,168,126,0.25)",
+    green:"#90cc9e",greenL:"rgba(144,204,158,0.14)",
+    accent:"#9cc880",accentL:"rgba(156,200,128,0.14)",
+    inputBg:"#2c4633",shadow:"0 4px 22px rgba(0,0,0,0.28)",
   },
   light:{
-    bg:"#f4fbf6",bg2:"#e6f5eb",bg3:"#d4edda",
-    card:"#ffffff",card2:"#f0faf3",cardSolid:"#ffffff",
-    text:"#1a3022",text2:"#3a8f60",text3:"#5a8070",
-    border:"rgba(0,0,0,0.06)",border2:"rgba(57,142,91,0.18)",
-    primary:"#3a8f60",primaryL:"rgba(58,143,96,0.08)",primaryM:"rgba(58,143,96,0.18)",
-    green:"#56b685",greenL:"rgba(86,182,133,0.1)",
-    accent:"#7ab554",accentL:"rgba(122,181,84,0.12)",
-    inputBg:"#f4fbf6",shadow:"0 2px 16px rgba(0,0,0,0.06)",
+    bg:"#f6fcf7",bg2:"#e8f5ed",bg3:"#d8eedd",
+    card:"#ffffff",card2:"#f2faf5",cardSolid:"#ffffff",
+    text:"#1c3022",text2:"#3a8858",text3:"#567868",
+    border:"rgba(0,0,0,0.06)",border2:"rgba(58,136,88,0.18)",
+    primary:"#389058",primaryL:"rgba(56,144,88,0.08)",primaryM:"rgba(56,144,88,0.18)",
+    green:"#52b480",greenL:"rgba(82,180,128,0.1)",
+    accent:"#74b050",accentL:"rgba(116,176,80,0.12)",
+    inputBg:"#eaf5ee",shadow:"0 2px 16px rgba(0,0,0,0.06)",
   }
 };
 
@@ -3121,10 +3121,74 @@ function HardDayModal({currentDay, th, lang, onClose}) {
   );
 }
 
+// ── MENSAGENS MOTIVACIONAIS ────────────────────────────────────
+const MSGS={
+  relax:[
+    "Desacelerar não é desistir. É reconhecer que você é um ser vivo — não uma máquina de resultados. Respire sem culpa.",
+    "A ansiedade mente quando diz que você precisa resolver tudo agora. Nenhuma transformação real acontece na urgência. Ela acontece na constância silenciosa.",
+    "Você não vai arruinar tudo se pausar hoje. O que construiu nos outros dias não desaparece por um momento de cuidado.",
+    "Existe uma coragem que ninguém aplaude: a de não se punir quando erra. Essa coragem também é sua.",
+    "Seu valor não é proporcional ao seu peso. Nem à sua produtividade. Nem a quantas coisas você fez hoje.",
+    "A paz não é o oposto do progresso. Às vezes ela é o solo onde o progresso cresce.",
+    "Tem dias em que o ato mais corajoso é simplesmente não agir com violência contra você mesma.",
+    "O silêncio depois de uma semana difícil não é vazio — é espaço. Use para sentir, não para preencher.",
+    "Sua jornada não precisa ser épica todos os dias. Alguns dias são capítulos de transição — e toda boa história precisa deles.",
+    "Cuidar de si mesma não é um prêmio que você ganha quando chegar lá. É o caminho que leva até lá.",
+    "A culpa depois de um dia imperfeito diz mais sobre o padrão impossível que você criou do que sobre quem você realmente é.",
+    "Seu corpo não é seu inimigo. Ele te carrega todos os dias — mesmo quando você o ignora. Isso merece reconhecimento.",
+    "Você pode estar exausta e ainda ser forte. Essas duas coisas coexistem — e ninguém precisa saber das duas ao mesmo tempo.",
+    "Não existe progresso perfeito. Existe progresso real, irregular e imperfeito — e ele é o único que dura.",
+  ],
+  hard:[
+    "Você já tem a informação. Você já sabe o que precisa fazer. O que falta não é conhecimento — é a decisão de parar de negociar com sua versão menor.",
+    "Conforto e transformação não dividem o mesmo espaço. Você pode ter um ou o outro — não os dois ao mesmo tempo.",
+    "Toda vez que cede ao impulso de hoje, você vota contra a mulher que quer se tornar amanhã. Cada escolha é um voto.",
+    "A disciplina não é uma qualidade de quem nasce com ela. É uma habilidade construída escolha por escolha, nos dias em que você menos quer.",
+    "Suas desculpas são criativas, detalhadas e fazem todo sentido. E ainda são desculpas.",
+    "Você ainda está esperando se sentir pronta para agir. Essa sensação nunca vem antes da ação — ela vem depois.",
+    "Você não vai se tornar outra pessoa esperando o momento certo. O momento certo é o que você faz com o momento que tem.",
+    "A mulher que você admira não tem dias mais fáceis. Ela só parou de deixar os dias difíceis decidirem por ela.",
+    "Você pode se sentir exausta e ainda fazer. Esperar pelo estado emocional ideal é uma armadilha sofisticada.",
+    "Parar por um dia pode ser descanso. Parar por três dias começa a ser identidade. Você está descansando ou se redefinindo?",
+    "Sua versão ideal não vai aparecer como uma revelação. Ela vai emergir de centenas de escolhas pequenas, invisíveis e sem aplauso.",
+    "O problema não é que você não consegue. O problema é que você ainda não decidiu de verdade que vai.",
+    "Cada vez que você quebra um compromisso com você mesma, o custo não é a escolha de hoje — é a confiança que você tem em si mesma.",
+    "Você não precisa de motivação para começar. Motivação é o que você ganha depois de começar sem ela.",
+  ],
+  vai:[
+    "Em algum ponto dessa jornada, você vai olhar para trás e não reconhecer a mulher que precisava se convencer a começar. Esse dia chega — mas só para quem continua.",
+    "Tem uma mulher dentro de você que nunca precisou de aprovação, nunca teve medo de ocupar espaço, nunca duvidou do próprio valor. Você não vai criá-la — vai encontrá-la.",
+    "Transformação não é uma linha reta. É uma espiral — você volta ao mesmo ponto, mas sempre um andar acima. Cada recomeço está mais alto do que o anterior.",
+    "Você não está emagrecendo. Você está construindo a identidade de uma mulher que se cuida, que se respeita e que aparece para ela mesma todos os dias.",
+    "A mulher que você será em 3 meses já existe em potência. O que você faz hoje é a decisão de deixá-la emergir — ou mantê-la enterrada.",
+    "Seu corpo não é o destino. É o primeiro território que você aprende a liderar. Quem domina a própria biologia, domina muito mais.",
+    "Não existe versão medíocre do que você pode se tornar. Existe a versão que você escolhe construir — ou a que deixa o tempo construir por descuido.",
+    "As mulheres mais fortes que você conhece não foram assim desde sempre. Elas estavam exatamente onde você está — e decidiram não parar.",
+    "Você está reescrevendo sua história no nível mais profundo. Cada escolha consciente muda quem você é — não só o espelho.",
+    "A sua melhor versão não é uma fantasia. É uma direção. E toda vez que você escolhe bem, você se move um passo mais perto dela.",
+    "Daqui a um ano, você vai agradecer por ter começado hoje. Ou vai lamentar por ter esperado mais um amanhã.",
+    "O corpo que você quer não é sobre vaidade. É sobre ocupar o mundo com mais presença, mais energia e menos desculpa.",
+    "Você não está perdendo peso. Você está ganhando clareza sobre quem decide ser — e isso muda tudo que vem depois.",
+    "Ninguém vai aplaudir suas escolhas silenciosas das 6h da manhã. Mas a mulher que você está se tornando vai sentir cada uma delas.",
+  ],
+};
+
 // ── HOME TAB ──────────────────────────────────────────────────
 function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th, lang="pt"}) {
   const [tipIdx,setTipIdx]=useState(0);
   const [showHardDay,setShowHardDay]=useState(false);
+  const [msgCat,setMsgCat]=useState("relax");
+  const [msgIdx,setMsgIdx]=useState(()=>Math.floor(Math.random()*MSGS.relax.length));
+  const [msgKey,setMsgKey]=useState(0);
+  const MSG_CATS=[
+    {id:"relax",label:"🌿 Relax",color:"#9dd9b8",bg:"linear-gradient(135deg,rgba(157,217,184,0.16),rgba(157,217,184,0.05))"},
+    {id:"hard", label:"⚔️ Hard", color:"#e05518",bg:"linear-gradient(135deg,rgba(224,85,24,0.2),rgba(184,32,32,0.08))"},
+    {id:"vai",  label:"🔥 Vai",  color:th.primary,bg:`linear-gradient(135deg,${th.primaryL},${th.accentL})`},
+  ];
+  const curMsgCat=MSG_CATS.find(c=>c.id===msgCat)||MSG_CATS[0];
+  const curMsg=MSGS[msgCat][msgIdx%MSGS[msgCat].length];
+  const nextMsg=()=>{setMsgIdx(i=>(i+1)%MSGS[msgCat].length);setMsgKey(k=>k+1);};
+  const switchMsgCat=(cat)=>{setMsgCat(cat);setMsgIdx(Math.floor(Math.random()*MSGS[cat].length));setMsgKey(k=>k+1);};
   const TIPS=[
     {i:"🧠",t:S(lang,"tip0_t"),b:S(lang,"tip0_b")},
     {i:"🌙",t:S(lang,"tip1_t"),b:S(lang,"tip1_b")},
@@ -3156,6 +3220,27 @@ function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th, lan
           </div>
           <div style={{height:8,background:th.border,borderRadius:4}}>
             <div className="pbar pb-rose" style={{width:`${pct}%`}}/>
+          </div>
+        </div>
+      </div>
+
+      {/* ── GERADOR DE MENSAGENS MOTIVACIONAIS ── */}
+      <div className="slide-up" style={{borderRadius:22,overflow:"hidden",border:`1.5px solid ${curMsgCat.color}35`,animationDelay:".04s",boxShadow:`0 6px 28px ${curMsgCat.color}15`}}>
+        <div style={{display:"flex",background:th.bg2}}>
+          {MSG_CATS.map(cat=>(
+            <button key={cat.id} onClick={()=>switchMsgCat(cat.id)} style={{flex:1,padding:"13px 4px",background:msgCat===cat.id?cat.bg:"transparent",border:"none",borderBottom:msgCat===cat.id?`2.5px solid ${cat.color}`:"2.5px solid transparent",cursor:"pointer",fontSize:12,fontWeight:800,color:msgCat===cat.id?cat.color:th.text3,fontFamily:"'Manrope',sans-serif",transition:"all .22s",letterSpacing:.5}}>
+              {cat.label}
+            </button>
+          ))}
+        </div>
+        <div style={{padding:"0 20px 18px",background:curMsgCat.bg}}>
+          <div style={{fontSize:52,lineHeight:.75,color:curMsgCat.color,opacity:.15,fontFamily:"Georgia,serif",fontWeight:900,paddingTop:16,marginBottom:6}}>"</div>
+          <div key={msgKey} className="fade">
+            <p className="serif" style={{fontSize:16,color:th.text,lineHeight:1.72,fontWeight:500,marginBottom:20}}>{curMsg}</p>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:10,color:th.text3,fontWeight:600,letterSpacing:.5}}>{(msgIdx%MSGS[msgCat].length)+1} / {MSGS[msgCat].length}</span>
+            <button onClick={nextMsg} style={{background:"transparent",border:`1.5px solid ${curMsgCat.color}55`,borderRadius:12,padding:"9px 18px",color:curMsgCat.color,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"'Manrope',sans-serif",letterSpacing:.3}}>nova mensagem →</button>
           </div>
         </div>
       </div>

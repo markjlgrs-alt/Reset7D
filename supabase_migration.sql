@@ -44,3 +44,33 @@ CREATE TABLE IF NOT EXISTS community_posts (
 );
 
 CREATE INDEX IF NOT EXISTS idx_community_created ON community_posts(created_at DESC);
+
+-- ══════════════════════════════════════════════════════════════
+--  SEGURANÇA — Row Level Security (RLS)
+--  CRÍTICO: sem isso qualquer pessoa com a chave anon do Supabase
+--  lê toda a tabela via REST API diretamente.
+--  O backend usa service_role (bypassa RLS) — correto.
+--  O anon (público) fica totalmente bloqueado.
+-- ══════════════════════════════════════════════════════════════
+
+-- Habilita RLS
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.password_reset_tokens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_posts ENABLE ROW LEVEL SECURITY;
+
+-- Políticas: apenas service_role (backend) pode operar
+-- Usar auth.role() = 'service_role' em vez de auth.uid() porque
+-- o backend não usa o Auth do Supabase, usa JWT próprio.
+CREATE POLICY "service_role_only" ON public.users
+  USING (auth.role() = 'service_role');
+
+CREATE POLICY "service_role_only" ON public.password_reset_tokens
+  USING (auth.role() = 'service_role');
+
+CREATE POLICY "service_role_only" ON public.community_posts
+  USING (auth.role() = 'service_role');
+
+-- Verificação: execute no SQL Editor do Supabase para confirmar:
+-- SELECT tablename, rowsecurity FROM pg_tables
+-- WHERE schemaname = 'public'
+-- ORDER BY tablename;
