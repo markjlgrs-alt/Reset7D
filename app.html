@@ -979,6 +979,15 @@ const LANG_STRINGS = {
     mission_ineg_title:"🔑 INEGOCIÁVEIS DO PROTOCOLO",
     mission_modo_title:"😮‍💨 Modo Mínimo (dia muito corrido)",
     mission_modo_tip:"Em dias impossíveis, só estas 2 ações. Não quebre o streak.",
+    hard_open:"🔥 Dia Hard — Só o Essencial",
+    hard_badge:"MODO ESPECIAL",hard_title:"🔥 DIA HARD",
+    hard_subtitle:"Dia infernal? Aqui está tudo que realmente importa hoje. Sem enrolação.",
+    hard_action1:"⚡ A COISA #1 HOJE",
+    hard_min_mode:"😮‍💨 MODO MÍNIMO — FAÇA SÓ ISSO",
+    hard_missions:"🎯 MISSÕES QUE IMPORTAM",
+    hard_why:"💡 POR QUE ISSO IMPORTA HOJE",
+    hard_result:"✅ O QUE ISSO VAI GERAR",
+    hard_btn:"Entendido — Vou fazer isso 💪",
   },
   en:{
     login_title:"Your transformation starts here ✨",login_email:"EMAIL",login_password:"PASSWORD",
@@ -1098,6 +1107,15 @@ const LANG_STRINGS = {
     mission_ineg_title:"🔑 PROTOCOL NON-NEGOTIABLES",
     mission_modo_title:"😮‍💨 Minimum Mode (very busy day)",
     mission_modo_tip:"On impossible days, only these 2 actions. Don't break the streak.",
+    hard_open:"🔥 Hard Day — Just the Essentials",
+    hard_badge:"SPECIAL MODE",hard_title:"🔥 HARD DAY",
+    hard_subtitle:"Rough day? Here's everything that truly matters today. No fluff.",
+    hard_action1:"⚡ THE #1 THING TODAY",
+    hard_min_mode:"😮‍💨 MINIMUM MODE — JUST DO THIS",
+    hard_missions:"🎯 MISSIONS THAT MATTER",
+    hard_why:"💡 WHY THIS MATTERS TODAY",
+    hard_result:"✅ WHAT THIS WILL GENERATE",
+    hard_btn:"Got it — I'll do this 💪",
   },
   es:{
     login_title:"Tu transformación comienza aquí ✨",login_email:"CORREO",login_password:"CONTRASEÑA",
@@ -1217,6 +1235,15 @@ const LANG_STRINGS = {
     mission_ineg_title:"🔑 IRRENUNCIABLES DEL PROTOCOLO",
     mission_modo_title:"😮‍💨 Modo Mínimo (día muy ocupado)",
     mission_modo_tip:"En días imposibles, solo estas 2 acciones. No rompas el streak.",
+    hard_open:"🔥 Día Difícil — Solo lo Esencial",
+    hard_badge:"MODO ESPECIAL",hard_title:"🔥 DÍA DIFÍCIL",
+    hard_subtitle:"¿Día infernal? Aquí está todo lo que realmente importa hoy. Sin rodeos.",
+    hard_action1:"⚡ LO MÁS IMPORTANTE HOY",
+    hard_min_mode:"😮‍💨 MODO MÍNIMO — HAZ SOLO ESTO",
+    hard_missions:"🎯 MISIONES QUE IMPORTAN",
+    hard_why:"💡 POR QUÉ ESTO IMPORTA HOY",
+    hard_result:"✅ QUÉ GENERARÁ ESTO",
+    hard_btn:"¡Entendido — Voy a hacerlo 💪",
   },
 };
 
@@ -2985,9 +3012,119 @@ function ChangePwModal({onClose, user, th, lang="pt"}) {
   );
 }
 
+// ── DIA HARD — resultados esperados por dia ───────────────────
+const HARD_RESULTS = {
+  1:"Proteína no café + janela de 10h ativam o modo queima de gordura desde hoje. Seu metabolismo começa a se reajustar ainda esta noite.",
+  2:"Uma boa noite de sono reduz até 300 kcal extras que você comeria amanhã sem perceber. Seu corpo queima gordura enquanto você dorme.",
+  3:"Quebrar o ciclo cortisol-compulsão hoje muda diretamente sua tarde de amanhã. Menos impulsividade = menos calorias sem nem perceber.",
+  4:"Fibra + fermentado reduzem inflamação e melhoram sua saciedade amanhã. Seu intestino começa a enviar sinais mais equilibrados de fome.",
+  5:"Ativar o sistema linfático desincha mais que qualquer chá diurético. Resultado visível nas pernas e barriga ainda hoje à noite.",
+  6:"NEAT acumulado durante o dia vale mais que 1h de academia para metabolismo. Cada micro-ação aumenta seu gasto calórico sem esforço concentrado.",
+  7:"Definir seus inegociáveis hoje em papel garante que a próxima semana seja tão poderosa quanto essa. O que você escreve agora, você mantém.",
+};
+
+// ── HARD DAY MODAL ────────────────────────────────────────────
+function HardDayModal({currentDay, th, lang, onClose}) {
+  const pc = getPC(lang)[currentDay] || PC[currentDay];
+  const dayMissions = getMissions(lang)[currentDay] || [];
+  const keystoneMission = dayMissions.find(m => m.keystone);
+  const topMissions = dayMissions.filter(m => !m.keystone).sort((a,b)=>b.xp-a.xp).slice(0,2);
+  const result = HARD_RESULTS[currentDay] || "";
+  const dayTitle = (pc?.title||"").split("—")[0].trim();
+  const introLine = (pc?.intro||"").split("\n")[0];
+
+  return (
+    <div className="overlay fade" style={{overflowY:"auto",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"16px 12px 32px"}} onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:480,borderRadius:24,overflow:"hidden",background:th.card,border:`1px solid ${th.border}`,boxShadow:"0 20px 60px rgba(0,0,0,.55)"}}>
+
+        {/* Header */}
+        <div style={{background:"linear-gradient(135deg,#b82020,#e05518)",padding:"24px 20px 22px",position:"relative"}}>
+          <button onClick={onClose} style={{position:"absolute",top:14,right:14,background:"rgba(255,255,255,.18)",border:"none",borderRadius:10,color:"#fff",width:32,height:32,cursor:"pointer",fontSize:20,lineHeight:"32px",textAlign:"center",fontFamily:"inherit"}}>×</button>
+          <div style={{fontSize:10,fontWeight:800,color:"rgba(255,255,255,.65)",letterSpacing:2,marginBottom:6}}>{S(lang,"hard_badge")}</div>
+          <div style={{fontSize:26,fontWeight:900,color:"#fff",marginBottom:4,fontFamily:"'Manrope',sans-serif"}}>{S(lang,"hard_title")}</div>
+          <div className="serif" style={{fontSize:14,color:"rgba(255,255,255,.85)",marginBottom:10}}>{S(lang,"day_label")} {currentDay} — {dayTitle}</div>
+          <div style={{fontSize:12,color:"rgba(255,255,255,.72)",lineHeight:1.55}}>{S(lang,"hard_subtitle")}</div>
+        </div>
+
+        <div style={{padding:"20px 16px 24px",display:"flex",flexDirection:"column",gap:16}}>
+
+          {/* Ação #1 */}
+          {pc?.keystone && (
+            <div style={{background:"rgba(224,85,24,.1)",border:"1px solid rgba(224,85,24,.35)",borderRadius:16,padding:"14px 16px"}}>
+              <div style={{fontSize:10,fontWeight:800,color:"#e05518",letterSpacing:1.5,marginBottom:8}}>{S(lang,"hard_action1")}</div>
+              <div style={{fontSize:15,fontWeight:700,color:th.text,lineHeight:1.5}}>{pc.keystone}</div>
+            </div>
+          )}
+
+          {/* Modo Mínimo */}
+          {pc?.modoMinimo?.length > 0 && (
+            <div>
+              <div style={{fontSize:10,fontWeight:800,color:th.text3,letterSpacing:1.5,marginBottom:10}}>{S(lang,"hard_min_mode")}</div>
+              {pc.modoMinimo.map((step,i)=>(
+                <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:8,padding:"11px 14px",background:th.card2,border:`1px solid ${th.border}`,borderRadius:12}}>
+                  <span style={{fontSize:17,flexShrink:0,marginTop:1}}>{i===0?"1️⃣":"2️⃣"}</span>
+                  <span style={{fontSize:13,color:th.text,lineHeight:1.55}}>{step}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Missões essenciais */}
+          {(keystoneMission || topMissions.length>0) && (
+            <div>
+              <div style={{fontSize:10,fontWeight:800,color:th.text3,letterSpacing:1.5,marginBottom:10}}>{S(lang,"hard_missions")}</div>
+              {keystoneMission && (
+                <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:8,padding:"12px 14px",background:`${pc?.color||"#d6628e"}14`,border:`1px solid ${pc?.color||"#d6628e"}40`,borderRadius:12}}>
+                  <span style={{fontSize:16,flexShrink:0,marginTop:2}}>⭐</span>
+                  <div>
+                    <div style={{fontSize:13,fontWeight:700,color:th.text,lineHeight:1.45}}>{keystoneMission.t}</div>
+                    {keystoneMission.tip && <div style={{fontSize:11,color:th.text3,marginTop:4,lineHeight:1.4}}>{keystoneMission.tip}</div>}
+                  </div>
+                </div>
+              )}
+              {topMissions.map(m=>(
+                <div key={m.id} style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:8,padding:"10px 14px",background:th.card2,border:`1px solid ${th.border}`,borderRadius:12}}>
+                  <span style={{fontSize:15,flexShrink:0,marginTop:2}}>⭕</span>
+                  <div>
+                    <div style={{fontSize:13,color:th.text,lineHeight:1.45}}>{m.t}</div>
+                    {m.tip && <div style={{fontSize:11,color:th.text3,marginTop:3,lineHeight:1.4}}>{m.tip}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Por que importa */}
+          {introLine && (
+            <div style={{borderLeft:"3px solid #e05518",paddingLeft:14}}>
+              <div style={{fontSize:10,fontWeight:800,color:th.text3,letterSpacing:1.5,marginBottom:8}}>{S(lang,"hard_why")}</div>
+              <div style={{fontSize:13,color:th.text3,lineHeight:1.65}}>{introLine}</div>
+            </div>
+          )}
+
+          {/* Resultado */}
+          {result && (
+            <div style={{background:th.greenL,border:`1px solid ${th.green}40`,borderRadius:16,padding:"14px 16px"}}>
+              <div style={{fontSize:10,fontWeight:800,color:th.green,letterSpacing:1.5,marginBottom:8}}>{S(lang,"hard_result")}</div>
+              <div style={{fontSize:13,color:th.text,lineHeight:1.65}}>{result}</div>
+            </div>
+          )}
+
+          {/* Botão fechar */}
+          <button onClick={onClose} className="btn-p" style={{marginTop:4,padding:"14px",fontSize:14,fontWeight:700,background:"linear-gradient(135deg,#b82020,#e05518)",boxShadow:"0 5px 0 #6b1010,0 8px 20px rgba(184,32,32,.3)"}}>
+            {S(lang,"hard_btn")}
+          </button>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── HOME TAB ──────────────────────────────────────────────────
 function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th, lang="pt"}) {
   const [tipIdx,setTipIdx]=useState(0);
+  const [showHardDay,setShowHardDay]=useState(false);
   const TIPS=[
     {i:"🧠",t:S(lang,"tip0_t"),b:S(lang,"tip0_b")},
     {i:"🌙",t:S(lang,"tip1_t"),b:S(lang,"tip1_b")},
@@ -3042,6 +3179,18 @@ function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th, lan
         ))}
         <button onClick={()=>setActiveTab("mission")} className="btn-p" style={{marginTop:10,padding:"10px"}}>{S(lang,"home_see_missions")}</button>
       </div>
+
+      {/* Botão Dia HARD */}
+      <button onClick={()=>setShowHardDay(true)} className="slide-up hover-scale" style={{animationDelay:".07s",borderRadius:18,padding:"16px 18px",background:"linear-gradient(135deg,#b82020,#e05518)",border:"none",boxShadow:"0 5px 0 #6b1010,0 8px 22px rgba(184,32,32,.32)",cursor:"pointer",textAlign:"left",width:"100%",display:"flex",alignItems:"center",gap:14}}>
+        <div style={{fontSize:34,lineHeight:1}}>🔥</div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:11,fontWeight:800,color:"rgba(255,255,255,.65)",letterSpacing:1.5,marginBottom:3}}>DIA CORRIDO? APERTE AQUI</div>
+          <div style={{fontSize:16,fontWeight:800,color:"#fff",fontFamily:"'Manrope',sans-serif"}}>{S(lang,"hard_open")}</div>
+          <div style={{fontSize:11,color:"rgba(255,255,255,.72)",marginTop:3,lineHeight:1.4}}>O suprassumo do dia — prático e direto ao ponto.</div>
+        </div>
+        <div style={{fontSize:20,color:"rgba(255,255,255,.5)"}}>›</div>
+      </button>
+      {showHardDay && <HardDayModal currentDay={currentDay} th={th} lang={lang} onClose={()=>setShowHardDay(false)}/>}
 
       <div className="glass slide-up" style={{borderRadius:20,padding:18,animationDelay:".1s",border:`1px solid ${th.accent}30`}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
