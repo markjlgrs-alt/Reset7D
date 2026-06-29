@@ -183,7 +183,7 @@ const THEMES = {
     bg:"#2b1c35", bg2:"#321f3d", bg3:"#3a2448",
     card:"#3e2455", card2:"#472c63", cardSolid:"#3e2455",
     text:"#eedff5", text2:"#cca8de", text3:"#8a6ea6",
-    border:"rgba(238,223,245,0.08)", border2:"rgba(204,168,222,0.22)",
+    border:"rgba(238,223,245,0.08)", border2:"rgba(228,186,136,0.38)", cardBorder:"rgba(228,186,136,0.28)",
     primary:"#d48ac0", primaryL:"rgba(212,138,192,0.13)", primaryM:"rgba(212,138,192,0.25)",
     green:"#84c8a4", greenL:"rgba(132,200,164,0.14)",
     accent:"#e4ba88", accentL:"rgba(228,186,136,0.14)",
@@ -193,7 +193,7 @@ const THEMES = {
     bg:"#faf5ff", bg2:"#f2e8ff", bg3:"#e8d8f8",
     card:"#ffffff", card2:"#f8f0fe", cardSolid:"#ffffff",
     text:"#2c1a3c", text2:"#8040a8", text3:"#7862a0",
-    border:"rgba(0,0,0,0.06)", border2:"rgba(180,80,180,0.18)",
+    border:"rgba(0,0,0,0.06)", border2:"rgba(184,128,40,0.35)", cardBorder:"rgba(184,128,40,0.22)",
     primary:"#bf5a9a", primaryL:"rgba(191,90,154,0.08)", primaryM:"rgba(191,90,154,0.18)",
     green:"#4aa878", greenL:"rgba(74,168,120,0.1)",
     accent:"#c88828", accentL:"rgba(200,136,40,0.12)",
@@ -258,7 +258,7 @@ input,textarea{font-family:'Manrope',sans-serif;}
 .logo-glow{animation:glow-pulse 3s ease-in-out infinite;}
 @keyframes rotate-slow{to{transform:rotate(360deg)}}
 @keyframes bg-shift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-.auth-bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 30% 40%,rgba(232,164,192,0.12) 0%,transparent 55%),radial-gradient(ellipse at 70% 70%,rgba(157,217,184,0.08) 0%,transparent 50%),${th.bg};pointer-events:none;}
+.auth-bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 30% 40%,rgba(212,138,192,0.14) 0%,transparent 55%),radial-gradient(ellipse at 70% 70%,rgba(132,200,164,0.09) 0%,transparent 50%),${th.bg};pointer-events:none;}
 @keyframes particle-drift{0%{transform:translateY(0) translateX(0) scale(1);opacity:0}20%{opacity:1}80%{opacity:.7}100%{transform:translateY(-120px) translateX(30px) scale(0.5);opacity:0}}
 .quiz-header-animated{background:linear-gradient(135deg,${th.primaryL},${th.greenL},${th.primaryL});background-size:200% 200%;animation:bg-shift 6s ease infinite;}
 .hover-scale{transition:transform .18s,box-shadow .18s;cursor:pointer;}
@@ -1951,7 +1951,7 @@ function QuizScreen({onDone, th, lang="pt", onShowResult}) {
       }}>
         {/* brilho interno superior */}
         <div style={{position:'absolute',inset:0,borderRadius:22,background:'linear-gradient(180deg,rgba(232,164,192,0.10) 0%,transparent 50%)',pointerEvents:'none'}}/>
-        <div style={{fontSize:26, fontWeight:900, color:'#e8a4c0', letterSpacing:'-0.01em', textShadow:'0 0 24px rgba(232,164,192,0.5)'}}>
+        <div style={{fontSize:26, fontWeight:900, color:'#d48ac0', letterSpacing:'-0.01em', textShadow:'0 0 24px rgba(232,164,192,0.5)'}}>
           Dra. Ana Paula
         </div>
         <div style={{fontSize:10, color:'rgba(255,255,255,0.45)', letterSpacing:'0.14em', fontWeight:700, marginTop:5}}>
@@ -1975,10 +1975,10 @@ function QuizScreen({onDone, th, lang="pt", onShowResult}) {
           {S(lang,"quiz_profile")}
         </div>
         {[
-          [S(lang,"quiz_profile_r1"),'67%','#e8a4c0',S(lang,"quiz_lvl_r1")],
+          [S(lang,"quiz_profile_r1"),'67%','#d48ac0',S(lang,"quiz_lvl_r1")],
           [S(lang,"quiz_profile_r2"),'78%','#9dd9b8',S(lang,"quiz_lvl_r2")],
           [S(lang,"quiz_profile_r3"),'54%','#f4c896',S(lang,"quiz_lvl_r3")],
-          [S(lang,"quiz_profile_r4"),'71%','#e8a4c0',S(lang,"quiz_lvl_r4")],
+          [S(lang,"quiz_profile_r4"),'71%','#d48ac0',S(lang,"quiz_lvl_r4")],
           [S(lang,"quiz_profile_r5"),'61%','#9dd9b8',S(lang,"quiz_lvl_r5")],
         ].map(([label,pct,cor,nivel])=>(
           <div key={label} style={{display:'flex', alignItems:'center', gap:10, marginBottom:9}}>
@@ -2010,14 +2010,14 @@ function QuizScreen({onDone, th, lang="pt", onShowResult}) {
         border:'1px solid rgba(232,164,192,0.35)',
         boxShadow:'0 4px 0 rgba(0,0,0,0.45), 0 10px 40px rgba(232,164,192,0.12)',
       })}>
-        <div className="serif" style={{fontSize:60,fontWeight:900,color:'#e8a4c0',lineHeight:1,textShadow:'0 0 32px rgba(232,164,192,0.5)'}}>73%</div>
+        <div className="serif" style={{fontSize:60,fontWeight:900,color:'#d48ac0',lineHeight:1,textShadow:'0 0 32px rgba(232,164,192,0.5)'}}>73%</div>
         <div style={{fontSize:11,color:'rgba(255,255,255,0.5)',marginTop:8,marginBottom:4,letterSpacing:'0.07em',textTransform:'uppercase',fontWeight:700}}>{S(lang,"quiz_stat")}</div>
         <div style={{fontSize:13,color:'rgba(245,230,237,0.85)',lineHeight:1.6}}>{S(lang,"quiz_stat_sub")}</div>
       </div>
 
       {/* ══ 7. GRÁFICO 3D ══ */}
       <div style={glass('.42s')}>
-        <div style={{fontSize:13,fontWeight:700,color:'#e8a4c0',marginBottom:4}}>{S(lang,"quiz_chart_title")}</div>
+        <div style={{fontSize:13,fontWeight:700,color:'#d48ac0',marginBottom:4}}>{S(lang,"quiz_chart_title")}</div>
         <div style={{fontSize:11,color:'rgba(255,255,255,0.4)',marginBottom:12}}>{S(lang,"quiz_chart_sub")}</div>
         <Chart3D data={chartData}/>
       </div>
@@ -2367,13 +2367,13 @@ function ThreeBackground() {
       pos[i * 3 + 2] = r * Math.cos(phi);
     }
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const mat = new THREE.PointsMaterial({ size: 0.011, color: new THREE.Color('#e8a4c0'), transparent: true, opacity: 0.75, sizeAttenuation: true });
+    const mat = new THREE.PointsMaterial({ size: 0.011, color: new THREE.Color('#d48ac0'), transparent: true, opacity: 0.75, sizeAttenuation: true });
     const sphere = new THREE.Points(geo, mat);
     scene.add(sphere);
 
     // Anéis orbitais
     const ringGeo = new THREE.TorusGeometry(1.08, 0.0035, 16, 120);
-    const ringMat = new THREE.MeshBasicMaterial({ color: '#e8a4c0', transparent: true, opacity: 0.25 });
+    const ringMat = new THREE.MeshBasicMaterial({ color: '#d48ac0', transparent: true, opacity: 0.25 });
     const ring1 = new THREE.Mesh(ringGeo, ringMat);
     ring1.rotation.x = Math.PI / 2;
     scene.add(ring1);
@@ -2469,7 +2469,7 @@ function FloatingParticles() {
     size: Math.random() * 6 + 3,
     delay: Math.random() * 4,
     dur: Math.random() * 3 + 4,
-    color: ['#e8a4c0','#9dd9b8','#f4c896','#a4b4e8'][i % 4],
+    color: ['#d48ac0','#9dd9b8','#f4c896','#a4b4e8'][i % 4],
   }));
   return (
     <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,overflow:'hidden'}}>
@@ -3173,6 +3173,13 @@ const MSGS={
   ],
 };
 
+// ── DESIGN DE MENSAGENS ────────────────────────────────────────
+const MSG_DESIGN={
+  relax:{bg:"linear-gradient(160deg,#081A0F 0%,#0B2316 100%)",accent:"#6FCBA0",text:"#C8E8DC",glow:"rgba(111,203,160,0.22)",tabGlow:"0 0 18px rgba(111,203,160,0.28),0 0 36px rgba(111,203,160,0.10)",icon:"🌿"},
+  hard: {bg:"linear-gradient(160deg,#110202 0%,#1D0606 100%)",accent:"#D03B1F",text:"#EDE8E8",glow:"rgba(208,59,31,0.22)",tabGlow:"0 0 18px rgba(208,59,31,0.32),0 0 36px rgba(208,59,31,0.10)",icon:"⚔️"},
+  vai:  {bg:"linear-gradient(160deg,#150A26 0%,#240F3C 100%)",accent:"#D48AC0",text:"#ECD8F5",glow:"rgba(212,138,192,0.22)",tabGlow:"0 0 18px rgba(212,138,192,0.30),0 0 36px rgba(212,138,192,0.10)",icon:"🔥"},
+};
+
 // ── HOME TAB ──────────────────────────────────────────────────
 function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th, lang="pt"}) {
   const [tipIdx,setTipIdx]=useState(0);
@@ -3180,13 +3187,10 @@ function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th, lan
   const [msgCat,setMsgCat]=useState("relax");
   const [msgIdx,setMsgIdx]=useState(()=>Math.floor(Math.random()*MSGS.relax.length));
   const [msgKey,setMsgKey]=useState(0);
-  const MSG_CATS=[
-    {id:"relax",label:"🌿 Relax",color:"#9dd9b8",bg:"linear-gradient(135deg,rgba(157,217,184,0.16),rgba(157,217,184,0.05))"},
-    {id:"hard", label:"⚔️ Hard", color:"#e05518",bg:"linear-gradient(135deg,rgba(224,85,24,0.2),rgba(184,32,32,0.08))"},
-    {id:"vai",  label:"🔥 Vai",  color:th.primary,bg:`linear-gradient(135deg,${th.primaryL},${th.accentL})`},
-  ];
-  const curMsgCat=MSG_CATS.find(c=>c.id===msgCat)||MSG_CATS[0];
+  const MSG_CATS=[{id:"relax",label:"🌿 Relax"},{id:"hard",label:"⚔️ Hard"},{id:"vai",label:"🔥 Vai"}];
+  const curD=MSG_DESIGN[msgCat];
   const curMsg=MSGS[msgCat][msgIdx%MSGS[msgCat].length];
+  const msgWords=curMsg.split(' ');
   const nextMsg=()=>{setMsgIdx(i=>(i+1)%MSGS[msgCat].length);setMsgKey(k=>k+1);};
   const switchMsgCat=(cat)=>{setMsgCat(cat);setMsgIdx(Math.floor(Math.random()*MSGS[cat].length));setMsgKey(k=>k+1);};
   const TIPS=[
@@ -3224,23 +3228,43 @@ function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th, lan
         </div>
       </div>
 
-      {/* ── GERADOR DE MENSAGENS MOTIVACIONAIS ── */}
-      <div className="slide-up" style={{borderRadius:22,overflow:"hidden",border:`1.5px solid ${curMsgCat.color}35`,animationDelay:".04s",boxShadow:`0 6px 28px ${curMsgCat.color}15`}}>
-        <div style={{display:"flex",background:th.bg2}}>
-          {MSG_CATS.map(cat=>(
-            <button key={cat.id} onClick={()=>switchMsgCat(cat.id)} style={{flex:1,padding:"13px 4px",background:msgCat===cat.id?cat.bg:"transparent",border:"none",borderBottom:msgCat===cat.id?`2.5px solid ${cat.color}`:"2.5px solid transparent",cursor:"pointer",fontSize:12,fontWeight:800,color:msgCat===cat.id?cat.color:th.text3,fontFamily:"'Manrope',sans-serif",transition:"all .22s",letterSpacing:.5}}>
-              {cat.label}
-            </button>
-          ))}
+      {/* ── MENSAGEM DO DIA ── */}
+      <div className="slide-up" style={{borderRadius:26,overflow:"hidden",animationDelay:".04s",boxShadow:`0 16px 60px ${curD.glow},0 4px 20px rgba(0,0,0,0.55)`}}>
+        {/* Pill tabs */}
+        <div style={{background:"#080808",padding:"14px 14px 0",display:"flex",gap:8}}>
+          {MSG_CATS.map(cat=>{
+            const d=MSG_DESIGN[cat.id];const active=msgCat===cat.id;
+            return (
+              <button key={cat.id} onClick={()=>switchMsgCat(cat.id)} style={{flex:1,padding:"11px 6px",borderRadius:15,border:active?`1.5px solid ${d.accent}55`:"1.5px solid rgba(255,255,255,0.07)",background:active?`${d.accent}1A`:"transparent",cursor:"pointer",fontSize:11,fontWeight:900,color:active?d.accent:"rgba(255,255,255,0.22)",fontFamily:"'Manrope',sans-serif",letterSpacing:.7,transition:"all .28s ease",boxShadow:active?d.tabGlow:"none"}}>
+                {cat.label}
+              </button>
+            );
+          })}
         </div>
-        <div style={{padding:"0 20px 18px",background:curMsgCat.bg}}>
-          <div style={{fontSize:52,lineHeight:.75,color:curMsgCat.color,opacity:.15,fontFamily:"Georgia,serif",fontWeight:900,paddingTop:16,marginBottom:6}}>"</div>
-          <div key={msgKey} className="fade">
-            <p className="serif" style={{fontSize:16,color:th.text,lineHeight:1.72,fontWeight:500,marginBottom:20}}>{curMsg}</p>
+        {/* Message area */}
+        <div style={{background:curD.bg,padding:"26px 24px 20px",minHeight:228,position:"relative",overflow:"hidden"}}>
+          {/* Radial glow orb */}
+          <div style={{position:"absolute",top:-50,right:-50,width:200,height:200,borderRadius:"50%",background:curD.glow,filter:"blur(55px)",pointerEvents:"none",opacity:.7}}/>
+          {/* Ghost icon texture */}
+          <div style={{position:"absolute",right:-18,bottom:-14,fontSize:155,opacity:.055,lineHeight:1,pointerEvents:"none",userSelect:"none",transform:"rotate(-8deg)",filter:"saturate(0) brightness(1.4)"}}>{curD.icon}</div>
+          {/* Message */}
+          <div key={msgKey} className="fade" style={{position:"relative",zIndex:1,marginBottom:26}}>
+            <div style={{fontFamily:"'Fraunces',serif",fontSize:19,fontWeight:500,fontStyle:"italic",lineHeight:1.75,color:curD.text,letterSpacing:.02}}>
+              <span style={{color:curD.accent,fontWeight:700}}>{msgWords[0]}</span>
+              {' '+msgWords.slice(1).join(' ')}
+            </div>
           </div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <span style={{fontSize:10,color:th.text3,fontWeight:600,letterSpacing:.5}}>{(msgIdx%MSGS[msgCat].length)+1} / {MSGS[msgCat].length}</span>
-            <button onClick={nextMsg} style={{background:"transparent",border:`1.5px solid ${curMsgCat.color}55`,borderRadius:12,padding:"9px 18px",color:curMsgCat.color,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"'Manrope',sans-serif",letterSpacing:.3}}>nova mensagem →</button>
+          {/* Controls */}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",position:"relative",zIndex:1}}>
+            <div style={{display:"flex",gap:5,alignItems:"center"}}>
+              {Array.from({length:MSGS[msgCat].length}).map((_,i)=>{
+                const cur=msgIdx%MSGS[msgCat].length;
+                return <button key={i} onClick={()=>{setMsgIdx(i);setMsgKey(k=>k+1);}} style={{width:cur===i?18:5,height:5,borderRadius:999,background:cur===i?curD.accent:`${curD.accent}28`,border:"none",cursor:"pointer",padding:0,transition:"all .35s ease",flexShrink:0}}/>;
+              })}
+            </div>
+            <button onClick={nextMsg} style={{background:`${curD.accent}1C`,border:`1.5px solid ${curD.accent}40`,borderRadius:14,padding:"9px 16px",color:curD.accent,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"'Manrope',sans-serif",letterSpacing:.5,display:"flex",alignItems:"center",gap:6}}>
+              próxima <span style={{fontSize:14}}>→</span>
+            </button>
           </div>
         </div>
       </div>
