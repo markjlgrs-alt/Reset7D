@@ -160,26 +160,28 @@ const { AreaChart, Area, BarChart, Bar, RadarChart, Radar,
 // ── TEMA ─────────────────────────────────────────────────────
 const THEMES = {
   dark: {
-    bg:"#15101b", bg2:"#1c1524", bg3:"#241a2d",
-    card:"#221829", card2:"#2a1f33", cardSolid:"#221829",
-    text:"#f2ecf6", text2:"#bca9cc", text3:"#83738f",
-    border:"rgba(255,255,255,0.07)", border2:"rgba(216,150,200,0.30)", cardBorder:"rgba(255,255,255,0.06)",
-    primary:"#d68ac4", primaryL:"rgba(214,138,196,0.12)", primaryM:"rgba(214,138,196,0.24)",
-    green:"#67c79c", greenL:"rgba(103,199,156,0.13)",
-    accent:"#e6b079", accentL:"rgba(230,176,121,0.13)",
-    inputBg:"#2a1f33", shadow:"0 12px 34px rgba(0,0,0,0.42)",
-    chipMint:"#1f3a30", chipMintT:"#7fd9af", chipBlue:"#232a44", chipBlueT:"#9fb0f0",
-    chipPeach:"#3a2c1e", chipPeachT:"#f0bd84", chipLilac:"#2e2240", chipLilacT:"#c4a6e8",
+    bg:"#131217", bg2:"#1a191f", bg3:"#222129",
+    card:"#1e1d24", card2:"#26252e", cardSolid:"#1e1d24",
+    text:"#f4f2f7", text2:"#b4afc0", text3:"#7c7789",
+    border:"rgba(255,255,255,0.07)", border2:"rgba(205,245,99,0.42)", cardBorder:"rgba(255,255,255,0.06)",
+    primary:"#b083e0", primaryL:"rgba(176,131,224,0.14)", primaryM:"rgba(176,131,224,0.28)",
+    green:"#7ddca0", greenL:"rgba(125,220,160,0.14)",
+    accent:"#cdf563", accentL:"rgba(205,245,99,0.14)",
+    inputBg:"#26252e", shadow:"0 14px 40px rgba(0,0,0,0.50)",
+    lime:"#cdf563", lilac:"#c3a7ea", pink:"#f3c5e6", ink:"#191527",
+    chipMint:"#1f3a30", chipMintT:"#9fe6bf", chipBlue:"#232a44", chipBlueT:"#a8b6f2",
+    chipPeach:"#3a2c1e", chipPeachT:"#f0bd84", chipLilac:"#2c2440", chipLilacT:"#c8aef0",
   },
   light: {
-    bg:"#efeafa", bg2:"#f5f1fd", bg3:"#e7e0f6",
-    card:"#ffffff", card2:"#f7f4fc", cardSolid:"#ffffff",
-    text:"#241830", text2:"#6b5a82", text3:"#9a8bb0",
-    border:"rgba(36,24,48,0.07)", border2:"rgba(176,86,143,0.28)", cardBorder:"rgba(36,24,48,0.05)",
-    primary:"#b0568f", primaryL:"rgba(176,86,143,0.08)", primaryM:"rgba(176,86,143,0.16)",
+    bg:"#eeeef0", bg2:"#f6f6f8", bg3:"#e4e4e8",
+    card:"#ffffff", card2:"#f5f5f7", cardSolid:"#ffffff",
+    text:"#1a1822", text2:"#5d5868", text3:"#928d9e",
+    border:"rgba(26,24,34,0.08)", border2:"rgba(140,180,40,0.45)", cardBorder:"rgba(26,24,34,0.06)",
+    primary:"#8a5cc4", primaryL:"rgba(138,92,196,0.09)", primaryM:"rgba(138,92,196,0.18)",
     green:"#3fa97a", greenL:"rgba(63,169,122,0.10)",
-    accent:"#df9a57", accentL:"rgba(223,154,87,0.12)",
-    inputBg:"#f3eefb", shadow:"0 8px 30px rgba(60,40,90,0.10)",
+    accent:"#9bbf2e", accentL:"rgba(155,191,46,0.14)",
+    inputBg:"#f0f0f3", shadow:"0 8px 30px rgba(30,25,45,0.10)",
+    lime:"#cdf563", lilac:"#c3a7ea", pink:"#f3c5e6", ink:"#191527",
     chipMint:"#d9f0e4", chipMintT:"#2c8a62", chipBlue:"#dde3fb", chipBlueT:"#4659c0",
     chipPeach:"#fbe6d0", chipPeachT:"#c47a32", chipLilac:"#ece0f8", chipLilacT:"#8757b8",
   }
@@ -3334,22 +3336,58 @@ function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th, lan
   const totalAll=Object.values(MISSIONS).flat().length;
   const pct=Math.round((totalDone/totalAll)*100);
 
+  const firstName=user?.name?.split(" ")[0]||"Guerreira";
+  const _hr=new Date().getHours();
+  const greeting=_hr<12?"Bom dia":_hr<18?"Boa tarde":"Boa noite";
+  const dayTitle=PC[currentDay]?.title||`Dia ${currentDay}`;
+
   return (
-    <div style={{padding:"16px 16px 100px",display:"flex",flexDirection:"column",gap:14}}>
-      <div className="slide-up glass" style={{borderRadius:24,padding:"24px 22px"}}>
-        <div style={{fontSize:11,color:th.primary,marginBottom:7,fontWeight:800,letterSpacing:1.6,textTransform:"uppercase"}}>{S(lang,"home_protocol")}</div>
-        <div style={{fontSize:30,fontWeight:800,color:th.text,lineHeight:1.12,marginBottom:8,letterSpacing:-0.5}}>
-          {S(lang,"home_hello",{name:user?.name?.split(" ")[0]||"Guerreira"})}
+    <div style={{padding:"18px 16px 120px",display:"flex",flexDirection:"column",gap:14}}>
+      {/* ── Saudação ── */}
+      <div className="slide-up" style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 2px",marginBottom:2}}>
+        <div>
+          <div style={{fontSize:13,color:th.text3,fontWeight:600,marginBottom:1}}>{greeting},</div>
+          <div style={{fontSize:24,fontWeight:800,color:th.text,letterSpacing:-0.6}}>{firstName} <span style={{fontSize:20}}>👋</span></div>
         </div>
-        <div style={{fontSize:14,color:th.text2,lineHeight:1.5,marginBottom:20}}>
-          {S(lang,"home_quote")}
+        <div style={{display:"flex",alignItems:"center",gap:6,background:th.accentL,border:`1px solid ${th.border2}`,borderRadius:999,padding:"7px 13px"}}>
+          <span style={{fontSize:14}}>{PC[currentDay]?.emoji}</span>
+          <span style={{fontSize:12,fontWeight:800,color:th.accent,letterSpacing:.3}}>Dia {currentDay}/7</span>
         </div>
-        <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",marginBottom:9}}>
-          <span style={{fontSize:12,color:th.text3,fontWeight:600}}>{S(lang,"home_progress")}</span>
-          <span style={{fontSize:24,color:th.text,fontWeight:800,lineHeight:1,letterSpacing:-0.5}}>{pct}<span style={{fontSize:14,color:th.text3,fontWeight:700}}>%</span></span>
+      </div>
+
+      {/* ── HERO: desafio de hoje (verde-limão) ── */}
+      <button onClick={()=>setActiveTab("mission")} className="slide-up card-interactive" style={{textAlign:"left",border:"none",cursor:"pointer",width:"100%",display:"block",borderRadius:28,padding:"22px 22px 24px",background:th.lime,position:"relative",overflow:"hidden",fontFamily:"'Manrope',sans-serif"}}>
+        <div style={{position:"absolute",right:-8,top:-14,fontSize:104,lineHeight:1,opacity:.14,pointerEvents:"none"}}>{PC[currentDay]?.emoji}</div>
+        <div style={{position:"relative",zIndex:1}}>
+          <div style={{fontSize:11,fontWeight:800,letterSpacing:1.8,textTransform:"uppercase",color:th.ink,opacity:.5,marginBottom:11}}>Desafio de hoje</div>
+          <div style={{fontSize:23,fontWeight:800,color:th.ink,lineHeight:1.12,letterSpacing:-0.5,marginBottom:14,maxWidth:"82%"}}>{dayTitle}</div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{flex:1,maxWidth:170,height:7,background:"rgba(25,21,39,0.18)",borderRadius:999,overflow:"hidden"}}>
+              <div style={{height:"100%",width:`${dayMissions.length?Math.round(dayDone/dayMissions.length*100):0}%`,background:th.ink,borderRadius:999,transition:"width .6s ease"}}/>
+            </div>
+            <span style={{fontSize:12,fontWeight:800,color:th.ink,opacity:.7}}>{dayDone}/{dayMissions.length}</span>
+          </div>
         </div>
-        <div style={{height:9,background:th.bg3,borderRadius:999,overflow:"hidden"}}>
-          <div className="pbar pb-rose" style={{width:`${pct}%`}}/>
+        <div style={{position:"absolute",right:18,bottom:18,width:50,height:50,borderRadius:"50%",background:th.ink,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,color:th.lime,boxShadow:"0 6px 18px rgba(0,0,0,0.28)"}}>→</div>
+      </button>
+
+      {/* ── Cards de estatística (lilás + rosa) ── */}
+      <div className="slide-up" style={{display:"flex",gap:12,animationDelay:".04s"}}>
+        <div style={{flex:1,borderRadius:24,padding:"18px 18px 20px",background:th.lilac,position:"relative"}}>
+          <div style={{fontSize:10.5,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:th.ink,opacity:.55,marginBottom:14}}>{S(lang,"home_progress")}</div>
+          <div style={{position:"relative",width:78,height:78,margin:"0 auto"}}>
+            <div style={{width:78,height:78,borderRadius:"50%",background:`conic-gradient(${th.ink} ${pct*3.6}deg, rgba(25,21,39,0.16) 0deg)`}}/>
+            <div style={{position:"absolute",inset:9,borderRadius:"50%",background:th.lilac,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <span style={{fontSize:19,fontWeight:800,color:th.ink,letterSpacing:-0.5}}>{pct}%</span>
+            </div>
+          </div>
+        </div>
+        <div style={{flex:1,borderRadius:24,padding:"18px 18px 20px",background:th.pink,display:"flex",flexDirection:"column"}}>
+          <div style={{fontSize:10.5,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:th.ink,opacity:.55,marginBottom:"auto"}}>Pontos XP</div>
+          <div style={{marginTop:14}}>
+            <div style={{fontSize:38,fontWeight:800,color:th.ink,lineHeight:.95,letterSpacing:-1.5}}>{xp}</div>
+            <div style={{fontSize:12,color:th.ink,opacity:.6,marginTop:6,fontWeight:700}}>{totalDone} missões feitas</div>
+          </div>
         </div>
       </div>
 
@@ -4924,11 +4962,11 @@ function Dashboard({user, onLogout, darkMode, setDarkMode, lang, setLang, th}) {
   return (
     <div style={{maxWidth:430,margin:"0 auto",height:"100vh",display:"flex",flexDirection:"column",background:th.bg,position:"relative",overflow:"hidden"}}>
       {/* Header */}
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 16px 10px",background:th.bg2,borderBottom:`1px solid ${th.border}`,zIndex:10,flexShrink:0}}>
-        <button onClick={()=>setMenuOpen(true)} style={{width:38,height:38,borderRadius:12,background:th.card,border:`1px solid ${th.border}`,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}>
-          {[1,2,3].map(i=><div key={i} style={{width:16,height:2,borderRadius:1,background:th.primary}}/>)}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 16px 12px",background:th.bg,zIndex:10,flexShrink:0}}>
+        <button onClick={()=>setMenuOpen(true)} style={{width:40,height:40,borderRadius:14,background:th.card,border:`1px solid ${th.border}`,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}>
+          {[1,2,3].map(i=><div key={i} style={{width:16,height:2,borderRadius:1,background:th.text2}}/>)}
         </button>
-        <div className="serif" style={{fontSize:24,fontWeight:600,color:th.primary}}>RESET 7D</div>
+        <div style={{fontSize:20,fontWeight:800,color:th.text,letterSpacing:-0.3}}>RESET <span style={{color:th.accent}}>7D</span></div>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <button onClick={()=>setShowDayPicker(!showDayPicker)} style={{background:th.primaryL,border:`1px solid ${th.border2}`,borderRadius:20,padding:"5px 11px",color:th.primary,fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"'Manrope',sans-serif"}}>
             {PC[currentDay]?.emoji} D{currentDay}
@@ -4961,15 +4999,19 @@ function Dashboard({user, onLogout, darkMode, setDarkMode, lang, setLang, th}) {
         {activeTab==="community" && <CommunityTab user={user} currentDay={currentDay} th={th} lang={lang}/>}
       </div>
 
-      {/* Tab bar */}
-      <div style={{display:"flex",background:th.bg2,borderTop:`1px solid ${th.border}`,padding:"6px 0 14px",flexShrink:0,zIndex:10}}>
-        {TABS.map(tab=>(
-          <button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:"none",border:"none",cursor:"pointer",padding:"4px 2px",position:"relative",fontFamily:"'Manrope',sans-serif"}}>
-            {activeTab===tab.id && <div style={{position:"absolute",top:-6,left:"50%",transform:"translateX(-50%)",width:28,height:3,background:`linear-gradient(90deg,${th.primary},${th.text2})`,borderRadius:"0 0 3px 3px"}}/>}
-            <span style={{fontSize:activeTab===tab.id?22:17,transition:"font-size .2s"}}>{tab.icon}</span>
-            <span style={{fontSize:9,color:activeTab===tab.id?th.primary:th.text3,fontWeight:activeTab===tab.id?800:400}}>{tab.label}</span>
-          </button>
-        ))}
+      {/* Tab bar — flutuante com pílula ativa */}
+      <div style={{flexShrink:0,padding:"8px 12px 16px",zIndex:10}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:th.card,border:`1px solid ${th.border}`,borderRadius:28,padding:"8px 9px",boxShadow:th.shadow}}>
+          {TABS.map(tab=>{
+            const active=activeTab===tab.id;
+            return (
+              <button key={tab.id} onClick={()=>setActiveTab(tab.id)} title={tab.label} style={{flex:active?"0 0 auto":"1 1 0",minWidth:0,display:"flex",alignItems:"center",justifyContent:"center",gap:7,background:active?th.primary:"transparent",border:"none",cursor:"pointer",padding:active?"11px 15px":"11px 2px",borderRadius:999,transition:"background .25s,padding .25s",fontFamily:"'Manrope',sans-serif"}}>
+                <span style={{fontSize:18,lineHeight:1,opacity:active?1:.55}}>{tab.icon}</span>
+                {active && <span style={{fontSize:12,fontWeight:800,color:"#fff",letterSpacing:.2,whiteSpace:"nowrap"}}>{tab.label}</span>}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <HamburgerMenu open={menuOpen} onClose={()=>setMenuOpen(false)} th={th} darkMode={darkMode} setDarkMode={setDarkMode} lang={lang} setLang={setLang} onLogout={onLogout} onChangePw={()=>setShowChangePw(true)} user={user} onOpenCalca={()=>setShowCalca(true)}/>
