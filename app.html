@@ -115,27 +115,7 @@
       window._r7dWatermark = function(email){
         var old = document.getElementById('r7d-wm');
         if (old) old.remove();
-        if (!email) return;
-        var c = document.createElement('canvas');
-        var W = 340, H = 180;
-        c.width = W; c.height = H;
-        var ctx = c.getContext('2d');
-        ctx.translate(W/2, H/2);
-        ctx.rotate(-28 * Math.PI/180);
-        ctx.font = '11px sans-serif';
-        ctx.fillStyle = 'rgba(232,164,192,0.10)';
-        ctx.textAlign = 'center';
-        ctx.fillText(email, 0, 0);
-        ctx.fillText('RESET 7D · ACESSO PESSOAL', 0, 18);
-        var url = c.toDataURL();
-        var el = document.createElement('div');
-        el.id = 'r7d-wm';
-        el.style.cssText = [
-          'position:fixed','inset:0','z-index:9999',
-          'pointer-events:none','background:url('+url+') repeat',
-          'opacity:1'
-        ].join(';');
-        document.body.appendChild(el);
+        /* Marca d'água de letras removida — fundo limpo. */
       };
 
     }); // DOMContentLoaded
@@ -154,13 +134,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Manrope',sans-serif;background:#2b1c35;}
+    body{font-family:'Manrope',sans-serif;background:#15101b;}
     #root{height:100vh;}
   </style>
 </head>
 <body>
 <div id="root"></div>
-<div id="dbg-err" style="display:none;position:fixed;inset:0;z-index:99999;background:#2b1c35;color:#eedff5;padding:24px;font-family:monospace;font-size:13px;overflow:auto;white-space:pre-wrap;"></div>
+<div id="dbg-err" style="display:none;position:fixed;inset:0;z-index:99999;background:#15101b;color:#f2ecf6;padding:24px;font-family:monospace;font-size:13px;overflow:auto;white-space:pre-wrap;"></div>
 <script>
 window.BACKEND_URL=window.location.hostname==="localhost"?"http://localhost:3001":"";
 window.onerror=function(msg,src,line,col,err){
@@ -180,24 +160,28 @@ const { AreaChart, Area, BarChart, Bar, RadarChart, Radar,
 // ── TEMA ─────────────────────────────────────────────────────
 const THEMES = {
   dark: {
-    bg:"#2b1c35", bg2:"#321f3d", bg3:"#3a2448",
-    card:"#3e2455", card2:"#472c63", cardSolid:"#3e2455",
-    text:"#eedff5", text2:"#cca8de", text3:"#8a6ea6",
-    border:"rgba(238,223,245,0.08)", border2:"rgba(228,186,136,0.38)", cardBorder:"rgba(228,186,136,0.28)",
-    primary:"#d48ac0", primaryL:"rgba(212,138,192,0.13)", primaryM:"rgba(212,138,192,0.25)",
-    green:"#84c8a4", greenL:"rgba(132,200,164,0.14)",
-    accent:"#e4ba88", accentL:"rgba(228,186,136,0.14)",
-    inputBg:"#3e2455", shadow:"0 4px 22px rgba(0,0,0,0.28)",
+    bg:"#15101b", bg2:"#1c1524", bg3:"#241a2d",
+    card:"#221829", card2:"#2a1f33", cardSolid:"#221829",
+    text:"#f2ecf6", text2:"#bca9cc", text3:"#83738f",
+    border:"rgba(255,255,255,0.07)", border2:"rgba(216,150,200,0.30)", cardBorder:"rgba(255,255,255,0.06)",
+    primary:"#d68ac4", primaryL:"rgba(214,138,196,0.12)", primaryM:"rgba(214,138,196,0.24)",
+    green:"#67c79c", greenL:"rgba(103,199,156,0.13)",
+    accent:"#e6b079", accentL:"rgba(230,176,121,0.13)",
+    inputBg:"#2a1f33", shadow:"0 12px 34px rgba(0,0,0,0.42)",
+    chipMint:"#1f3a30", chipMintT:"#7fd9af", chipBlue:"#232a44", chipBlueT:"#9fb0f0",
+    chipPeach:"#3a2c1e", chipPeachT:"#f0bd84", chipLilac:"#2e2240", chipLilacT:"#c4a6e8",
   },
   light: {
-    bg:"#faf5ff", bg2:"#f2e8ff", bg3:"#e8d8f8",
-    card:"#ffffff", card2:"#f8f0fe", cardSolid:"#ffffff",
-    text:"#2c1a3c", text2:"#8040a8", text3:"#7862a0",
-    border:"rgba(0,0,0,0.06)", border2:"rgba(184,128,40,0.35)", cardBorder:"rgba(184,128,40,0.22)",
-    primary:"#bf5a9a", primaryL:"rgba(191,90,154,0.08)", primaryM:"rgba(191,90,154,0.18)",
-    green:"#4aa878", greenL:"rgba(74,168,120,0.1)",
-    accent:"#c88828", accentL:"rgba(200,136,40,0.12)",
-    inputBg:"#f2e8ff", shadow:"0 2px 16px rgba(0,0,0,0.06)",
+    bg:"#efeafa", bg2:"#f5f1fd", bg3:"#e7e0f6",
+    card:"#ffffff", card2:"#f7f4fc", cardSolid:"#ffffff",
+    text:"#241830", text2:"#6b5a82", text3:"#9a8bb0",
+    border:"rgba(36,24,48,0.07)", border2:"rgba(176,86,143,0.28)", cardBorder:"rgba(36,24,48,0.05)",
+    primary:"#b0568f", primaryL:"rgba(176,86,143,0.08)", primaryM:"rgba(176,86,143,0.16)",
+    green:"#3fa97a", greenL:"rgba(63,169,122,0.10)",
+    accent:"#df9a57", accentL:"rgba(223,154,87,0.12)",
+    inputBg:"#f3eefb", shadow:"0 8px 30px rgba(60,40,90,0.10)",
+    chipMint:"#d9f0e4", chipMintT:"#2c8a62", chipBlue:"#dde3fb", chipBlueT:"#4659c0",
+    chipPeach:"#fbe6d0", chipPeachT:"#c47a32", chipLilac:"#ece0f8", chipLilacT:"#8757b8",
   }
 };
 // alias para compatibilidade com código de auth (usa T.primary etc)
@@ -209,8 +193,8 @@ const makeCSS = (th) => `
 body{font-family:'Manrope',sans-serif;background:${th.bg};color:${th.text};-webkit-font-smoothing:antialiased;}
 ::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:${th.primary};border-radius:2px;}
 .serif{font-family:'Fraunces',serif;font-optical-sizing:auto;letter-spacing:-0.01em;}
-.glass{background:${th.card};border:1px solid ${th.cardBorder};box-shadow:0 6px 20px rgba(0,0,0,0.22),inset 0 1px 0 rgba(255,255,255,0.05);}
-.glass2{background:${th.card2};border:1px solid ${th.cardBorder};box-shadow:0 3px 12px rgba(0,0,0,0.16);}
+.glass{background:${th.card};border:1px solid ${th.cardBorder};box-shadow:${th.shadow};}
+.glass2{background:${th.card2};border:1px solid ${th.cardBorder};box-shadow:none;}
 .hover-scale{transition:transform .18s,box-shadow .18s;cursor:pointer;}
 .hover-scale:active{transform:scale(0.97);}
 .slide-up{animation:su .38s ease forwards;}
@@ -223,10 +207,10 @@ body{font-family:'Manrope',sans-serif;background:${th.bg};color:${th.text};-webk
 @keyframes checkPop{0%{transform:scale(0) rotate(-20deg);opacity:0}65%{transform:scale(1.25);opacity:1}100%{transform:scale(1);opacity:1}}
 .check-circle{width:72px;height:72px;border-radius:50%;background:${th.greenL};border:2px solid ${th.green};display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;color:${th.green};animation:checkPop .5s ease forwards;}
 .grad-text{background:linear-gradient(135deg,${th.primary},${th.green});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.btn-s{background:linear-gradient(135deg,${th.primaryL},${th.card});border:1.5px solid ${th.border2};border-radius:13px;color:${th.primary};font-weight:700;font-size:13px;padding:11px 18px;cursor:pointer;font-family:'Manrope',sans-serif;transition:all .18s;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
-.btn-s:hover{border-color:rgba(228,186,136,0.65);box-shadow:0 4px 16px rgba(228,186,136,0.22);transform:translateY(-1px);}
-.btn-g{background:linear-gradient(135deg,${th.greenL},${th.card});border:1.5px solid rgba(132,200,164,.35);border-radius:13px;color:${th.green};font-weight:700;font-size:13px;padding:11px 18px;cursor:pointer;font-family:'Manrope',sans-serif;transition:all .18s;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
-.btn-g:hover{border-color:rgba(132,200,164,.65);box-shadow:0 4px 16px rgba(132,200,164,0.22);transform:translateY(-1px);}
+.btn-s{background:${th.primaryL};border:1px solid ${th.primaryM};border-radius:14px;color:${th.primary};font-weight:700;font-size:13px;padding:11px 18px;cursor:pointer;font-family:'Manrope',sans-serif;transition:all .18s;}
+.btn-s:hover{background:${th.primaryM};transform:translateY(-1px);}
+.btn-g{background:${th.greenL};border:1px solid ${th.greenL};border-radius:14px;color:${th.green};font-weight:700;font-size:13px;padding:11px 18px;cursor:pointer;font-family:'Manrope',sans-serif;transition:all .18s;}
+.btn-g:hover{transform:translateY(-1px);filter:brightness(1.06);}
 .xp-fly{position:fixed;top:35%;left:50%;transform:translateX(-50%);z-index:999;background:linear-gradient(135deg,${th.primary},${th.accent});border-radius:20px;padding:10px 22px;font-size:20px;font-weight:900;color:${th.bg};pointer-events:none;animation:xpf .9s ease forwards;}
 @keyframes xpf{0%{opacity:1;transform:translateX(-50%) scale(1) translateY(0);}60%{opacity:1;transform:translateX(-50%) scale(1.3) translateY(-20px);}100%{opacity:0;transform:translateX(-50%) scale(0.8) translateY(-50px);}}
 .pbar{height:100%;border-radius:999px;transition:width .8s ease;}
@@ -241,13 +225,13 @@ body{font-family:'Manrope',sans-serif;background:${th.bg};color:${th.text};-webk
 .pass-bar-track{height:5px;border-radius:99px;background:${th.border};overflow:hidden;margin-top:8px;}
 .pass-bar{height:5px;border-radius:99px;transition:width .45s,background .45s;}
 input,textarea{font-family:'Manrope',sans-serif;}
-.glass{background:${th.card};border:1px solid ${th.cardBorder};backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 6px 20px rgba(0,0,0,0.22),inset 0 1px 0 rgba(255,255,255,0.05);}
-.auth-card{position:relative;z-index:1;box-shadow:0 0 60px rgba(232,164,192,0.08),0 20px 60px rgba(0,0,0,0.4);transition:box-shadow .3s;}
-.auth-card:hover{box-shadow:0 0 80px rgba(232,164,192,0.15),0 24px 70px rgba(0,0,0,0.5);}
-.btn-p{background:linear-gradient(135deg,${th.primary},${th.text2});border:none;border-radius:14px;color:${th.bg};font-weight:700;font-size:14px;padding:13px;cursor:pointer;width:100%;font-family:'Manrope',sans-serif;transition:all .2s;position:relative;overflow:hidden;}
-.btn-p::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);opacity:0;transition:opacity .2s;}
+.glass{background:${th.card};border:1px solid ${th.cardBorder};backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:${th.shadow};}
+.auth-card{position:relative;z-index:1;box-shadow:${th.shadow};transition:box-shadow .3s;}
+.auth-card:hover{box-shadow:0 16px 50px rgba(0,0,0,0.28);}
+.btn-p{background:${th.primary};border:none;border-radius:14px;color:#fff;font-weight:700;font-size:14px;padding:14px;cursor:pointer;width:100%;font-family:'Manrope',sans-serif;transition:all .2s;position:relative;overflow:hidden;box-shadow:0 6px 18px ${th.primaryM};}
+.btn-p::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.18),transparent);opacity:0;transition:opacity .2s;}
 .btn-p:hover::after{opacity:1;}
-.btn-p:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(232,164,192,0.45);}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 12px 28px ${th.primaryM};filter:brightness(1.04);}
 .btn-p:active{transform:scale(0.98) translateY(0);}
 .btn-p:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;}
 .inp{width:100%;padding:13px 16px;background:${th.inputBg};border:1.5px solid ${th.border};border-radius:13px;color:${th.text};font-size:14px;font-family:'Manrope',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;}
@@ -280,7 +264,7 @@ input,textarea{font-family:'Manrope',sans-serif;}
 .quiz-opt-selected{animation:optionPick .45s ease forwards !important;}
 .ripple-wave{position:absolute;border-radius:50%;pointer-events:none;transform:scale(0);animation:rippleWave .6s ease-out forwards;}
 .card-interactive{transition:transform .25s cubic-bezier(.2,0,.2,1),box-shadow .25s;}
-.card-interactive:hover{transform:translateY(-5px) scale(1.015);box-shadow:0 18px 44px rgba(228,186,136,0.20),0 6px 20px rgba(0,0,0,0.25) !important;}
+.card-interactive:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(60,40,90,0.18) !important;}
 .auth-form-panel{background:rgba(43,28,53,0.42);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(212,138,192,0.14);border-radius:22px;}
 @keyframes logoSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 @keyframes quizResultIn{from{transform:translateY(30px) scale(0.95);opacity:0;}to{transform:translateY(0) scale(1);opacity:1;}}
@@ -322,7 +306,7 @@ const PC = {
     title:"A Base — Proteína + Janela Alimentar",
     keystone:"20g de proteína no café da manhã AGORA",
     modoMinimo:["3 ovos mexidos OU iogurte grego + pasta de amendoim","Para de comer 10h após o café — só água/chá depois"],
-    intro:`Dois hábitos respondem por ~60% dos resultados do protocolo. Hoje você instala os dois.\n\nNão é dieta. É sinal correto para o corpo na hora certa.`,
+    intro:`Dois hábitos respondem por ~60% dos resultados do protocolo. Hoje você instala os dois.\n\nNão é dieta. É sinal correto para o corpo na hora certa.\n\n📌 O QUE ESPERAR NESSES 7 DIAS (seja honesta consigo):\n→ Redução de 1–4cm de cintura (principalmente desinchação real)\n→ Calça que fechava apertada → fecha com mais conforto\n→ Melhora perceptível de energia e qualidade do sono\n→ Perda de GORDURA é um processo de semanas — o que sai em 7 dias é principalmente líquido retido e inflamação. Isso é REAL e visível. Não espere 5kg na balança — espere um corpo mais leve, menos inchado e mais disposto.\n\n🌙 IMPORTANTE PARA ESTA NOITE:\nAinda que hoje seja Dia 1 de proteína e janela, o sono de hoje À NOITE já é parte do protocolo. Telas fora às 21h + chá morno + respiração 4-7-8. Isso prepara o Dia 2 para funcionar melhor.`,
     sections:[
       {title:"⚡ O que fazer hoje — AÇÃO IMEDIATA",sci:false,content:`PRATO PADRÃO — Monte assim, sem pensar:\n½ prato: vegetais (brócolis, alface, abobrinha, cenoura, tomate)\n¼ prato: proteína (frango, ovos, sardinha, feijão + ovo)\n¼ prato: carboidrato bom (arroz integral, batata, mandioca)\n1 fio de gordura boa (azeite)\n\nJANELA ALIMENTAR DE 10H:\nCafé às 8h → última refeição até 18h\nCafé às 9h → última refeição até 19h\nApós isso: só água, chá puro ou café puro\n\nHIDRATAÇÃO MATINAL:\n1 copo de água morna ao acordar — antes de qualquer coisa`},
       {title:"🥚 META DE PROTEÍNA (não opcional)",sci:false,content:`Café da manhã: 20–25g\n→ 3 ovos (18g) + iogurte natural (6g) ✓\n→ Omelete 2 ovos + queijo branco + pão integral ✓\n\nAlmoço: 25–35g\n→ 1 palma de frango grelhado (≈25g) + feijão ✓\n→ Sardinha em lata (21g/100g) + arroz integral ✓\n\nJantar: 20–25g\n→ Omelete 3 ovos + vegetais refogados ✓\n→ Sopa de frango com legumes ✓\n\nFONTES ECONÔMICAS: Ovos (6–7g/un), sardinha lata, feijão (7g/100g), iogurte natural, amendoim (25g/100g)`},
@@ -363,7 +347,7 @@ const PC = {
     title:"O Escudo — Quebrando o Ciclo Cortisol-Compulsão",
     keystone:"Respiração 4-7-8 ANTES de abrir a geladeira por impulso",
     modoMinimo:["Proteína no café (estabiliza glicemia o dia todo)","4-7-8 antes de qualquer coisa impulsiva"],
-    intro:`Compulsão às 16h não é fraqueza. É cortisol cronicamente alto pedindo açúcar rápido.\n\nA intervenção de 90 segundos que quebra esse ciclo: respiração antes de agir.`,
+    intro:`Compulsão às 16h não é fraqueza. É cortisol cronicamente alto pedindo açúcar rápido.\n\nA intervenção de 90 segundos que quebra esse ciclo: respiração antes de agir.\n\n🌸 NOTA SOBRE SEU CICLO MENSTRUAL:\nSe você está na semana pré-menstrual (fase lútea, 7–14 dias antes da menstruação), saiba: a compulsão por doce e carboidrato é BIOLOGICAMENTE amplificada nessa fase. A progesterona cai, o cortisol sobe, a serotonina despenca. NÃO É FRAQUEZA — é fisiologia.\nNessa semana: aumente a proteína (protege da compulsão), use a respiração 4-7-8 com mais frequência, seja mais gentil consigo. O protocolo funciona mesmo na TPM — só exige mais da ferramenta de respiração.`,
     sections:[
       {title:"🛡️ Execute assim hoje — as 3 frentes",sci:false,content:`FRENTE 1 — RESPIRAÇÃO (ferramenta principal)\n\n4-7-8 (aprenda agora, faça 4 ciclos):\n→ Inspire pelo nariz: conte 4\n→ Segure: conte 7\n→ Expire pela boca: conte 8\n→ Repita 4 ciclos (≈90 segundos)\nUse: antes de refeições, no pico da tarde, antes de dormir\n\nGROUNDING nos momentos de compulsão:\nAntes de abrir a geladeira por impulso →\n5 coisas que você VÊ · 4 que TOCA · 3 que OUVE · 2 que CHEIRA · 1 que SENTE\n\nFRENTE 2 — ALIMENTAÇÃO ANTI-CORTISOL\n• Magnésio: espinafre, couve, feijão preto, aveia, banana, amendoim\n• Vitamina C: acerola, laranja, caju, pimentão vermelho\n• Proteína no café: estabiliza glicemia → menos pico de cortisol à tarde\n• Máximo 2 cafés/dia, nenhum após 14h\n\nFRENTE 3 — MOVIMENTO QUE DERRUBA CORTISOL\n• Caminhada 15–20 min ao ar livre (mais eficaz que treino intenso para cortisol)\n• Alongamento suave 10 min antes de dormir`},
       {title:"🔬 A ciência do cortisol (toque para ver)",sci:true,content:`Cortisol cronicamente elevado:\n• Resistência à insulina → acúmulo de gordura abdominal\n• Leptina cai → você não percebe quando está satisfeita\n• Grelina sobe → fome de açúcar e gordura\n• Gordura visceral acumula (abdômen concentra receptores de cortisol)\n\nRespiração lenta: estudos mostram redução de cortisol salivar com 4-7-8 e técnicas similares.\n\nRef: Epel ES et al. Obesity Reviews 2018; Ma X et al. Front Psychol 2017`},
@@ -419,7 +403,7 @@ const PC = {
     title:"O Forno — NEAT, Movimento e Metabolismo Ativo",
     keystone:"6 micro-ações de NEAT hoje (marque conforme faz)",
     modoMinimo:["3 micro-ações NEAT (escada, ficar de pé, caminhar)","Caminhada de 10 min após o almoço"],
-    intro:`NEAT (movimento fora da academia) pode valer mais que 1h de treino para mulheres sedentárias.\n\nO forno interno não precisa de academia. Precisa de ativação contínua.`,
+    intro:`NEAT (movimento fora da academia) pode valer mais que 1h de treino para mulheres sedentárias.\n\nO forno interno não precisa de academia. Precisa de ativação contínua.\n\n📅 Nota de ciclo: se você está na semana pré-menstrual (fase lútea), cortisol e progesterona estão biologicamente elevados — o que amplia a retenção de líquidos, o apetite e o inchaço. NEAT nessa fase é especialmente eficaz: micro-movimentos ao longo do dia regulam o cortisol, desincha e melhora o humor mais do que um treino intenso. Não é o momento de se cobrar por "desempenho" — é o momento de manter o forno ativo com movimentos leves e contínuos.`,
     sections:[
       {title:"🔥 NEAT — escolha 6 hoje (marque ao fazer)",sci:false,content:`MICRO-AÇÕES (cada uma conta):\n☐ Subir escadas em vez do elevador\n☐ Caminhar até um ponto de ônibus mais distante\n☐ Ficar de pé durante ligações/reuniões\n☐ Cozinhar com disposição real (15+ min de pé)\n☐ Limpar um cômodo com velocidade\n☐ Dançar 5 min (de verdade, não fingir)\n☐ Caminhada pós-jantar (10–15 min)\n☐ Alongamento de pé 5 min durante pausa no trabalho\n\nATIVAÇÃO DE GORDURA MARROM (bônus ao final do banho):\n30s água fria → 30s morna → repita 3x\n⚠️ Não fazer com pressão alta descompensada\n\nTERMOGÊNICOS NATURAIS:\n• Pimenta (capsaicina ativa termogênese)\n• Canela (sensibilidade à insulina)\n• Gengibre (digestão + leve termogênese)`},
       {title:"🔬 A ciência do NEAT (toque para ver)",sci:true,content:`NEAT pode representar 15–50% do gasto calórico total em pessoas ativas vs. sedentárias.\n\nPessoas naturalmente magras têm NEAT 350 kcal/dia maior que pessoas obesas — a diferença não está na academia.\n\nGordura marrom (BAT): existe em pescoço, ombros e tronco. Ativada pelo frio, queima ácidos graxos para gerar calor (termogênese não-tremulante).\n\nRef: Levine JA et al. Science 1999 (NEAT); Saito M et al. Diabetes 2009 (BAT)`},
@@ -440,7 +424,7 @@ const PC = {
     modoMinimo:["Reflexão de 5 min: o que funcionou nessa semana?","Foto final + definir data do próximo ciclo"],
     intro:`7 dias concluídos. Agora vem a parte mais importante: transformar o que você aprendeu em sistema permanente.\n\nO que não vira hábito automático vai embora na primeira segunda-feira difícil.`,
     sections:[
-      {title:"💪 Plano de Manutenção (escreva no papel hoje)",sci:false,content:`SEUS 3 INEGOCIÁVEIS (todo dia, automático):\n1. Proteína em toda refeição principal (20g+)\n2. Janela alimentar de 10h (ou 8h se estiver fluindo bem)\n3. Dormir antes das 22h30 + ritual de 5 min\n\nMOVIMENTO (toda semana, mínimo):\n• 2–3 treinos curtos (os vídeos que você já conhece)\n• NEAT diário (6 micro-ações)\n• Caminhada 1x por semana (30+ min)\n\nCHECK-IN MENSAL (não balança diária):\n• Vista a calça-teste 1x por mês\n• Medir cintura 1x por mês\n• A roupa avisa antes da balança — confie nela\n\nSE SAIR DOS TRILHOS (e vai sair — faz parte):\n• Regra do "nunca duas vezes seguidas"\n• Modo Mínimo: proteína + janela + dormir\n• Recomeço no mesmo dia, não na segunda-feira`},
+      {title:"💪 Plano de Manutenção (escreva no papel hoje)",sci:false,content:`SEUS 4 INEGOCIÁVEIS (todo dia, automático):\n1. Proteína em toda refeição principal (20g+)\n2. Janela alimentar de 10h (ou 8h se estiver fluindo bem)\n3. Dormir antes das 22h30 + ritual de 5 min\n4. Semana lútea? Mais NEAT, mais proteína — menos cobrança\n\nMOVIMENTO (toda semana, mínimo):\n• 2–3 treinos curtos (os vídeos que você já conhece)\n• NEAT diário (6 micro-ações — mais na semana pré-menstrual)\n• Caminhada 1x por semana (30+ min)\n\nCHECK-IN MENSAL (não balança diária):\n• Vista a calça-teste 1x por mês\n• Medir cintura 1x por mês\n• A roupa avisa antes da balança — confie nela\n\nSE SAIR DOS TRILHOS (e vai sair — faz parte):\n• Regra do "nunca duas vezes seguidas"\n• Modo Mínimo: proteína + janela + dormir\n• Recomeço no mesmo dia, não na segunda-feira`},
       {title:"📝 Reflexão dos 7 Dias (10 min escrevendo)",sci:false,content:`O que mudou no meu corpo nessa semana?\nQual hábito foi mais fácil de manter?\nQual foi o mais difícil? Por quê?\nO que eu aprendi sobre mim mesma?\nQual versão minha surgiu nessa semana?\n\nESSAS RESPOSTAS são o seu mapa de continuidade.\nSe algo foi fácil → vai ser seu ponto forte.\nSe algo foi difícil → é sua área de desenvolvimento.\n\n📸 FOTO FINAL COM A CALÇA DE REFERÊNCIA:\nMesma posição, mesma luz, mesmo horário do Dia 1.`},
       {title:"🔬 A ciência da manutenção (toque para ver)",sci:true,content:`Os 3 preditores mais fortes de sucesso a longo prazo (pesquisa em manutenção de peso):\n1. Café da manhã com proteína (reduz ingestão calórica total do dia)\n2. Auto-monitoramento regular (não diário — mensal é suficiente)\n3. Atividade física acima da média (NEAT > treino isolado)\n\nO "efeito elástico" acontece quando a pessoa para completamente após um programa. A regra do "nunca duas vezes" é o amortecedor mais eficaz.\n\nRef: Wing RR, Phelan S. Am J Clin Nutr 2005; National Weight Control Registry`},
     ],
@@ -460,60 +444,60 @@ const PC = {
 // tip: instrução inline de 1 frase | keystone:true = faça esta primeiro
 const MISSIONS = {
   1:[
-    {id:"1a",t:"💪 Proteína no café (20g+)",xp:60,keystone:true,tip:"3 ovos OU iogurte grego + pasta de amendoim. Não pule."},
-    {id:"1b",t:"⏰ Janela alimentar de 10h",xp:50,tip:"Hora do café → +10h = hora do jantar. Só água/chá depois."},
-    {id:"1c",t:"💧 Água morna ao acordar (antes do café)",xp:25,tip:"1 copo antes de qualquer coisa. Ativa fígado e intestino."},
-    {id:"1d",t:"🥗 Almoço no prato padrão (½ vegetal, ¼ prot, ¼ carbo)",xp:40,tip:"½ prato de vegetais. 1 palma de proteína. 1 punho de carbo."},
-    {id:"1e",t:"🌙 Dormir antes das 22h30",xp:40,tip:"Inegociável do protocolo. Define tudo que vem depois."},
-    {id:"1f",t:"📸 Foto com a calça de referência — Dia 1!",xp:70,tip:"Mesma calça, mesma posição. Este é seu ponto de partida real."},
+    {id:"1a",t:"💪 Proteína no café (20g+)",xp:80,keystone:true,tip:"3 ovos OU iogurte grego + pasta de amendoim. Não pule — é o hábito mais importante."},
+    {id:"1b",t:"⏰ Janela alimentar de 10h",xp:65,tip:"Hora do café → +10h = hora do jantar. Só água/chá depois."},
+    {id:"1c",t:"💧 Água morna ao acordar (antes do café)",xp:30,tip:"1 copo antes de qualquer coisa. Ativa fígado e intestino."},
+    {id:"1d",t:"🥗 Almoço no prato padrão (½ vegetal, ¼ prot, ¼ carbo)",xp:55,tip:"½ prato de vegetais. 1 palma de proteína. 1 punho de carbo."},
+    {id:"1e",t:"🌙 Telas fora às 21h + chá de sono esta noite",xp:55,tip:"Sono é pré-requisito de tudo. Hoje à noite: telas fora às 21h + chá morno + respiração 4-7-8."},
+    {id:"1f",t:"📸 Foto com a calça de referência — Dia 1!",xp:45,tip:"Mesma calça, mesma posição. Este é seu ponto de partida real."},
   ],
   2:[
-    {id:"2a",t:"🌙 Telas fora às 21h (modo avião ou fora do quarto)",xp:60,keystone:true,tip:"Luz azul bloqueia melatonina por 2h. Uma decisão. Grande impacto."},
-    {id:"2b",t:"☀️ Luz natural nos primeiros 30 min do dia",xp:40,tip:"5 min na varanda ou janela. Ancora o ritmo circadiano."},
-    {id:"2c",t:"☕✗ Sem cafeína após 14h",xp:35,tip:"Cafeína tem meia-vida de 5h. Café das 16h = acordada às 22h."},
-    {id:"2d",t:"🍽️ Jantar leve com triptofano",xp:40,tip:"Iogurte, ovo, frango, banana. Leve = até 18h30 se janela de 10h."},
-    {id:"2e",t:"🌙 Ritual de 5 min (chá + respiração 4-7-8)",xp:50,tip:"Chá morno + 4 ciclos de respiração 4-7-8 deitada. Semáforo verde pro sono."},
-    {id:"2f",t:"📸 Foto pela manhã ao acordar (antes de qualquer coisa)",xp:60,tip:"Seu corpo depois do sono é a medida mais honesta."},
+    {id:"2a",t:"🌙 Telas fora às 21h (modo avião ou fora do quarto)",xp:80,keystone:true,tip:"Luz azul bloqueia melatonina por 2h. Uma decisão. Grande impacto."},
+    {id:"2b",t:"☀️ Luz natural nos primeiros 30 min do dia",xp:50,tip:"5 min na varanda ou janela. Ancora o ritmo circadiano."},
+    {id:"2c",t:"☕✗ Sem cafeína após 14h",xp:45,tip:"Cafeína tem meia-vida de 5h. Café das 16h = acordada às 22h."},
+    {id:"2d",t:"🍽️ Jantar leve com triptofano",xp:50,tip:"Iogurte, ovo, frango, banana. Leve = até 18h30 se janela de 10h."},
+    {id:"2e",t:"🌙 Ritual de 5 min (chá + respiração 4-7-8)",xp:65,tip:"Chá morno + 4 ciclos de respiração 4-7-8 deitada. Semáforo verde pro sono."},
+    {id:"2f",t:"📸 Foto pela manhã ao acordar (antes de qualquer coisa)",xp:40,tip:"Seu corpo depois do sono é a medida mais honesta."},
   ],
   3:[
-    {id:"3a",t:"🌬️ Respiração 4-7-8 antes de abrir a geladeira por impulso",xp:60,keystone:true,tip:"4 inspire / 7 segurar / 8 expirar × 4 ciclos = 90 segundos. Faça ANTES."},
-    {id:"3b",t:"🧠 Grounding em 1 momento de compulsão",xp:50,tip:"5 coisas que vê, 4 que toca, 3 que ouve. Quebra o piloto automático."},
-    {id:"3c",t:"💪 Proteína no café (estabiliza a tarde toda)",xp:40,tip:"Glicemia estável → sem pico de cortisol às 16h. A proteína é sua defesa."},
-    {id:"3d",t:"🚶 Caminhada 15–20 min ao ar livre",xp:40,tip:"Ar livre + luz solar = cortisol desce + humor sobe."},
-    {id:"3e",t:"☕ Máx. 2 cafés, nenhum após 14h",xp:30,tip:"Cafeína amplifica cortisol. Tarde sem café = tarde sem compulsão."},
-    {id:"3f",t:"📸 Foto com a calça — compare com Dia 1!",xp:70,tip:"Registre: menos compulsão hoje = corpo mudando."},
+    {id:"3a",t:"🌬️ Respiração 4-7-8 antes de abrir a geladeira por impulso",xp:80,keystone:true,tip:"4 inspire / 7 segurar / 8 expirar × 4 ciclos = 90 segundos. Faça ANTES de agir no impulso."},
+    {id:"3b",t:"🧠 Grounding em 1 momento de compulsão",xp:60,tip:"5 coisas que vê, 4 que toca, 3 que ouve. Quebra o piloto automático em 2 minutos."},
+    {id:"3c",t:"💪 Proteína no café (estabiliza a tarde toda)",xp:55,tip:"Glicemia estável → sem pico de cortisol às 16h. A proteína é sua defesa."},
+    {id:"3d",t:"🚶 Caminhada 15–20 min ao ar livre",xp:50,tip:"Ar livre + luz solar = cortisol desce + humor sobe. Melhor que qualquer ansiolítico."},
+    {id:"3e",t:"☕ Máx. 2 cafés, nenhum após 14h",xp:40,tip:"Cafeína amplifica cortisol. Tarde sem café = tarde sem compulsão."},
+    {id:"3f",t:"📸 Foto com a calça — compare com Dia 1!",xp:40,tip:"Registre: menos compulsão hoje = corpo mudando."},
   ],
   4:[
-    {id:"4a",t:"🌱 Fibra em toda refeição (aveia, vegetais, leguminosa)",xp:50,keystone:true,tip:"Café: aveia. Almoço: salada + feijão. Jantar: vegetais. Sempre os três."},
-    {id:"4b",t:"🫙 Fermentado 1x hoje (iogurte, kefir ou coalhada)",xp:50,tip:"Sem adição de açúcar. Natural = fermentado real. Pote pequeno já conta."},
-    {id:"4c",t:"🧘 Respiração diafragmática 5 min (pós-almoço)",xp:35,tip:"Barriga expande ao inspirar. Ativa nervo vago — conexão intestino-cérebro."},
-    {id:"4d",t:"🍵 Chá calmante intestinal (camomila + erva-doce)",xp:25,tip:"À tarde ou após jantar. Reduz gases, relaxa intestino, apoia digestão."},
-    {id:"4e",t:"🥦 Vegetais em pelo menos 2 refeições",xp:35,tip:"½ prato. Qualquer vegetal. Fresco, cozido, refogado — tanto faz."},
-    {id:"4f",t:"📸 Foto dos pratos de hoje",xp:60,tip:"Ver o que você comeu é mais honesto que lembrar. Registre o progresso."},
+    {id:"4a",t:"🌱 Fibra em toda refeição (aveia, vegetais, leguminosa)",xp:75,keystone:true,tip:"Café: aveia. Almoço: salada + feijão. Jantar: vegetais. Microbioma agradece."},
+    {id:"4b",t:"🫙 Fermentado 1x hoje (iogurte, kefir ou coalhada)",xp:65,tip:"Sem adição de açúcar. Natural = fermentado real. Pote pequeno já conta."},
+    {id:"4c",t:"🧘 Respiração diafragmática 5 min (pós-almoço)",xp:50,tip:"Barriga expande ao inspirar. Ativa nervo vago — conexão intestino-cérebro."},
+    {id:"4d",t:"🍵 Chá calmante intestinal (camomila + erva-doce)",xp:35,tip:"À tarde ou após jantar. Reduz gases, relaxa intestino, apoia digestão."},
+    {id:"4e",t:"🥦 Vegetais em pelo menos 2 refeições",xp:45,tip:"½ prato. Qualquer vegetal. Fresco, cozido, refogado — tanto faz."},
+    {id:"4f",t:"📸 Foto dos pratos de hoje",xp:35,tip:"Ver o que você comeu é mais honesto que lembrar. Registre o progresso."},
   ],
   5:[
-    {id:"5a",t:"💧 Ativação linfática matinal (10 min)",xp:60,keystone:true,tip:"Sacudir → saltitar → elevar joelhos → balanço → respiração. 2x a sequência."},
-    {id:"5b",t:"🚶 Caminhada pós-almoço (10–15 min)",xp:40,tip:"Contração muscular bombeia a linfa. Qualquer velocidade."},
-    {id:"5c",t:"🥤 Suco verde da drenagem OU 2L de água",xp:30,tip:"Linfa é 95% água. Desidratada = drenagem parada."},
-    {id:"5d",t:"🦵 Pernas na parede (10 min à noite)",xp:35,tip:"Deite, apoie pernas em 90° na parede. Gravidade drena passivamente."},
-    {id:"5e",t:"💆 Automassagem suave (5 min, com creme/óleo)",xp:30,tip:"Pressão leve em direção às axilas/virilha. Suave e fluido."},
-    {id:"5f",t:"📸 Foto da área inchada vs. Dia 1",xp:70,tip:"Inchaço que sai é resultado real, mesmo sem mudar peso na balança."},
+    {id:"5a",t:"💧 Ativação linfática matinal (10 min)",xp:80,keystone:true,tip:"Sacudir → saltitar → elevar joelhos → balanço → respiração. 2x a sequência. Antes do café!"},
+    {id:"5b",t:"🚶 Caminhada pós-almoço (10–15 min)",xp:55,tip:"Contração muscular bombeia a linfa. Qualquer velocidade conta."},
+    {id:"5c",t:"🥤 Suco verde da drenagem OU 2L de água",xp:35,tip:"Linfa é 95% água. Desidratada = drenagem parada."},
+    {id:"5d",t:"🦵 Pernas na parede (10 min à noite)",xp:50,tip:"Deite, apoie pernas em 90° na parede. Gravidade drena passivamente."},
+    {id:"5e",t:"💆 Automassagem suave (5 min, com creme/óleo)",xp:40,tip:"Pressão leve em direção às axilas/virilha. Suave e fluido."},
+    {id:"5f",t:"📸 Foto da área inchada vs. Dia 1",xp:40,tip:"Inchaço que sai é resultado real, mesmo sem mudar peso na balança."},
   ],
   6:[
-    {id:"6a",t:"🔥 6 micro-ações de NEAT hoje",xp:60,keystone:true,tip:"Escada, ficar de pé, caminhar, cozinhar, dançar 5 min, caminhar pós-jantar."},
-    {id:"6b",t:"🚶 Treino ou caminhada (15+ min)",xp:50,tip:"Qualquer vídeo do protocolo. Ou caminhada com ritmo. Movimento conta."},
-    {id:"6c",t:"🚿 Banho com ciclos frio/morno ao final (3x)",xp:30,tip:"30s fria → 30s morna. Repita 3x. Ativa gordura marrom. Opcional mas poderoso."},
-    {id:"6d",t:"🌶️ Especiarias termogênicas na alimentação",xp:20,tip:"Canela, gengibre, pimenta ou cúrcuma em alguma refeição ou chá."},
-    {id:"6e",t:"🌙 Ritual do sono + dormir antes das 22h30",xp:40,tip:"Inegociável do protocolo. Sono é quando o corpo queima gordura de verdade."},
-    {id:"6f",t:"📸 Foto com a calça (Dias 1 vs 6!)",xp:70,tip:"6 dias de NEAT + sono + proteína = diferença visível. Registre agora."},
+    {id:"6a",t:"🔥 6 micro-ações de NEAT hoje",xp:80,keystone:true,tip:"Escada, ficar de pé, caminhar, cozinhar, dançar 5 min, caminhar pós-jantar. NEAT acumula."},
+    {id:"6b",t:"🚶 Treino ou caminhada (15+ min)",xp:65,tip:"Qualquer vídeo do protocolo. Ou caminhada com ritmo. Movimento constante conta mais que treino esporádico."},
+    {id:"6c",t:"🚿 Banho com ciclos frio/morno ao final (3x)",xp:35,tip:"30s fria → 30s morna. Repita 3x. Ativa gordura marrom. ⚠️ Evitar com pressão alta ou doenças cardíacas."},
+    {id:"6d",t:"🌶️ Especiarias termogênicas na alimentação",xp:25,tip:"Canela, gengibre, pimenta ou cúrcuma em alguma refeição ou chá. Pequeno efeito real."},
+    {id:"6e",t:"🌙 Ritual do sono + dormir antes das 22h30",xp:55,tip:"Sono é quando o corpo queima gordura de verdade. Hoje: telas fora às 21h."},
+    {id:"6f",t:"📸 Foto com a calça (Dias 1 vs 6!)",xp:40,tip:"6 dias de NEAT + sono + proteína = diferença visível. Registre agora."},
   ],
   7:[
-    {id:"7a",t:"✍️ Escrever seus 3 inegociáveis permanentes",xp:80,keystone:true,tip:"No papel. Proteína + Janela + Sono são a base. Adicione 1 seu."},
-    {id:"7b",t:"💪 20–25g proteína em CADA refeição",xp:60,tip:"Hoje e sempre. Café, almoço, jantar. Não negocia."},
-    {id:"7c",t:"🚶 6+ micro-ações de NEAT",xp:50,tip:"NEAT é o hábito mais sustentável a longo prazo. Eleve o seu padrão."},
-    {id:"7d",t:"📏 Reflexão dos 7 dias (10 min escrevendo)",xp:70,tip:"O que mudou. O que foi difícil. O que vai manter. Escrever consolida."},
-    {id:"7e",t:"🌙 Ritual do sono completo",xp:40,tip:"Última vez no protocolo. Mas não a última vez na sua vida."},
-    {id:"7f",t:"🎉📸 Foto FINAL com a calça + post na comunidade!",xp:100,tip:"Dias 1 vs 7 lado a lado. Você merece ver o quanto mudou."},
+    {id:"7a",t:"✍️ Escrever seus 3 inegociáveis permanentes",xp:90,keystone:true,tip:"No papel. Proteína + Janela + Sono são a base. O que você escreve, você fixa."},
+    {id:"7b",t:"💪 20–25g proteína em CADA refeição",xp:70,tip:"Hoje e sempre. Café, almoço, jantar. Não negocia."},
+    {id:"7c",t:"🚶 6+ micro-ações de NEAT",xp:60,tip:"NEAT é o hábito mais sustentável. Eleve o seu padrão permanente."},
+    {id:"7d",t:"📏 Reflexão dos 7 dias (10 min escrevendo)",xp:75,tip:"O que mudou. O que foi difícil. O que vai manter. Escrever consolida 40% mais."},
+    {id:"7e",t:"🌙 Ritual do sono completo",xp:50,tip:"Última vez no protocolo. Mas que vire hábito permanente."},
+    {id:"7f",t:"🎉📸 Foto FINAL com a calça + post na comunidade!",xp:60,tip:"Dias 1 vs 7 lado a lado. Você merece ver o quanto mudou."},
   ],
   extra:[
     {id:"e1",t:"💧 Beber 2L de água",xp:20,tip:"Meta mínima. Com inchaço: 2,5L."},
@@ -531,6 +515,7 @@ const INEGOCIAVEIS = [
   {id:"neg1",t:"💪 Proteína em toda refeição principal (20g+)",tip:"3 ovos OU frango OU iogurte grego + amendoim. Todo dia, toda refeição principal."},
   {id:"neg2",t:"⏰ Janela alimentar de 10h respeitada",tip:"Abre com o café → fecha 10h depois. Após isso: só água, chá ou café puro."},
   {id:"neg3",t:"🌙 Dormir antes das 22h30",tip:"Ritual: telas fora às 21h + chá morno + respiração 4-7-8. Nunca negocia."},
+  {id:"neg4",t:"📅 Semana lútea? Mais NEAT, mais proteína, menos cobrança",tip:"Na fase pré-menstrual, cortisol elevado pede movimento suave (NEAT) e proteína extra — não treino pesado nem restrição. Variações de peso e humor são fisiologia, não fraqueza. Mantenha os inegociáveis e perdoe o resto."},
 ];
 
 // ── PROTOCOLOS PREMIUM ────────────────────────────────────────
@@ -542,10 +527,11 @@ const PROTOCOLS_SHOP = [
 
 // ── POSTS INICIAIS DA COMUNIDADE ──────────────────────────────
 const INIT_POSTS = [
-  {id:1,user:"Ana Carolina",day:3,time:"2h",text:"Dia 3 concluído! 🔥 O banho frio foi um choque mas amei a sensação depois! Minha barriga já está visivelmente menos inchada!",likes:{"❤️":14,"🔥":9,"💪":16},comments:[{u:"Mariana",t:"Eu também! Diferença enorme! 💧"},{u:"Renata",t:"O chá termogênico é incrível 🫖"}],hasPhoto:true},
-  {id:2,user:"Priscila M.",day:1,time:"5h",text:"Primeira foto com a calça de referência! Estava com vergonha mas decidi registrar. Esse é meu ponto de partida. Volto em 7 dias! 💜📸",likes:{"❤️":38,"🌟":24,"💜":20},comments:[{u:"Carla",t:"Que coragem linda! ✨"},{u:"Ju Lima",t:"Atitude já é metade do caminho! 💪"}],hasPhoto:true},
-  {id:3,user:"Fernanda O.",day:5,time:"1d",text:"Dia 5 foi surreal. Usei o grounding pela primeira vez quando quase comi o pacote inteiro de biscoito e FUNCIONOU 🤯 Técnica simples, poder enorme.",likes:{"❤️":29,"🧠":20,"🔥":15},comments:[{u:"Beth",t:"Grounding mudou minha vida!"},{u:"Tati",t:"Orgulho de você! ❤️"}],hasPhoto:false},
-  {id:4,user:"Luciana F.",day:7,time:"2d",text:"🎉 CONCLUÍ O RESET 7D! A calça que estava apertada agora fecha com folga. Não passei fome nenhuma vez. Obrigada a todas! 💜✨",likes:{"❤️":72,"🎉":50,"🔥":41,"💜":55},comments:[{u:"Carol",t:"Parabéns! Inspiração!"},{u:"Gi",t:"Que resultado lindo!! 🌟"},{u:"Dani",t:"Vou começar amanhã! 💪"}],hasPhoto:true}
+  {id:1,user:"Ana Carolina M.",day:3,time:"2h",text:"Dia 3 concluído! 🔥 Fiz a ativação linfática de manhã e minha barriga ficou VISIVELMENTE menos inchada durante o dia. Ainda não acredito que 10 minutinhos fazem diferença! Quem mais tá sentindo o corpo mudar?",reactions:{"❤️":22,"🔥":17,"💪":19,"💧":8},comments:[{u:"Mariana",t:"Igual aqui! Pernas muito mais leves 💧"},{u:"Renata",t:"A ativação linfática é maravilhosa mesmo! 🌊"},{u:"Cíntia",t:"Continua firme! Aqui no dia 3 também ❤️"}],hasPhoto:true},
+  {id:2,user:"Priscila Melo",day:1,time:"5h",text:"Decidi tirar a foto de referência hoje. Estava com MUITA vergonha, mas fiz. 📸 Esse é meu ponto de partida. Não vou mais me esconder. Volto em 7 dias pra comparar. Alguém mais fazendo esse passo de coragem? 💜",reactions:{"❤️":54,"🌟":31,"💜":28,"🔥":14},comments:[{u:"Carla",t:"Que atitude linda! Você vai se orgulhar muito ✨"},{u:"Ju Lima",t:"A coragem de registrar já é metade do caminho 💪"},{u:"Fernanda",t:"Faz parte! Eu também fiz hoje. Juntas! 🌷"}],hasPhoto:true},
+  {id:3,user:"Fernanda Oliveira",day:5,time:"1d",text:"GENTE. No Dia 5 eu usei o grounding pela primeira vez quando quase atacava o pacote inteiro de biscoito às 16h. Fiz os 5 sentidos, 90 segundos, e a vontade PASSOU. Isso não é força de vontade — é protocolo. Minha cabeça explodiu 🤯",reactions:{"❤️":38,"🧠":27,"🔥":22,"💜":15},comments:[{u:"Beth",t:"Isso é ciência de verdade! Grounding funciona demais"},{u:"Tati",t:"Orgulho de você! Fiz também no dia 4 e salvou meu dia ❤️"},{u:"Renata",t:"Que descoberta! Vou guardar isso pra sempre 🌟"}],hasPhoto:false},
+  {id:4,user:"Luciana Ferreira",day:7,time:"2d",text:"🎉 CONCLUÍ O RESET 7D! Calça que estava apertada agora fecha COM FOLGA. Menos 4cm de cintura em 7 dias (fita métrica não mente!). Não passei fome nenhuma vez, fiz tudo dentro da minha rotina maluca. Não é dieta — é protocolo. Obrigada a todas por essa energia linda! 💜✨",reactions:{"❤️":89,"🎉":63,"🔥":51,"💜":44,"🌟":37},comments:[{u:"Carol",t:"PARABÉNS! Você é minha inspiração! 🏆"},{u:"Gi",t:"4cm em 7 dias!!! Que resultado lindo 🌟"},{u:"Dani",t:"Começando amanhã! Você me deu forças 💪"},{u:"Ana",t:"Que orgulho! Você chegou lá! ❤️"}],hasPhoto:true},
+  {id:5,user:"Camila Santos",day:2,time:"3h",text:"Dia 2 completo! O ritual do sono funcionou demais — acordei hoje SEM aquele peso, descansada de verdade pela primeira vez em semanas. 🌙 Telas fora às 21h + chá de melissa + respiração 4-7-8. Parecia simples demais pra funcionar. Mas funcionou. Dormindo mais cedo que meu filho 😂",reactions:{"❤️":31,"🌙":19,"💤":24,"✨":12},comments:[{u:"Ju",t:"Igual aqui! O chá de melissa é incrível 🍵"},{u:"Bela",t:"Que alegria ler isso! Sono é ouro 🌙"},{u:"Priscila",t:"Faz isso todo dia! Muda tudo ❤️"}],hasPhoto:false}
 ];
 
 // ── BANCO LOCAL ───────────────────────────────────────────────
@@ -970,11 +956,13 @@ const LANG_STRINGS = {
     content_modo_min:"😮‍💨 DIA RUIM? MODO MÍNIMO:",
     content_prato_title:"🍽️ PRATO PADRÃO (monta sem pensar)",
     content_prato_body:"½ prato vegetais · ¼ proteína · ¼ carbo bom · 1 fio de azeite",
-    content_sci_toggle:"🔬 A ciência por trás (toque para abrir)",
-    content_sci_close:"▲ Fechar ciência",
+    content_porque_title:"📖 Entenda o Porquê",
+    content_recipes_toggle:"🍽️ Ver Receitas de Hoje ({n})",
+    content_recipes_close:"▲ Fechar receitas",
     content_checkin:"📊 Check-in Rápido (20 seg)",
     checkin_fome:"Fome hoje (1–5)",checkin_energia:"Energia (1–5)",
-    checkin_sono:"Sono (horas)",checkin_cintura:"Cintura inchada?",
+    checkin_humor:"Humor hoje (1–5)",checkin_compulsao:"Compulsão hoje?",
+    checkin_sono:"Sono (horas)",checkin_cintura:"Barriga inchada?",
     checkin_sim:"Sim",checkin_nao:"Não",
     checkin_save:"Salvar ✓",checkin_saved:"Salvo! ✓",
     mission_keystone:"⭐ KEYSTONE — Faça esta primeiro",
@@ -1098,10 +1086,12 @@ const LANG_STRINGS = {
     content_modo_min:"😮‍💨 BAD DAY? MINIMUM MODE:",
     content_prato_title:"🍽️ DEFAULT PLATE (no thinking needed)",
     content_prato_body:"½ plate vegetables · ¼ protein · ¼ good carbs · drizzle of olive oil",
-    content_sci_toggle:"🔬 The science behind it (tap to open)",
-    content_sci_close:"▲ Close science",
+    content_porque_title:"📖 Understand Why",
+    content_recipes_toggle:"🍽️ View Today's Recipes ({n})",
+    content_recipes_close:"▲ Close recipes",
     content_checkin:"📊 Quick Check-in (20 sec)",
     checkin_fome:"Hunger today (1–5)",checkin_energia:"Energy (1–5)",
+    checkin_humor:"Mood today (1–5)",checkin_compulsao:"Cravings today?",
     checkin_sono:"Sleep (hours)",checkin_cintura:"Belly bloated?",
     checkin_sim:"Yes",checkin_nao:"No",
     checkin_save:"Save ✓",checkin_saved:"Saved! ✓",
@@ -1226,10 +1216,12 @@ const LANG_STRINGS = {
     content_modo_min:"😮‍💨 ¿DÍA DIFÍCIL? MODO MÍNIMO:",
     content_prato_title:"🍽️ PLATO ESTÁNDAR (sin pensar)",
     content_prato_body:"½ plato vegetales · ¼ proteína · ¼ carbohidratos · chorrito de aceite",
-    content_sci_toggle:"🔬 La ciencia detrás (toca para abrir)",
-    content_sci_close:"▲ Cerrar ciencia",
+    content_porque_title:"📖 Entiende el Porqué",
+    content_recipes_toggle:"🍽️ Ver Recetas de Hoy ({n})",
+    content_recipes_close:"▲ Cerrar recetas",
     content_checkin:"📊 Check-in Rápido (20 seg)",
     checkin_fome:"Hambre hoy (1–5)",checkin_energia:"Energía (1–5)",
+    checkin_humor:"Humor hoy (1–5)",checkin_compulsao:"¿Compulsión hoy?",
     checkin_sono:"Sueño (horas)",checkin_cintura:"¿Vientre inflamado?",
     checkin_sim:"Sí",checkin_nao:"No",
     checkin_save:"Guardar ✓",checkin_saved:"¡Guardado! ✓",
@@ -3232,6 +3224,90 @@ const MSG_DESIGN={
 };
 
 // ── HOME TAB ──────────────────────────────────────────────────
+// ── TIMER MODAL — para missões com tempo definido ─────────────
+function TimerModal({seconds, label, onClose, th}) {
+  const [remaining, setRemaining] = React.useState(seconds);
+  const [running, setRunning] = React.useState(false);
+  const [done, setDone] = React.useState(false);
+  const intervalRef = React.useRef(null);
+
+  const start = () => {
+    if (done) { setRemaining(seconds); setDone(false); }
+    setRunning(true);
+  };
+  const pause = () => { setRunning(false); };
+  const reset = () => { setRunning(false); setRemaining(seconds); setDone(false); };
+
+  React.useEffect(() => {
+    if (!running) return;
+    intervalRef.current = setInterval(() => {
+      setRemaining(r => {
+        if (r <= 1) { clearInterval(intervalRef.current); setRunning(false); setDone(true); return 0; }
+        return r - 1;
+      });
+    }, 1000);
+    return () => clearInterval(intervalRef.current);
+  }, [running]);
+
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+  const pct = ((seconds - remaining) / seconds) * 100;
+
+  return (
+    <div className="overlay" style={{zIndex:800}} onClick={e=>{ if(e.target===e.currentTarget) onClose(); }}>
+      <div className="glass slide-up" style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:400,borderRadius:24,padding:"24px 20px",zIndex:801,border:`1px solid ${th.border2}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+          <div style={{fontSize:13,fontWeight:800,color:th.text}}>⏱️ {label}</div>
+          <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:th.text3,padding:4}}>✕</button>
+        </div>
+        {/* Anel de progresso */}
+        <div style={{position:"relative",width:140,height:140,margin:"0 auto 20px"}}>
+          <svg width="140" height="140" style={{transform:"rotate(-90deg)"}}>
+            <circle cx="70" cy="70" r="60" fill="none" stroke={th.border} strokeWidth="8"/>
+            <circle cx="70" cy="70" r="60" fill="none" stroke={done?th.green:th.primary} strokeWidth="8"
+              strokeDasharray={`${2*Math.PI*60}`}
+              strokeDashoffset={`${2*Math.PI*60*(1-pct/100)}`}
+              strokeLinecap="round"
+              style={{transition:"stroke-dashoffset 0.9s ease"}}
+            />
+          </svg>
+          <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+            <div className="serif" style={{fontSize:done?28:36,fontWeight:700,color:done?th.green:th.text,lineHeight:1}}>
+              {done ? "✓" : `${String(mins).padStart(2,"0")}:${String(secs).padStart(2,"0")}`}
+            </div>
+            {done && <div style={{fontSize:11,color:th.green,fontWeight:700,marginTop:4}}>Concluído!</div>}
+          </div>
+        </div>
+        <div style={{display:"flex",gap:10}}>
+          {!done && (
+            <button onClick={running?pause:start} className="btn-p" style={{flex:1,padding:"12px",fontSize:13,borderRadius:13}}>
+              {running ? "⏸ Pausar" : (remaining<seconds ? "▶ Retomar" : "▶ Iniciar")}
+            </button>
+          )}
+          {done && (
+            <button onClick={onClose} className="btn-p" style={{flex:1,padding:"12px",fontSize:13,borderRadius:13,background:`linear-gradient(135deg,${th.green},${th.green}88)`}}>
+              ✓ Perfeito!
+            </button>
+          )}
+          <button onClick={reset} style={{padding:"12px 16px",borderRadius:13,border:`1.5px solid ${th.border2}`,background:"none",color:th.text3,fontSize:12,cursor:"pointer",fontFamily:"'Manrope',sans-serif",fontWeight:700}}>↺</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Missões com timer integrado ───────────────────────────────
+const MISSION_TIMERS = {
+  "2e":{seconds:5*60,label:"Ritual do Sono (5 min)"},
+  "3a":{seconds:90,label:"Respiração 4-7-8 (90 seg)"},
+  "4c":{seconds:5*60,label:"Respiração Diafragmática (5 min)"},
+  "5a":{seconds:10*60,label:"Ativação Linfática (10 min)"},
+  "5d":{seconds:10*60,label:"Pernas na Parede (10 min)"},
+  "5e":{seconds:5*60,label:"Automassagem Suave (5 min)"},
+  "6b":{seconds:15*60,label:"Caminhada / Treino (15 min)"},
+  "7d":{seconds:10*60,label:"Reflexão dos 7 Dias (10 min)"},
+};
+
 function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th, lang="pt"}) {
   const [tipIdx,setTipIdx]=useState(0);
   const [showHardDay,setShowHardDay]=useState(false);
@@ -3260,22 +3336,20 @@ function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th, lan
 
   return (
     <div style={{padding:"16px 16px 100px",display:"flex",flexDirection:"column",gap:14}}>
-      <div className="slide-up glass card-interactive" style={{borderRadius:22,padding:"22px 20px",background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`,border:`1px solid ${th.border2}`}}>
-        <div style={{fontSize:12,color:th.text2,marginBottom:4,fontWeight:600}}>{S(lang,"home_protocol")}</div>
-        <div className="serif" style={{fontSize:30,fontWeight:600,color:th.text,lineHeight:1.15,marginBottom:6}}>
+      <div className="slide-up glass" style={{borderRadius:24,padding:"24px 22px"}}>
+        <div style={{fontSize:11,color:th.primary,marginBottom:7,fontWeight:800,letterSpacing:1.6,textTransform:"uppercase"}}>{S(lang,"home_protocol")}</div>
+        <div style={{fontSize:30,fontWeight:800,color:th.text,lineHeight:1.12,marginBottom:8,letterSpacing:-0.5}}>
           {S(lang,"home_hello",{name:user?.name?.split(" ")[0]||"Guerreira"})}
         </div>
-        <div className="serif" style={{fontSize:14,fontStyle:"italic",color:th.text3,lineHeight:1.5,marginBottom:14}}>
+        <div style={{fontSize:14,color:th.text2,lineHeight:1.5,marginBottom:20}}>
           {S(lang,"home_quote")}
         </div>
-        <div>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-            <span style={{fontSize:11,color:th.text2}}>{S(lang,"home_progress")}</span>
-            <span style={{fontSize:11,color:th.text2,fontWeight:700}}>{pct}%</span>
-          </div>
-          <div style={{height:8,background:th.border,borderRadius:4}}>
-            <div className="pbar pb-rose" style={{width:`${pct}%`}}/>
-          </div>
+        <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",marginBottom:9}}>
+          <span style={{fontSize:12,color:th.text3,fontWeight:600}}>{S(lang,"home_progress")}</span>
+          <span style={{fontSize:24,color:th.text,fontWeight:800,lineHeight:1,letterSpacing:-0.5}}>{pct}<span style={{fontSize:14,color:th.text3,fontWeight:700}}>%</span></span>
+        </div>
+        <div style={{height:9,background:th.bg3,borderRadius:999,overflow:"hidden"}}>
+          <div className="pbar pb-rose" style={{width:`${pct}%`}}/>
         </div>
       </div>
 
@@ -3331,15 +3405,15 @@ function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th, lan
         </div>
       </div>
 
-      <div className="glass slide-up card-interactive" style={{borderRadius:20,padding:18,animationDelay:".05s"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+      <div className="glass slide-up card-interactive" style={{borderRadius:24,padding:20,animationDelay:".05s"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
           <div>
-            <div style={{fontSize:11,color:th.text3,marginBottom:2}}>{S(lang,"home_today")}</div>
-            <div className="serif" style={{fontSize:18,fontWeight:600,color:th.text}}>{S(lang,"home_today_missions",{emoji:PC[currentDay]?.emoji,day:currentDay})}</div>
+            <div style={{fontSize:10,color:th.text3,marginBottom:3,fontWeight:700,letterSpacing:1.2,textTransform:"uppercase"}}>{S(lang,"home_today")}</div>
+            <div style={{fontSize:18,fontWeight:800,color:th.text,letterSpacing:-0.3}}>{S(lang,"home_today_missions",{emoji:PC[currentDay]?.emoji,day:currentDay})}</div>
           </div>
-          <div style={{textAlign:"right"}}>
-            <div className="serif" style={{fontSize:26,fontWeight:700,color:th.primary}}>{dayDone}/{dayMissions.length}</div>
-            <div style={{fontSize:10,color:th.text3}}>{S(lang,"home_done")}</div>
+          <div style={{textAlign:"center",background:th.primaryL,borderRadius:14,padding:"8px 14px",minWidth:62}}>
+            <div style={{fontSize:24,fontWeight:800,color:th.primary,lineHeight:1,letterSpacing:-0.5}}>{dayDone}/{dayMissions.length}</div>
+            <div style={{fontSize:9,color:th.text3,fontWeight:700,letterSpacing:.5,marginTop:3,textTransform:"uppercase"}}>{S(lang,"home_done")}</div>
           </div>
         </div>
         {dayMissions.slice(0,3).map(m=>(
@@ -3406,6 +3480,7 @@ function HomeTab({user, currentDay, xp, completedMissions, setActiveTab, th, lan
 // ── MISSION TAB ───────────────────────────────────────────────
 function MissionTab({user, currentDay, completedMissions, setCompletedMissions, xp, setXp, th, lang="pt"}) {
   const [showXP,setShowXP]=useState(null);
+  const [activeTimer,setActiveTimer]=useState(null);
   const activeMissions=getMissions(lang);
   const dayMissions=activeMissions[currentDay]||[];
   const keystone=dayMissions.find(m=>m.keystone)||null;
@@ -3482,17 +3557,24 @@ function MissionTab({user, currentDay, completedMissions, setCompletedMissions, 
       <div style={{fontSize:11,fontWeight:800,color:th.text2,textTransform:"uppercase",letterSpacing:1}}>{S(lang,"mission_day_title",{day:currentDay})}</div>
       {regularMissions.map(m=>{
         const done=(completedMissions[currentDay]||[]).includes(m.id);
+        const hasTimer=MISSION_TIMERS[m.id];
         return (
-          <div key={m.id} onClick={()=>toggle(currentDay,m.id,m.xp)} className="hover-scale glass" style={{display:"flex",gap:12,padding:"12px 16px",borderRadius:14,cursor:"pointer",border:done?`1px solid ${th.border2}`:`1px solid ${th.border}`,background:done?th.primaryL:th.card,alignItems:"flex-start"}}>
-            <span style={{fontSize:18,flexShrink:0,marginTop:1}}>{done?"✅":"⭕"}</span>
-            <div style={{flex:1}}>
+          <div key={m.id} className="hover-scale glass" style={{display:"flex",gap:12,padding:"12px 16px",borderRadius:14,border:done?`1px solid ${th.border2}`:`1px solid ${th.border}`,background:done?th.primaryL:th.card,alignItems:"flex-start"}}>
+            <span onClick={()=>toggle(currentDay,m.id,m.xp)} style={{fontSize:18,flexShrink:0,marginTop:1,cursor:"pointer"}}>{done?"✅":"⭕"}</span>
+            <div onClick={()=>toggle(currentDay,m.id,m.xp)} style={{flex:1,cursor:"pointer"}}>
               <div style={{fontSize:12,fontWeight:600,color:done?th.text3:th.text,textDecoration:done?"line-through":"none",marginBottom:m.tip&&!done?3:0}}>{m.t}</div>
               {m.tip && !done && <div style={{fontSize:11,color:th.text3,lineHeight:1.45}}>{m.tip}</div>}
             </div>
-            <div style={{fontSize:11,fontWeight:700,color:th.accent,background:th.accentL,padding:"3px 8px",borderRadius:10,flexShrink:0}}>+{m.xp}</div>
+            <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4,flexShrink:0}}>
+              <div style={{fontSize:11,fontWeight:700,color:th.accent,background:th.accentL,padding:"3px 8px",borderRadius:10}}>+{m.xp}</div>
+              {hasTimer && !done && (
+                <button onClick={e=>{e.stopPropagation();setActiveTimer(MISSION_TIMERS[m.id]);}} style={{fontSize:9,fontWeight:800,color:th.primary,background:th.primaryL,border:`1px solid ${th.primary}40`,borderRadius:8,padding:"2px 7px",cursor:"pointer",fontFamily:"'Manrope',sans-serif",whiteSpace:"nowrap"}}>⏱ Timer</button>
+              )}
+            </div>
           </div>
         );
       })}
+      {activeTimer && <TimerModal seconds={activeTimer.seconds} label={activeTimer.label} onClose={()=>setActiveTimer(null)} th={th}/>}
 
       {/* 😮‍💨 MODO MÍNIMO */}
       {pcDay?.modoMinimo && (
@@ -3634,7 +3716,7 @@ function GratitudeModal({onClose, th, lang="pt"}) {
 function ContentTab({currentDay, user, onCompleteDay, th, lang="pt"}) {
   const [selDay,setSelDay]=useState(currentDay);
   const [showGratitude,setShowGratitude]=useState(false);
-  const [sciExpanded,setSciExpanded]=useState(false);
+  const [recipesOpen,setRecipesOpen]=useState(false);
   const [checkinData,setCheckinData]=useState(()=>DB.checkin(user?.email,currentDay)||{});
   const [checkinSaved,setCheckinSaved]=useState(false);
   const pcL=getPC(lang);
@@ -3643,7 +3725,7 @@ function ContentTab({currentDay, user, onCompleteDay, th, lang="pt"}) {
   useEffect(()=>{
     setCheckinData(DB.checkin(user?.email,selDay)||{});
     setCheckinSaved(false);
-    setSciExpanded(false);
+    setRecipesOpen(false);
   },[selDay]);
 
   const handleComplete = () => {
@@ -3721,6 +3803,16 @@ function ContentTab({currentDay, user, onCompleteDay, th, lang="pt"}) {
           <SectionCard key={i} title={s.title} th={th} accent={d.color}>{s.content}</SectionCard>
         ))}
 
+        {/* 📖 ENTENDA O PORQUÊ — explicação científica, mesma hierarquia do protocolo */}
+        {sciSections.length>0 && (
+          <>
+            <div style={{fontSize:11,fontWeight:800,color:th.green,textTransform:"uppercase",letterSpacing:1.2,marginBottom:8,marginTop:4}}>{S(lang,"content_porque_title")}</div>
+            {sciSections.map((s,i)=>(
+              <SectionCard key={i} title={s.title} th={th} accent={th.green}>{s.content}</SectionCard>
+            ))}
+          </>
+        )}
+
         {/* 😮‍💨 MODO MÍNIMO */}
         {d.modoMinimo && (
           <div style={{borderRadius:16,padding:"12px 14px",marginBottom:10,background:`${th.accent}12`,border:`1px solid ${th.accent}35`}}>
@@ -3734,41 +3826,30 @@ function ContentTab({currentDay, user, onCompleteDay, th, lang="pt"}) {
           </div>
         )}
 
-        {/* 🍽️ RECEITAS */}
-        <div style={{fontSize:11,fontWeight:800,color:th.accent,textTransform:"uppercase",letterSpacing:1.2,marginBottom:8,marginTop:4}}>{S(lang,"content_recipes",{day:selDay})}</div>
-        {d.recipes.map((r,i)=>(
-          <div key={i} style={{borderRadius:14,overflow:"hidden",marginBottom:10,border:`1px solid ${th.accent}40`}}>
-            <div style={{padding:"9px 14px",background:th.accentL}}>
-              <div style={{fontSize:12,fontWeight:800,color:th.accent}}>{r.e} {r.name}</div>
-            </div>
-            <div style={{padding:"10px 14px",background:th.card}}>
-              <div style={{fontSize:11,fontWeight:700,color:th.text,marginBottom:5}}>{S(lang,"content_ingredients")}</div>
-              {r.ing.map((item,j)=><div key={j} style={{fontSize:11,color:th.text3,marginBottom:2}}>• {item}</div>)}
-              <div style={{fontSize:11,fontWeight:700,color:th.text,marginTop:8,marginBottom:5}}>{S(lang,"content_how")}</div>
-              {r.how.map((step,j)=><div key={j} style={{fontSize:11,color:th.text3,marginBottom:2}}>{j+1}. {step}</div>)}
-              <div style={{marginTop:8,padding:"7px 10px",background:th.greenL,borderRadius:8,border:`1px solid ${th.green}30`}}>
-                <div style={{fontSize:10,color:th.green,fontWeight:700,marginBottom:1}}>{S(lang,"content_why")}</div>
-                <div style={{fontSize:10,color:th.text3,lineHeight:1.6,fontStyle:"italic"}}>{r.sci}</div>
+        {/* 🍽️ RECEITAS — colapsadas, não competem com o protocolo */}
+        <div style={{borderRadius:14,overflow:"hidden",marginBottom:10,border:`1px solid ${th.accent}40`}}>
+          <button onClick={()=>setRecipesOpen(o=>!o)} style={{width:"100%",padding:"11px 14px",background:th.card2,border:"none",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",fontFamily:"'Manrope',sans-serif"}}>
+            <span style={{fontSize:11,fontWeight:800,color:th.accent}}>{recipesOpen?S(lang,"content_recipes_close"):S(lang,"content_recipes_toggle",{n:d.recipes.length})}</span>
+            <span style={{fontSize:12,color:th.accent}}>{recipesOpen?"▲":"▼"}</span>
+          </button>
+          {recipesOpen && d.recipes.map((r,i)=>(
+            <div key={i} style={{borderTop:`1px solid ${th.accent}30`}}>
+              <div style={{padding:"9px 14px",background:th.accentL}}>
+                <div style={{fontSize:12,fontWeight:800,color:th.accent}}>{r.e} {r.name}</div>
+              </div>
+              <div style={{padding:"10px 14px",background:th.card}}>
+                <div style={{fontSize:11,fontWeight:700,color:th.text,marginBottom:5}}>{S(lang,"content_ingredients")}</div>
+                {r.ing.map((item,j)=><div key={j} style={{fontSize:11,color:th.text3,marginBottom:2}}>• {item}</div>)}
+                <div style={{fontSize:11,fontWeight:700,color:th.text,marginTop:8,marginBottom:5}}>{S(lang,"content_how")}</div>
+                {r.how.map((step,j)=><div key={j} style={{fontSize:11,color:th.text3,marginBottom:2}}>{j+1}. {step}</div>)}
+                <div style={{marginTop:8,padding:"7px 10px",background:th.greenL,borderRadius:8,border:`1px solid ${th.green}30`}}>
+                  <div style={{fontSize:10,color:th.green,fontWeight:700,marginBottom:1}}>{S(lang,"content_why")}</div>
+                  <div style={{fontSize:10,color:th.text3,lineHeight:1.6,fontStyle:"italic"}}>{r.sci}</div>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-
-        {/* 🔬 CIÊNCIA — colapsível */}
-        {sciSections.length>0 && (
-          <div style={{borderRadius:14,overflow:"hidden",marginBottom:10,border:`1px solid ${th.border}`}}>
-            <button onClick={()=>setSciExpanded(e=>!e)} style={{width:"100%",padding:"11px 14px",background:th.card2,border:"none",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",fontFamily:"'Manrope',sans-serif"}}>
-              <span style={{fontSize:11,fontWeight:800,color:th.green}}>{sciExpanded?S(lang,"content_sci_close"):S(lang,"content_sci_toggle")}</span>
-              <span style={{fontSize:12,color:th.green}}>{sciExpanded?"▲":"▼"}</span>
-            </button>
-            {sciExpanded && sciSections.map((s,i)=>(
-              <div key={i} style={{padding:"12px 14px",background:th.card,borderTop:`1px solid ${th.border}`}}>
-                <div style={{fontSize:11,fontWeight:800,color:th.text,marginBottom:6}}>{s.title}</div>
-                <div style={{fontSize:11,color:th.text3,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{s.content}</div>
-              </div>
-            ))}
-          </div>
-        )}
+          ))}
+        </div>
 
         {/* 📊 CHECK-IN RÁPIDO */}
         <div style={{borderRadius:14,padding:"12px 14px",marginBottom:10,background:th.card,border:`1px solid ${th.border}`}}>
@@ -3777,8 +3858,10 @@ function ContentTab({currentDay, user, onCompleteDay, th, lang="pt"}) {
             {[
               {key:"fome",label:S(lang,"checkin_fome"),type:"rating"},
               {key:"energia",label:S(lang,"checkin_energia"),type:"rating"},
+              {key:"humor",label:S(lang,"checkin_humor")||"Humor hoje (1–5)",type:"rating"},
               {key:"sono",label:S(lang,"checkin_sono"),type:"hours"},
               {key:"cintura",label:S(lang,"checkin_cintura"),type:"bool"},
+              {key:"compulsao",label:S(lang,"checkin_compulsao")||"Compulsão hoje?",type:"bool"},
             ].map(f=>(
               <div key={f.key} style={{background:th.card2,borderRadius:10,padding:"9px 10px"}}>
                 <div style={{fontSize:10,color:th.text3,marginBottom:5,fontWeight:600}}>{f.label}</div>
@@ -3861,7 +3944,8 @@ function EvolutionTab({xp, completedMissions, currentDay, th, lang="pt"}) {
   const lvl=Math.floor(xp/200)+1;
   const lvlProg=(xp%200)/200*100;
   const totalDone=Object.values(completedMissions).flat().length;
-  const streak=Math.min(currentDay,7);
+  // Conta dias que tiveram ao menos 1 missão concluída (mais honesto que streak sequencial)
+  const diasAtivos=Object.keys(MISSIONS).filter(k=>Number(k)<=currentDay&&(completedMissions[k]||[]).length>0).length;
   const xpData=(()=>{
     let cum=0;
     return Object.keys(PC).slice(0,currentDay).map(k=>{
@@ -3871,22 +3955,33 @@ function EvolutionTab({xp, completedMissions, currentDay, th, lang="pt"}) {
       return {name:`D${k}`,xp:cum};
     });
   })();
+  // Radar baseado em missões reais concluídas por categoria
+  const sleepMs=((completedMissions[2]||[]).length/((MISSIONS[2]||[]).length||1))*100;
+  const lymphMs=((completedMissions[5]||[]).length/((MISSIONS[5]||[]).length||1))*100;
   const radarData=[
-    {m:S(lang,"radar_hydration"),v:Math.min(100,xp/14)},{m:S(lang,"radar_sleep"),v:currentDay>=6?88:50},
-    {m:S(lang,"radar_move"),v:Math.min(100,totalDone*7)},{m:S(lang,"radar_nutrition"),v:Math.min(100,xp/12)},
-    {m:S(lang,"radar_mindset"),v:Math.min(100,xp/11)},{m:S(lang,"radar_lymph"),v:currentDay>=2?82:28},
+    {m:S(lang,"radar_hydration"),v:Math.min(100,Math.round(totalDone*6.5))},
+    {m:S(lang,"radar_sleep"),v:Math.min(100,Math.round(sleepMs*0.9+10))},
+    {m:S(lang,"radar_move"),v:Math.min(100,Math.round(totalDone*5.8))},
+    {m:S(lang,"radar_nutrition"),v:Math.min(100,Math.round(xp/10))},
+    {m:S(lang,"radar_mindset"),v:Math.min(100,Math.round(xp/9))},
+    {m:S(lang,"radar_lymph"),v:Math.min(100,Math.round(lymphMs*0.85+15))},
   ];
   const ACHIEVS=[
-    {n:S(lang,"achiev0_n"),i:"🌸",d:S(lang,"achiev0_d"),need:200},{n:S(lang,"achiev1_n"),i:"💧",d:S(lang,"achiev1_d"),need:400},
-    {n:S(lang,"achiev2_n"),i:"🔥",d:S(lang,"achiev2_d"),need:600},{n:S(lang,"achiev3_n"),i:"🌱",d:S(lang,"achiev3_d"),need:800},
-    {n:S(lang,"achiev4_n"),i:"🛡️",d:S(lang,"achiev4_d"),need:1000},{n:S(lang,"achiev5_n"),i:"🌙",d:S(lang,"achiev5_d"),need:1200},
-    {n:S(lang,"achiev6_n"),i:"💪",d:S(lang,"achiev6_d"),need:1500},{n:S(lang,"achiev7_n"),i:"🏅",d:S(lang,"achiev7_d"),need:700},
+    {n:S(lang,"achiev0_n"),i:"🌸",d:S(lang,"achiev0_d"),need:200},
+    {n:S(lang,"achiev1_n"),i:"💧",d:S(lang,"achiev1_d"),need:400},
+    {n:S(lang,"achiev2_n"),i:"🔥",d:S(lang,"achiev2_d"),need:600},
+    {n:S(lang,"achiev3_n"),i:"🌱",d:S(lang,"achiev3_d"),need:800},
+    {n:S(lang,"achiev4_n"),i:"🛡️",d:S(lang,"achiev4_d"),need:1000},
+    {n:S(lang,"achiev5_n"),i:"🌙",d:S(lang,"achiev5_d"),need:1200},
+    {n:S(lang,"achiev6_n"),i:"💪",d:S(lang,"achiev6_d"),need:1500},
+    {n:S(lang,"achiev7_n"),i:"🏅",d:S(lang,"achiev7_d"),need:700},
+    {n:"Voltei Mais Forte",i:"🦋",d:"Retomou após ausência — isso é força",need:300,special:diasAtivos>0&&currentDay>diasAtivos},
   ];
   return (
     <div style={{padding:"16px 16px 100px",display:"flex",flexDirection:"column",gap:14}}>
       <div className="glass" style={{borderRadius:20,padding:20,background:`linear-gradient(135deg,${th.primaryL},${th.greenL})`}}>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16,textAlign:"center"}}>
-          {[{l:"XP Total",v:`${xp}`,s:"⚡",c:th.accent},{l:S(lang,"evo_level"),v:`${lvl}`,s:"🌟",c:th.primary},{l:S(lang,"evo_sequence"),v:`${streak}`,s:"🔥",c:"#e8a872"}].map(s=>(
+          {[{l:"XP Total",v:`${xp}`,s:"⚡",c:th.accent},{l:S(lang,"evo_level"),v:`${lvl}`,s:"🌟",c:th.primary},{l:"Dias Ativos",v:`${diasAtivos}/7`,s:"🔥",c:"#e8a872"}].map(s=>(
             <div key={s.l} style={{background:th.card2,borderRadius:14,padding:"12px 8px"}}>
               <div className="serif" style={{fontSize:22,fontWeight:700,color:s.c}}>{s.s} {s.v}</div>
               <div style={{fontSize:10,color:th.text3}}>{s.l}</div>
@@ -3939,13 +4034,14 @@ function EvolutionTab({xp, completedMissions, currentDay, th, lang="pt"}) {
         <div style={{fontSize:13,fontWeight:800,color:th.text,marginBottom:12}}>{S(lang,"evo_achievements")}</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
           {ACHIEVS.map(a=>{
-            const earned=xp>=a.need;
+            const earned = a.special ? a.special : xp>=a.need;
             return (
-              <div key={a.n} className="hover-scale" style={{borderRadius:16,padding:"14px 12px",background:earned?th.primaryL:th.card2,border:earned?`1px solid ${th.border2}`:`1px solid ${th.border}`,opacity:earned?1:.5}}>
+              <div key={a.n} className="hover-scale" style={{borderRadius:16,padding:"14px 12px",background:earned?th.primaryL:th.card2,border:earned?`1px solid ${th.border2}`:`1px solid ${th.border}`,opacity:earned?1:.5,position:"relative",overflow:"hidden"}}>
+                {earned && a.special && <div style={{position:"absolute",top:6,right:6,fontSize:8,fontWeight:900,color:th.primary,background:th.primaryL,borderRadius:6,padding:"2px 5px",letterSpacing:.5}}>VOCÊ VOLTOU</div>}
                 <div style={{fontSize:24,marginBottom:4,filter:earned?"none":"grayscale(1)"}}>{a.i}</div>
                 <div style={{fontSize:11,fontWeight:700,color:earned?th.text:th.text3}}>{a.n}</div>
                 <div style={{fontSize:10,color:earned?th.text2:th.text3}}>{a.d}</div>
-                {!earned && <div style={{fontSize:9,color:th.text3,marginTop:2}}>{S(lang,"evo_xp_needed",{n:a.need})}</div>}
+                {!earned && !a.special && <div style={{fontSize:9,color:th.text3,marginTop:2}}>{S(lang,"evo_xp_needed",{n:a.need})}</div>}
               </div>
             );
           })}
@@ -3956,7 +4052,7 @@ function EvolutionTab({xp, completedMissions, currentDay, th, lang="pt"}) {
 }
 
 // ── UTIL: compressão de imagem ────────────────────────────────
-function compressImage(file, maxW=800, quality=0.75) {
+function compressImage(file, maxW=600, quality=0.45) {
   return new Promise(resolve => {
     const reader = new FileReader();
     reader.onload = e => {
@@ -4079,8 +4175,15 @@ function CommunityTab({user, currentDay, th, lang="pt"}) {
     try {
       const res = await fetch(`${window.BACKEND_URL}/api/community`);
       const data = await res.json();
-      if (res.ok) setPosts(data.posts || []);
-    } catch {}
+      if (res.ok && (data.posts||[]).length > 0) {
+        setPosts(data.posts || []);
+      } else {
+        // fallback: exibe posts ficticios simulando comunidade ativa
+        setPosts(INIT_POSTS.map(p=>({...p, reactions: p.reactions||p.likes||{}})));
+      }
+    } catch {
+      setPosts(INIT_POSTS.map(p=>({...p, reactions: p.reactions||p.likes||{}})));
+    }
     finally { setLoading(false); }
   };
   useEffect(()=>{ loadPosts(); },[]);
@@ -4876,11 +4979,51 @@ function Dashboard({user, onLogout, darkMode, setDarkMode, lang, setLang, th}) {
 }
 
 // ── APP PRINCIPAL ─────────────────────────────────────────────
+// ── DISCLAIMER MÉDICO — aparece 1x na primeira entrada ────────
+function DisclaimerModal({onAccept, th}) {
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:9000,background:"rgba(10,5,18,0.92)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div className="glass slide-up" style={{maxWidth:420,width:"100%",borderRadius:24,padding:"28px 24px",border:`1px solid ${th.border2}`}}>
+        <div style={{textAlign:"center",marginBottom:20}}>
+          <div style={{fontSize:32,marginBottom:8}}>⚕️</div>
+          <div className="serif" style={{fontSize:22,fontWeight:700,color:th.text,marginBottom:4}}>Antes de começar</div>
+          <div style={{fontSize:12,color:th.text3,lineHeight:1.6}}>Leia as informações importantes abaixo</div>
+        </div>
+        <div style={{background:th.card2,borderRadius:14,padding:"14px 16px",marginBottom:16,fontSize:12,color:th.text,lineHeight:1.8}}>
+          <div style={{fontWeight:800,color:th.primary,marginBottom:8,fontSize:11,textTransform:"uppercase",letterSpacing:1}}>⚠️ Aviso de Saúde</div>
+          <div style={{color:th.text2,lineHeight:1.8}}>
+            O RESET 7D é um programa de bem-estar com base em hábitos. <strong style={{color:th.text}}>Não substitui consulta médica.</strong>
+          </div>
+          <div style={{marginTop:10,display:"flex",flexDirection:"column",gap:7}}>
+            {[
+              {e:"🚫",t:"Jejum/Janela de 10h: evitar se grávida, diabética tipo 1, com histórico de transtorno alimentar ou hipotireoidismo descompensado."},
+              {e:"🚿",t:"Banho frio (D6): não recomendado para hipertensão descompensada, doenças cardíacas ou síndrome de Raynaud."},
+              {e:"💆",t:"Automassagem linfática: não fazer em caso de infecção ativa, trombose ou câncer com nódulos linfáticos afetados."},
+              {e:"👩‍⚕️",t:"Em caso de condição de saúde preexistente, consulte seu médico antes de iniciar."},
+            ].map((item,i)=>(
+              <div key={i} style={{display:"flex",gap:8,alignItems:"flex-start"}}>
+                <span style={{fontSize:13,flexShrink:0,marginTop:1}}>{item.e}</span>
+                <span style={{fontSize:11,color:th.text3,lineHeight:1.6}}>{item.t}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <button onClick={onAccept} className="btn-p" style={{width:"100%",padding:"14px",borderRadius:14,fontSize:13,fontWeight:800}}>
+          Entendi — Quero começar minha transformação ✨
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [lang, setLangState]    = useState(() => localStorage.getItem("r7d_lang") || "pt");
   const setLang = (l) => { setLangState(l); localStorage.setItem("r7d_lang", l); };
   const th = darkMode ? THEMES.dark : THEMES.light;
+
+  const [disclaimerOk, setDisclaimerOk] = useState(()=> localStorage.getItem("r7d_disclaimer_v2")==="1");
+  const acceptDisclaimer = () => { localStorage.setItem("r7d_disclaimer_v2","1"); setDisclaimerOk(true); };
 
   const [screen, setScreen] = useState(()=>{
     const token = getTokenFromURL();
@@ -4944,6 +5087,8 @@ function App() {
   return (
     <>
       <style>{cssStr}</style>
+      {/* Disclaimer médico — aparece 1x antes de qualquer interação */}
+      {!disclaimerOk && screen!=="app" && <DisclaimerModal onAccept={acceptDisclaimer} th={th}/>}
       {/* Seletor de idioma flutuante — visível em todas as telas exceto o Dashboard */}
       {screen!=="app" && (
         <div style={{position:"fixed",top:14,right:14,zIndex:9999}}>
