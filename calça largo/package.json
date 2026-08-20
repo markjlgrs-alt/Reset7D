@@ -1,0 +1,13 @@
+{
+  "name": "calca-larga-21d",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Calça Larga 21D — aplicativo do Método 7 Chaves. HTML único, React 18 embutido, funciona offline.",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "node build.js --watch",
+    "start": "node build.js && node -e \"console.log('Abra dist/CALCA_LARGA_21D.html no navegador')\""
+  },
+  "keywords": ["protocolo", "saude-feminina", "gamificacao", "react"],
+  "license": "UNLICENSED"
+}

@@ -6,3 +6,4 @@ backend/.env
 Thumbs.db
 
 .vercel
+.claude/

@@ -1,0 +1,9 @@
+{
+  "files.associations": { "*.js": "javascript" },
+  "editor.tabSize": 2,
+  "editor.rulers": [96],
+  "javascript.validate.enable": true,
+  "search.exclude": { "**/dist": true, "**/vendor": true },
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": { "build.js": "package.json, .gitignore, .editorconfig" }
+}

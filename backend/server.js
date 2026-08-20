@@ -13,6 +13,12 @@ const path       = require("path");
 const app  = express();
 const PORT = process.env.PORT || 3001;
 
+// Confia no primeiro hop do proxy (Vercel) para o Express calcular req.ip
+// corretamente a partir do X-Forwarded-For. Sem isso, o express-rate-limit
+// não consegue identificar cada usuário pelo IP real e loga ValidationError
+// em toda requisição (users diferentes podem cair no mesmo "balde" de rate limit).
+app.set("trust proxy", 1);
+
 // ── Supabase ──────────────────────────────────────────────────
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -29,7 +35,7 @@ app.use(helmet({
       fontSrc:     ["'self'", "https://fonts.gstatic.com"],
       imgSrc:      ["'self'", "data:", "blob:"],
       connectSrc:  ["'self'"],
-      frameSrc:    ["'none'"],
+      frameSrc:    ["'self'"],
       objectSrc:   ["'none'"],
     },
   },

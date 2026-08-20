@@ -1,0 +1,7 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Build", "type": "shell", "command": "node build.js", "group": { "kind": "build", "isDefault": true } },
+    { "label": "Watch", "type": "shell", "command": "node build.js --watch", "isBackground": true }
+  ]
+}
